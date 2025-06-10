@@ -1,0 +1,9 @@
+# Logs
+logs/
+*.log
+
+# Build output
+dist/
+
+# Database dumps
+db/*.sql
