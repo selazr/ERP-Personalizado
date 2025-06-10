@@ -6,21 +6,50 @@ import {
   CalendarClock,
   Users,
   TrendingUp,
-  Menu
+  Menu,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleResize = () => setIsMobile(window.innerWidth < 768);
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/trabajadores`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const today = new Date();
+        const upcoming = res.data.filter((w) => {
+          if (!w.fecha_baja) return false;
+          const diff = (new Date(w.fecha_baja) - today) / (1000 * 60 * 60 * 24);
+          return diff >= 0 && diff <= 7;
+        });
+        setNotifications(upcoming);
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
@@ -66,7 +95,47 @@ export default function Header() {
             </nav>
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-4">
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="text-white relative focus:outline-none"
+              >
+                <Bell className="h-5 w-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-64 bg-white text-gray-800 rounded shadow-lg z-50"
+                  >
+                    {notifications.length === 0 && (
+                      <div className="px-4 py-2 text-sm">Sin notificaciones</div>
+                    )}
+                    {notifications.map((n) => {
+                      const diff = Math.ceil((new Date(n.fecha_baja) - new Date()) / 86400000);
+                      const mensaje = diff === 7
+                        ? `A ${n.nombre} le queda 1 semana de contrato`
+                        : diff === 1
+                          ? `A ${n.nombre} le queda 1 día de contrato`
+                          : `A ${n.nombre} le quedan ${diff} días de contrato`;
+                      return (
+                        <div key={n.id} className="px-4 py-2 text-sm border-b last:border-b-0">
+                          {mensaje}
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm transition"
@@ -76,7 +145,47 @@ export default function Header() {
             </button>
           </div>
 
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="text-white relative focus:outline-none"
+              >
+                <Bell className="h-5 w-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-64 bg-white text-gray-800 rounded shadow-lg z-50"
+                  >
+                    {notifications.length === 0 && (
+                      <div className="px-4 py-2 text-sm">Sin notificaciones</div>
+                    )}
+                    {notifications.map((n) => {
+                      const diff = Math.ceil((new Date(n.fecha_baja) - new Date()) / 86400000);
+                      const mensaje = diff === 7
+                        ? `A ${n.nombre} le queda 1 semana de contrato`
+                        : diff === 1
+                          ? `A ${n.nombre} le queda 1 día de contrato`
+                          : `A ${n.nombre} le quedan ${diff} días de contrato`;
+                      return (
+                        <div key={n.id} className="px-4 py-2 text-sm border-b last:border-b-0">
+                          {mensaje}
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-white focus:outline-none"
