@@ -1,0 +1,309 @@
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import {
+  User, Mail, Phone, Briefcase, MapPin, CreditCard,
+  Calendar, Euro, ClipboardSignature, Edit3, HardHat,
+  Clock, Users, Tag, Banknote, Shield
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Header from '@/components/Header';
+import AddWorkerModal from '@/components/forms/AddWorkerModal';
+import EditWorkerModal from '@/components/forms/EditWorkerModal';
+
+
+export default function Trabajador() {
+  const [trabajadores, setTrabajadores] = useState([]);
+  const [error, setError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const workersPerPage = 6; // o el número que prefieras
+
+  const filteredTrabajadores = trabajadores
+    .filter((t) => t.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      if (!sortBy) return 0;
+      if ((a[sortBy] || '').toLowerCase() < (b[sortBy] || '').toLowerCase()) return -1;
+      if ((a[sortBy] || '').toLowerCase() > (b[sortBy] || '').toLowerCase()) return 1;
+      return 0;
+    });
+
+  const paginatedTrabajadores = filteredTrabajadores.slice(
+    (currentPage - 1) * workersPerPage,
+    currentPage * workersPerPage
+  );
+
+  const indexOfLastWorker = currentPage * workersPerPage;
+  const indexOfFirstWorker = indexOfLastWorker - workersPerPage;
+  const currentTrabajadores = filteredTrabajadores.slice(indexOfFirstWorker, indexOfLastWorker);
+
+
+
+
+
+  const navigate = useNavigate();
+
+// 1. Función reutilizable para cargar trabajadores
+const fetchWorkers = () => {
+  const token = localStorage.getItem('token');
+  axios.get(`${import.meta.env.VITE_API_URL}/trabajadores`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then((res) => setTrabajadores(res.data))
+    .catch((err) => {
+      console.error(err);
+      setError('No se pudo cargar la lista de trabajadores');
+    });
+};
+
+// 2. Llamada inicial en useEffect
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) return navigate('/');
+  fetchWorkers(); // ⬅️ Se llama aquí
+}, [navigate]);
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, sortBy]);
+
+
+// 3. Dar de alta usando fetchWorkers
+const handleAlta = async (id) => {
+  const token = localStorage.getItem('token');
+  if (!window.confirm('¿Deseas volver a dar de alta a este trabajador?')) return;
+
+  try {
+    await axios.put(`${import.meta.env.VITE_API_URL}/trabajadores/${id}`, {
+      fecha_baja: null
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    fetchWorkers(); // ⬅️ Se recarga
+  } catch (err) {
+    console.error('Error al dar de alta:', err);
+    alert('No se pudo dar de alta al trabajador.');
+  }
+};
+
+// 4. Dar de baja usando fetchWorkers
+const handleBaja = async (id) => {
+  const token = localStorage.getItem('token');
+  if (!window.confirm('¿Deseas dar de baja a este trabajador?')) return;
+
+  try {
+    const fechaHoy = new Date().toISOString().split('T')[0];
+    await axios.put(`${import.meta.env.VITE_API_URL}/trabajadores/${id}`, {
+      fecha_baja: fechaHoy
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    fetchWorkers(); // ⬅️ Se recarga
+  } catch (err) {
+    console.error('Error al dar de baja:', err);
+    alert('No se pudo dar de baja al trabajador.');
+  }
+};
+
+// 5. Lógica para editar trabajador (cuando implementes modal)
+  const handleEdit = (trabajador) => {
+    setTrabajadorSeleccionado(trabajador);
+    setShowEditModal(true);
+  };
+
+
+
+
+
+
+  return (
+    <>
+    <Header />
+    <div className="min-h-screen bg-slate-100 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Buscar por nombre..."
+            className="w-full md:w-64 p-3 text-black text-base border border-gray-300 rounded"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          <select
+            className="w-full md:w-48 p-3 text-black text-base border border-gray-300 rounded"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="">Filtrar por...</option>
+            <option value="nombre">Nombre (A-Z)</option>
+            <option value="empresa">Empresa</option>
+            <option value="pais">País</option>
+          </select>
+        </div>
+
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        >
+          Añadir Trabajador
+        </button>
+
+      </div>
+
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {currentTrabajadores.map((t) => (
+          <div
+            key={t.id}
+            className={`rounded-xl p-6 space-y-3 text-sm shadow transition-all duration-300 ${
+              t.fecha_baja ? 'bg-red-50 border border-red-400' : 'bg-white border border-gray-200'
+            }`}
+          >
+            <div className="flex flex-col mb-2 space-y-1">
+              <div className="flex items-center text-blue-600 text-lg font-semibold">
+                <User className="w-5 h-5 mr-2" />
+                {t.nombre}
+                {t.pais && (
+                  <span className="ml-2 text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                    {t.pais}
+                  </span>
+                )}
+                <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${
+                  t.fecha_baja ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                }`}>
+                  {t.fecha_baja ? 'Inactivo' : 'Activo'}
+                </span>
+              </div>
+              {t.empresa && (
+                <div className="text-sm font-medium text-gray-500 italic ml-7">
+                  Empresa: {t.empresa}
+                </div>
+              )}
+            </div>
+      
+            <div className="space-y-1 text-gray-800">
+              <p><MapPin className="inline w-4 h-4 mr-1 text-orange-500" /> {t.direccion}</p>
+              <p><CreditCard className="inline w-4 h-4 mr-1 text-purple-600" /> DNI: {t.dni}</p>
+              <p><Phone className="inline w-4 h-4 mr-1 text-green-500" /> {t.telefono}</p>
+              <p><Mail className="inline w-4 h-4 mr-1 text-pink-500" /> {t.correo_electronico}</p>
+              {t.iban && (<p><Banknote className="inline w-4 h-4 mr-1 text-green-600" />IBAN: {t.iban}</p>)}
+              {t.nss && (<p><Shield className="inline w-4 h-4 mr-1 text-gray-700" />NSS: {t.nss}</p>)}
+              <p><Briefcase className="inline w-4 h-4 mr-1 text-indigo-500" /> Tipo: {t.tipo_trabajador}</p>
+              <AnimatePresence>
+                {expandedId === t.id && (
+                  <motion.div
+                    key="expanded"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden space-y-1"
+                  >
+                    {t.grupo && (<p><Users className="inline w-4 h-4 mr-1 text-blue-500" />Grupo: {t.grupo}</p>)}
+                    {t.categoria && (<p><Tag className="inline w-4 h-4 mr-1 text-indigo-500" />Categoría: {t.categoria}</p>)}
+                    <p><Calendar className="inline w-4 h-4 mr-1 text-blue-500" /> Alta: {t.fecha_alta}</p>
+                    {t.fecha_baja && (<p><Calendar className="inline w-4 h-4 mr-1 text-red-500" /> Baja: {t.fecha_baja}</p>)}
+                    <p><Clock className="inline w-4 h-4 mr-1 text-gray-700" /> Horas: {t.horas_contratadas}</p>
+                    <p><Euro className="inline w-4 h-4 mr-1 text-emerald-500" /> Salario Neto: {t.salario_neto} €</p>
+                    <p><Euro className="inline w-4 h-4 mr-1 text-emerald-300" /> Salario Bruto: {t.salario_bruto} €</p>
+                    <p><User className="inline w-4 h-4 mr-1 text-red-500" /> Cliente: {t.cliente}</p>
+                    <p>A1: {t.a1 ? 'Sí' : 'No'}</p>
+                    <p>Fecha A1: {t.fecha_limosa || 'N/A'}</p>
+                    <p>Desplazamiento: {t.desplazamiento ? 'Sí' : 'No'}</p>
+                    <p>Fecha Desplazamiento: {t.fecha_desplazamiento || 'N/A'}</p>
+                    <p><HardHat className="inline w-4 h-4 mr-1 text-yellow-600" /> EPIs: {t.epis ? 'Sí' : 'No'}</p>
+                    {t.epis && <p>Fecha EPIs: {t.fecha_epis || 'N/A'}</p>}
+                    <p className="italic text-gray-600">
+                      <ClipboardSignature className="inline w-4 h-4 mr-1" /> {t.condiciones}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <button
+                onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
+                className="text-sm text-blue-600 hover:underline mt-2"
+              >
+                {expandedId === t.id ? 'Ver menos' : 'Ver más'}
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
+              {!t.fecha_baja ? (
+                <>
+                  <button
+                    onClick={() => handleEdit(t)}
+                    className="flex items-center px-3 py-1 border border-blue-500 text-blue-600 text-sm rounded hover:bg-blue-50"
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" /> Editar
+                  </button>
+                  <button
+                    onClick={() => handleBaja(t.id)}
+                    className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
+                  >
+                    <Calendar className="w-4 h-4 mr-1" /> Dar de baja
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => handleAlta(t.id)}
+                  className="flex items-center px-3 py-1 border border-green-600 text-green-700 text-sm rounded hover:bg-green-50"
+                >
+                  <Calendar className="w-4 h-4 mr-1" /> Dar de alta
+                </button>
+              )}
+            </div>
+            
+          </div>
+        )
+        )
+        }
+        <AddWorkerModal
+            open={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onWorkerAdded={fetchWorkers} // crea esta función si no existe para recargar lista
+            />
+        <EditWorkerModal
+            open={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            onWorkerUpdated={fetchWorkers}
+            initialData={trabajadorSeleccionado}
+          />
+
+
+      </div>
+<div className="mt-8 flex justify-center items-center gap-2">
+  <button
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage(prev => prev - 1)}
+    className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Anterior
+  </button>
+
+  <span className="text-black font-medium">{currentPage}</span>
+
+  <button
+    disabled={indexOfLastWorker >= filteredTrabajadores.length}
+    onClick={() => setCurrentPage(prev => prev + 1)}
+    className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Siguiente
+  </button>
+</div>
+
+
+    </div>
+    
+    </>
+  );
+}

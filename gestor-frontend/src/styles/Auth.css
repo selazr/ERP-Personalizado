@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fondo: video o imagen */
+.bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(0.4);
+}
+
+.auth-wrapper::after {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  font-size: 60px;
+  font-weight: 900;
+  color: white;
+  opacity: 0.05;
+  pointer-events: none;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+/* Contenedor principal */
+.auth-container {
+  max-width: 400px;
+  width: 90%;
+  padding: 30px 25px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  text-align: center;
+  animation: fadeIn 0.7s ease-in-out;
+  position: relative;
+  z-index: 1;
+  
+}
+.auth-container button[type="submit"]:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px #00c6ff, 0 0 20px #00c6ff;
+}
+
+
+/* Animación entrada */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Logo */
+.logo-lxh {
+  width: 160px;
+  margin: 0 auto 25px auto;  /* Centrado horizontal */
+  display: block;            /* Necesario para que margin auto funcione */
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
+  animation: logoGlow 2s ease-in-out infinite alternate;
+}
+
+
+@keyframes logoGlow {
+  from {
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.2));
+  }
+  to {
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));
+  }
+}
+
+
+/* Inputs */
+.auth-container input,
+.auth-container select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #222;
+}
+.auth-container input:focus,
+.auth-container select:focus {
+  outline: none;
+  border: 2px solid #00c6ff;
+  transition: border 0.3s ease;
+}
+
+
+/* Botón submit */
+.auth-container button[type="submit"] {
+  background-color: #00c6ff;
+  background-image: linear-gradient(to right, #0072ff, #00c6ff);
+  color: white;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s;
+  margin-top: 10px;
+}
+
+.auth-container button[type="submit"]:hover {
+  transform: scale(1.05);
+  background-image: linear-gradient(to right, #005be0, #00acc6);
+}
+
+/* Campo contraseña con icono */
+.password-container {
+  position: relative;
+}
+
+.password-container input {
+  padding-right: 44px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-80%);
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #333;
+}
+
+/* Mensaje de error */
+.error-message {
+  color: #ff6b6b;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* Enlaces */
+.auth-container p {
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.auth-container a {
+  color: #00c6ff;
+  text-decoration: none;
+}
+
+.auth-container a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 20px 15px;
+  }
+
+  .logo-lxh {
+    width: 120px;
+    margin-bottom: 20px;
+  }
+
+  .auth-container button[type="submit"] {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
