@@ -11,6 +11,14 @@ import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 
+// Determina si un trabajador está activo: la fecha de alta debe ser anterior o
+// igual a hoy y la fecha de baja debe ser nula o futura.
+export function isActivo(trabajador) {
+  const today = new Date();
+  const fechaAlta = new Date(trabajador.fecha_alta);
+  const fechaBaja = trabajador.fecha_baja ? new Date(trabajador.fecha_baja) : null;
+  return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
+}
 
 export default function Trabajador() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -178,9 +186,9 @@ const handleBaja = async (id) => {
                   </span>
                 )}
                 <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${
-                  t.fecha_baja ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                  isActivo(t) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                 }`}>
-                  {t.fecha_baja ? 'Inactivo' : 'Activo'}
+                  {isActivo(t) ? 'Activo' : 'Inactivo'}
                 </span>
               </div>
               {t.empresa && (

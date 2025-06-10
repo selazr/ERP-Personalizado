@@ -10,3 +10,21 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Manual checks for Trabajador status
+
+After updating the `Trabajador` component you can manually verify the active
+status logic:
+
+1. Run the frontend:
+
+   ```bash
+   cd gestor-frontend
+   npm install
+   npm run dev
+   ```
+
+2. En la aplicación, añade o edita un trabajador estableciendo una `fecha_baja`
+   futura (por ejemplo, dentro de un mes).
+3. Comprueba que el estado del trabajador aparece con la etiqueta verde
+   **Activo** a pesar de tener una fecha de baja en el futuro.
