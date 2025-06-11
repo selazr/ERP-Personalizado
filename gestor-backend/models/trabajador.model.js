@@ -29,6 +29,3 @@ module.exports = (sequelize, DataTypes) => {
     freezeTableName: true // 👈 esto evita la pluralización (Trabajadors)
   });
 };
-//FECHA DE VENCIMIENTO DE CONTRATO
-//EPIS BOL SI/NO
-//IF SI == FECHA
