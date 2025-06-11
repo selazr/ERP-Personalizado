@@ -28,7 +28,12 @@ Este proyecto es un ERP sencillo para gestionar trabajadores y programar sus hor
    ```bash
    npm install
    ```
-2. Arranca el entorno de desarrollo con:
+2. Crea un archivo `.env` dentro de `gestor-frontend` indicando la URL base del
+   backend. Un valor habitual en desarrollo es:
+   ```bash
+   VITE_API_URL=http://localhost:3001/api
+   ```
+3. Arranca el entorno de desarrollo con:
    ```bash
    npm run dev
    ```
