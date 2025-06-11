@@ -58,25 +58,32 @@ exports.getStats = async (req, res) => {
 
     const trabajadoresInactivos = totalTrabajadores - trabajadoresActivos;
 
-    const totalSalarioNeto = await Trabajador.sum('salario_neto');
-    const totalSalarioBruto = await Trabajador.sum('salario_bruto');
+    const totalSalarioNeto = await Trabajador.sum('salario_neto') || 0;
+    const totalSalarioBruto = await Trabajador.sum('salario_bruto') || 0;
 
-    const salarioNetoPromedio = await Trabajador.average('salario_neto');
-    const salarioBrutoPromedio = await Trabajador.average('salario_bruto');
+    const salarioNetoPromedio = await Trabajador.findOne({
+      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.col('salario_neto')), 'promedio']]
+    });
+    const salarioBrutoPromedio = await Trabajador.findOne({
+      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.col('salario_bruto')), 'promedio']]
+    });
+
+    const promedioNeto = parseFloat(salarioNetoPromedio.get('promedio')) || 0;
+    const promedioBruto = parseFloat(salarioBrutoPromedio.get('promedio')) || 0;
 
     res.json({
       totalTrabajadores,
       trabajadoresActivos,
       trabajadoresInactivos,
-      costeMensualNeto: Number(totalSalarioNeto) || 0,
-      costeMensualBruto: Number(totalSalarioBruto) || 0,
-      costeAnualNeto: Number(totalSalarioNeto) * 12 || 0,
-      costeAnualBruto: Number(totalSalarioBruto) * 12 || 0,
-      salarioNetoPromedio: Number(salarioNetoPromedio) || 0,
-      salarioBrutoPromedio: Number(salarioBrutoPromedio) || 0
+      costeMensualNeto: totalSalarioNeto,
+      costeMensualBruto: totalSalarioBruto,
+      costeAnualNeto: totalSalarioNeto * 12,
+      costeAnualBruto: totalSalarioBruto * 12,
+      salarioNetoPromedio: promedioNeto,
+      salarioBrutoPromedio: promedioBruto
     });
   } catch (err) {
+    console.error('Error en getStats:', err);
     res.status(500).json({ error: err.message });
   }
 };
-
