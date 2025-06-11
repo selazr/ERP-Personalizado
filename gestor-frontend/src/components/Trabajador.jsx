@@ -173,7 +173,7 @@ const handleBaja = async (id) => {
           <div
             key={t.id}
             className={`rounded-xl p-6 space-y-3 text-sm shadow transition-all duration-300 ${
-              t.fecha_baja ? 'bg-red-50 border border-red-400' : 'bg-white border border-gray-200'
+              isActivo(t) ? 'bg-white border border-gray-200' : 'bg-red-50 border border-red-400'
             }`}
           >
             <div className="flex flex-col mb-2 space-y-1">
@@ -246,7 +246,7 @@ const handleBaja = async (id) => {
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
-              {!t.fecha_baja ? (
+              {isActivo(t) ? (
                 <>
                   <button
                     onClick={() => handleEdit(t)}
@@ -254,12 +254,21 @@ const handleBaja = async (id) => {
                   >
                     <Edit3 className="w-4 h-4 mr-1" /> Editar
                   </button>
-                  <button
-                    onClick={() => handleBaja(t.id)}
-                    className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
-                  >
-                    <Calendar className="w-4 h-4 mr-1" /> Dar de baja
-                  </button>
+                  {t.fecha_baja ? (
+                    <button
+                      onClick={() => handleAlta(t.id)}
+                      className="flex items-center px-3 py-1 border border-green-600 text-green-700 text-sm rounded hover:bg-green-50"
+                    >
+                      <Calendar className="w-4 h-4 mr-1" /> Cancelar baja
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleBaja(t.id)}
+                      className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
+                    >
+                      <Calendar className="w-4 h-4 mr-1" /> Dar de baja
+                    </button>
+                  )}
                 </>
               ) : (
                 <button
