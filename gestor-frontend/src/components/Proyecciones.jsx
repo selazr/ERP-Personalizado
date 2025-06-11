@@ -10,6 +10,7 @@ export default function Proyecciones() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/trabajadores/estadisticas`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(res.data);
@@ -62,4 +63,3 @@ export default function Proyecciones() {
     </>
   );
 }
-
