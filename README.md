@@ -40,3 +40,13 @@ El repositorio incluye una copia de respaldo en `db/backup_gestor_horarios.sql`.
 mysql -u <usuario> -p < db/backup_gestor_horarios.sql
 ```
 Esto generará las tablas necesarias para que la aplicación funcione.
+
+## API de estadísticas
+
+El backend expone un endpoint para obtener estadísticas y proyecciones basadas en los salarios de los trabajadores.
+
+```
+GET /api/trabajadores/estadisticas
+```
+
+La respuesta incluye el número total de trabajadores, cuántos están activos o inactivos y el coste salarial tanto mensual como anual.

@@ -37,3 +37,46 @@ exports.remove = async (req, res) => {
   await trabajador.destroy();
   res.status(204).send();
 };
+
+// Estadísticas y proyecciones de salarios
+exports.getStats = async (req, res) => {
+  try {
+    const { Op } = db.Sequelize;
+    const today = new Date();
+
+    const totalTrabajadores = await Trabajador.count();
+
+    const trabajadoresActivos = await Trabajador.count({
+      where: {
+        fecha_alta: { [Op.lte]: today },
+        [Op.or]: [
+          { fecha_baja: null },
+          { fecha_baja: { [Op.gte]: today } }
+        ]
+      }
+    });
+
+    const trabajadoresInactivos = totalTrabajadores - trabajadoresActivos;
+
+    const totalSalarioNeto = await Trabajador.sum('salario_neto');
+    const totalSalarioBruto = await Trabajador.sum('salario_bruto');
+
+    const salarioNetoPromedio = await Trabajador.average('salario_neto');
+    const salarioBrutoPromedio = await Trabajador.average('salario_bruto');
+
+    res.json({
+      totalTrabajadores,
+      trabajadoresActivos,
+      trabajadoresInactivos,
+      costeMensualNeto: Number(totalSalarioNeto) || 0,
+      costeMensualBruto: Number(totalSalarioBruto) || 0,
+      costeAnualNeto: Number(totalSalarioNeto) * 12 || 0,
+      costeAnualBruto: Number(totalSalarioBruto) * 12 || 0,
+      salarioNetoPromedio: Number(salarioNetoPromedio) || 0,
+      salarioBrutoPromedio: Number(salarioBrutoPromedio) || 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
