@@ -13,7 +13,8 @@ exports.login = async (req, res) => {
     if (rows.length === 0) return res.status(401).json({ error: 'Usuario no encontrado' });
 
     const usuario = rows[0];
-    if (contraseña !== usuario.contraseña) {
+    const coincide = await bcrypt.compare(contraseña, usuario.contraseña);
+    if (!coincide) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
     
