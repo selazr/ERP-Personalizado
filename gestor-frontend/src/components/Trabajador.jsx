@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
+import * as XLSX from 'xlsx';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
@@ -130,6 +131,13 @@ const handleBaja = async (id) => {
   const handleEdit = (trabajador) => {
     setTrabajadorSeleccionado(trabajador);
     setShowEditModal(true);
+  };
+
+  const handleDescargarPlantilla = (trabajador) => {
+    const worksheet = XLSX.utils.json_to_sheet([trabajador]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Trabajador');
+    XLSX.writeFile(workbook, `trabajador_${trabajador.id}.xlsx`);
   };
 
 
@@ -267,22 +275,28 @@ const handleBaja = async (id) => {
                     <Calendar className="w-4 h-4 mr-1" /> Cancelar baja
                   </button>
                 ) : (
-                  <button
-                    onClick={() => handleBaja(t.id)}
-                    className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
-                  >
-                    <Calendar className="w-4 h-4 mr-1" /> Dar de baja
-                  </button>
-                )
-              ) : (
                 <button
-                  onClick={() => handleAlta(t.id)}
-                  className="flex items-center px-3 py-1 border border-green-600 text-green-700 text-sm rounded hover:bg-green-50"
+                  onClick={() => handleBaja(t.id)}
+                  className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
                 >
-                  <Calendar className="w-4 h-4 mr-1" /> Dar de alta
+                  <Calendar className="w-4 h-4 mr-1" /> Dar de baja
                 </button>
-              )}
-            </div>
+              )
+            ) : (
+              <button
+                onClick={() => handleAlta(t.id)}
+                className="flex items-center px-3 py-1 border border-green-600 text-green-700 text-sm rounded hover:bg-green-50"
+              >
+                <Calendar className="w-4 h-4 mr-1" /> Dar de alta
+              </button>
+            )}
+            <button
+              onClick={() => handleDescargarPlantilla(t)}
+              className="flex items-center px-3 py-1 border border-gray-500 text-gray-700 text-sm rounded hover:bg-gray-50"
+            >
+              Descargar Plantilla
+            </button>
+          </div>
             
           </div>
         )
