@@ -7,7 +7,11 @@ import { calculateTotalHoursFromIntervals, formatHoursToHM } from '../utils/util
 
 
 function calcularTipoHoras(intervals, dateKey, isFestivo) {
-  let normales = 0, extras = 0, nocturnas = 0, festivas = 0;
+  let totalDiario = 0;
+  let normales = 0,
+    extras = 0,
+    nocturnas = 0,
+    festivas = 0;
 
   intervals.forEach(({ hora_inicio, hora_fin }) => {
     if (!hora_inicio || !hora_fin) return;
@@ -15,39 +19,38 @@ function calcularTipoHoras(intervals, dateKey, isFestivo) {
     const [h2, m2] = hora_fin.split(':').map(Number);
     const start = h1 * 60 + m1;
     const end = h2 * 60 + m2;
-    const total = (end - start) / 60;
+    let total = (end - start) / 60;
 
-    let restante = total;
     const dia = getDay(parseISO(dateKey));
 
     if (dia === 0 || dia === 6 || isFestivo) {
       festivas += total;
-      return; // Ya clasificamos todo como festivo
+      return; // Todo el intervalo es festivo
     }
 
     // 360 minutos = 6:00 AM
     if (start < 360) {
       const nocturnaFin = Math.min(end, 360); // límite superior hasta las 6:00
       nocturnas += (nocturnaFin - start) / 60;
-      restante -= (nocturnaFin - start) / 60;
+      total -= (nocturnaFin - start) / 60;
     }
 
     // 1320 minutos = 22:00 PM
     if (end > 1320) {
       const nocturnaInicio = Math.max(start, 1320); // límite inferior desde las 22:00
       nocturnas += (end - nocturnaInicio) / 60;
-      restante -= (end - nocturnaInicio) / 60;
+      total -= (end - nocturnaInicio) / 60;
     }
 
-
-    // Normales y Extras
-    if (restante > 8) {
-      normales += 8;
-      extras += (restante - 8);
-    } else {
-      normales += restante;
-    }
+    totalDiario += total;
   });
+
+  if (totalDiario > 8) {
+    normales = 8;
+    extras = totalDiario - 8;
+  } else {
+    normales = totalDiario;
+  }
 
   return { normales, extras, nocturnas, festivas };
 }
@@ -101,7 +104,7 @@ export function HoursSummary({ currentDate, scheduleData }) {
         </div>
 
         <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-purple-600 font-medium">Horas extras</span>
+          <span className="text-purple-600 font-medium">Horas Extra laborable</span>
           <span className="text-md font-semibold text-purple-500">
             {formatHoursToHM(resumen.extras)}
           </span>
