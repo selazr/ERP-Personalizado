@@ -65,3 +65,13 @@ GET /api/trabajadores/estadisticas
 ```
 
 La respuesta incluye el número total de trabajadores, cuántos están activos o inactivos y el coste salarial tanto mensual como anual.
+
+## Documentación ISO 27001
+
+En `docs/iso27001` se incluyen documentos básicos relacionados con la gestión de la seguridad de la información:
+
+- `security-policy.md`
+- `risk-assessment-methodology.md`
+- `asset-inventory.md`
+- `incident-response-procedure.md`
+- `access-control-policy.md`
