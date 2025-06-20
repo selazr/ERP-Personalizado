@@ -153,7 +153,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
               {renderInput('Grupo', 'grupo', 'Ej: G1')}
               {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
               {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
-              {!['Fijo', 'Fijo discontinuo'].includes(form.tipo_trabajador) &&
+              {form.tipo_trabajador !== 'Fijo' &&
                 renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
               {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
               {renderInput('Salario Neto/Mes (€)', 'salario_neto', 'Ej: 1600', 'number')}
