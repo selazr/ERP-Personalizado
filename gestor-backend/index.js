@@ -8,6 +8,15 @@ const db = require('./models');
 
 dotenv.config();
 
+//CONFIGURACION DE VARIABLES DE ENTORNO
+const requiredEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'];
+const missingEnv = requiredEnv.filter((name) => !process.env[name]);
+if (missingEnv.length > 0) {
+  console.error(`\u274c Falta configurar las variables de entorno: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
+
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 // LOCAL
