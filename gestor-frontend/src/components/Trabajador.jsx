@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
-import { exportObjectToCSV } from '@/utils/exportCsv';
+import { exportScheduleToExcel } from '@/utils/exportExcel';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
@@ -133,8 +133,17 @@ const handleBaja = async (id) => {
     setShowEditModal(true);
   };
 
-  const handleDescargarPlantilla = (trabajador) => {
-    exportObjectToCSV(trabajador, `trabajador_${trabajador.id}.csv`);
+  const handleDescargarPlantilla = async (trabajador) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/horarios/${trabajador.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      exportScheduleToExcel(trabajador, res.data);
+    } catch (err) {
+      console.error('Error al generar Excel:', err);
+      alert('No se pudo generar el archivo');
+    }
   };
 
 
