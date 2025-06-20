@@ -46,6 +46,16 @@ mysql -u <usuario> -p < db/backup_gestor_horarios.sql
 ```
 Esto generará las tablas necesarias para que la aplicación funcione.
 
+## Seguridad
+
+Las contraseñas de la tabla `usuarios` deben almacenarse con hashing bcrypt. Cuando crees un usuario nuevo inserta la contraseña generada con:
+
+```bash
+node -e "console.log(require('bcrypt').hashSync('tu_clave', 10))"
+```
+
+Las rutas de trabajadores y horarios ahora requieren un token JWT válido en la cabecera `Authorization` con el formato `Bearer <token>`. Obtén el token mediante `/api/auth/login`.
+
 ## API de estadísticas
 
 El backend expone un endpoint para obtener estadísticas y proyecciones basadas en los salarios de los trabajadores.
