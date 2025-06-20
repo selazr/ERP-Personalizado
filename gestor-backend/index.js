@@ -22,8 +22,13 @@ const PORT = process.env.PORT || 3001;
 // LOCAL
 //✅ CORS: permite llamadas desde frontend en local
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173', 'https://lxherp.es'],
-  credentials: true
+  origin: process.env.CORS_ORIGIN?.split(',') || [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://lxherp.es'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 //PRODUCCION
 //✅ CORS: permite llamadas desde frontend en producción
