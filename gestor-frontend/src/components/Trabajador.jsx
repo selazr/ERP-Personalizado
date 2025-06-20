@@ -20,6 +20,12 @@ export function isActivo(trabajador) {
   return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
 }
 
+export function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day}-${month}-${year}`;
+}
+
 export default function Trabajador() {
   const [trabajadores, setTrabajadores] = useState([]);
   const [error, setError] = useState('');
@@ -218,18 +224,18 @@ const handleBaja = async (id) => {
                   >
                     {t.grupo && (<p><Users className="inline w-4 h-4 mr-1 text-blue-500" />Grupo: {t.grupo}</p>)}
                     {t.categoria && (<p><Tag className="inline w-4 h-4 mr-1 text-indigo-500" />Categoría: {t.categoria}</p>)}
-                    <p><Calendar className="inline w-4 h-4 mr-1 text-blue-500" /> Alta: {t.fecha_alta}</p>
-                    {t.fecha_baja && (<p><Calendar className="inline w-4 h-4 mr-1 text-red-500" /> Baja: {t.fecha_baja}</p>)}
+                    <p><Calendar className="inline w-4 h-4 mr-1 text-blue-500" /> Alta: {formatDate(t.fecha_alta)}</p>
+                    {t.fecha_baja && (<p><Calendar className="inline w-4 h-4 mr-1 text-red-500" /> Baja: {formatDate(t.fecha_baja)}</p>)}
                     <p><Clock className="inline w-4 h-4 mr-1 text-gray-700" /> Horas: {t.horas_contratadas}</p>
                     <p><Euro className="inline w-4 h-4 mr-1 text-emerald-500" /> Salario Neto: {t.salario_neto} €</p>
                     <p><Euro className="inline w-4 h-4 mr-1 text-emerald-300" /> Salario Bruto: {t.salario_bruto} €</p>
                     <p><User className="inline w-4 h-4 mr-1 text-red-500" /> Cliente: {t.cliente}</p>
                     <p>A1: {t.a1 ? 'Sí' : 'No'}</p>
-                    <p>Fecha A1: {t.fecha_limosa || 'N/A'}</p>
+                    <p>Fecha A1: {t.fecha_limosa ? formatDate(t.fecha_limosa) : 'N/A'}</p>
                     <p>Desplazamiento: {t.desplazamiento ? 'Sí' : 'No'}</p>
-                    <p>Fecha Desplazamiento: {t.fecha_desplazamiento || 'N/A'}</p>
+                    <p>Fecha Desplazamiento: {t.fecha_desplazamiento ? formatDate(t.fecha_desplazamiento) : 'N/A'}</p>
                     <p><HardHat className="inline w-4 h-4 mr-1 text-yellow-600" /> EPIs: {t.epis ? 'Sí' : 'No'}</p>
-                    {t.epis && <p>Fecha EPIs: {t.fecha_epis || 'N/A'}</p>}
+                    {t.epis && <p>Fecha EPIs: {t.fecha_epis ? formatDate(t.fecha_epis) : 'N/A'}</p>}
                     <p className="italic text-gray-600">
                       <ClipboardSignature className="inline w-4 h-4 mr-1" /> {t.condiciones}
                     </p>
@@ -246,30 +252,28 @@ const handleBaja = async (id) => {
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => handleEdit(t)}
+                className="flex items-center px-3 py-1 border border-blue-500 text-blue-600 text-sm rounded hover:bg-blue-50"
+              >
+                <Edit3 className="w-4 h-4 mr-1" /> Editar
+              </button>
               {isActivo(t) ? (
-                <>
+                t.fecha_baja ? (
                   <button
-                    onClick={() => handleEdit(t)}
-                    className="flex items-center px-3 py-1 border border-blue-500 text-blue-600 text-sm rounded hover:bg-blue-50"
+                    onClick={() => handleAlta(t.id)}
+                    className="flex items-center px-3 py-1 border border-green-600 text-green-700 text-sm rounded hover:bg-green-50"
                   >
-                    <Edit3 className="w-4 h-4 mr-1" /> Editar
+                    <Calendar className="w-4 h-4 mr-1" /> Cancelar baja
                   </button>
-                  {t.fecha_baja ? (
-                    <button
-                      onClick={() => handleAlta(t.id)}
-                      className="flex items-center px-3 py-1 border border-green-600 text-green-700 text-sm rounded hover:bg-green-50"
-                    >
-                      <Calendar className="w-4 h-4 mr-1" /> Cancelar baja
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleBaja(t.id)}
-                      className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
-                    >
-                      <Calendar className="w-4 h-4 mr-1" /> Dar de baja
-                    </button>
-                  )}
-                </>
+                ) : (
+                  <button
+                    onClick={() => handleBaja(t.id)}
+                    className="flex items-center px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-50"
+                  >
+                    <Calendar className="w-4 h-4 mr-1" /> Dar de baja
+                  </button>
+                )
               ) : (
                 <button
                   onClick={() => handleAlta(t.id)}
