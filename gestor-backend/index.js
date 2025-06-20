@@ -10,20 +10,19 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-/*✅ CORS: permite llamadas desde frontend en local
+// LOCAL
+//✅ CORS: permite llamadas desde frontend en local
 app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173', 'https://lxherp.es'],
   credentials: true
 }));
-**/
-
+//PRODUCCION
 //✅ CORS: permite llamadas desde frontend en producción
-app.use(cors({
+/*app.use(cors({
   origin: process.env.CORS_ORIGIN || 'https://lxherp.es',
   credentials: true
 })); 
-
+*/
 
 // Middlewares
 app.use(express.json());
