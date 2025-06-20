@@ -1,0 +1,72 @@
+import * as XLSX from 'xlsx';
+import { format, parseISO, getDay } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+function calcDuration(start, end) {
+  const [h1, m1] = start.split(':').map(Number);
+  const [h2, m2] = end.split(':').map(Number);
+  return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+}
+
+function round(num) {
+  return Math.round(num * 100) / 100;
+}
+
+export function exportScheduleToExcel(trabajador, horarios) {
+  const sorted = [...horarios].sort((a, b) => {
+    if (a.fecha === b.fecha) {
+      return a.hora_inicio.localeCompare(b.hora_inicio);
+    }
+    return a.fecha.localeCompare(b.fecha);
+  });
+
+  const dayData = {};
+  sorted.forEach((h) => {
+    const { fecha, hora_inicio, hora_fin, festivo } = h;
+    const dur = calcDuration(hora_inicio, hora_fin);
+    if (!dayData[fecha]) {
+      dayData[fecha] = { total: 0, festivo: false, intervals: [] };
+    }
+    dayData[fecha].total += dur;
+    dayData[fecha].festivo = dayData[fecha].festivo || festivo;
+    dayData[fecha].intervals.push({ start: hora_inicio, end: hora_fin });
+  });
+
+  const rows = [];
+  Object.keys(dayData).sort().forEach((fecha) => {
+    const entry = dayData[fecha];
+    const date = parseISO(fecha);
+    const dayName = format(date, 'EEEE', { locale: es });
+    const dayNum = format(date, 'd', { locale: es });
+    const horariosText = entry.intervals.map(i => `${i.start}-${i.end}`).join(', ');
+    const isWeekend = getDay(date) === 0 || getDay(date) === 6;
+    let extraLaborables = 0;
+    let extra = 0;
+    const total = entry.total;
+    if (entry.festivo || isWeekend) {
+      extra = total;
+    } else if (total > 8) {
+      extraLaborables = total - 8;
+    }
+
+    rows.push({
+      'Día': `${dayName} ${dayNum}`,
+      'Horario': horariosText,
+      'Horas Extra Laborables': round(extraLaborables),
+      'Horas Extra': round(extra),
+      'Total Horas': round(total)
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+  const info = [
+    ['Control horas trabajador'],
+    [`Nombre: ${trabajador.nombre}`],
+    [`País: ${trabajador.pais || ''}`],
+    []
+  ];
+  const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
+  XLSX.utils.sheet_add_aoa(ws, info, { origin: 'A1' });
+  XLSX.utils.book_append_sheet(wb, ws, 'Horas');
+  XLSX.writeFile(wb, `horas_${trabajador.nombre}.xlsx`);
+}
