@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
-import * as XLSX from 'xlsx';
+import { exportObjectToCSV } from '@/utils/exportCsv';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
@@ -134,10 +134,7 @@ const handleBaja = async (id) => {
   };
 
   const handleDescargarPlantilla = (trabajador) => {
-    const worksheet = XLSX.utils.json_to_sheet([trabajador]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Trabajador');
-    XLSX.writeFile(workbook, `trabajador_${trabajador.id}.xlsx`);
+    exportObjectToCSV(trabajador, `trabajador_${trabajador.id}.csv`);
   };
 
 
