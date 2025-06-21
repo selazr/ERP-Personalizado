@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import * as XLSX from './xlsx.js';
 import { format, parseISO, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
