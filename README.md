@@ -86,3 +86,4 @@ En `docs/templates` encontrarás archivos CSV con el formato de las plantillas d
 `plantilla_horarios.csv` incluye columnas para hasta dos intervalos de trabajo:
 `hora_entrada_1`, `hora_salida_1`, `hora_entrada_2` y `hora_salida_2`.
 Si el segundo intervalo no se usa, se deben rellenar sus columnas con `00:00`.
+Al exportar los horarios a Excel también se mostrarán estas cuatro columnas para reflejar todas las entradas y salidas registradas.
