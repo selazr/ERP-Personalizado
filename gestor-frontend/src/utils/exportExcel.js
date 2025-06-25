@@ -61,7 +61,6 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
   const rowFlags = [];
   let totalNormales = 0;
   let totalExtras = 0;
-  let totalNocturnas = 0;
   let totalFestivas = 0;
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
@@ -90,46 +89,19 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
     let normales = 0;
     let extras = 0;
-    let nocturnas = 0;
     let festivas = 0;
-
+    const total = entry.total;
     if (entry.festivo || isWeekend) {
-      // Todas las horas cuentan como festivas
-      festivas = entry.total;
+      festivas = total;
     } else {
-      let totalDiario = 0;
-      entry.intervals.forEach(({ start, end }) => {
-        if (!start || !end) return;
-        const [h1, m1] = start.split(':').map(Number);
-        const [h2, m2] = end.split(':').map(Number);
-        const inicio = h1 * 60 + m1;
-        const fin = h2 * 60 + m2;
-        let dur = (fin - inicio) / 60;
-
-        if (inicio < 360) {
-          const noctFin = Math.min(fin, 360);
-          nocturnas += (noctFin - inicio) / 60;
-          dur -= (noctFin - inicio) / 60;
-        }
-
-        if (fin > 1320) {
-          const noctIni = Math.max(inicio, 1320);
-          nocturnas += (fin - noctIni) / 60;
-          dur -= (fin - noctIni) / 60;
-        }
-
-        totalDiario += dur;
-      });
-
-      normales = Math.min(totalDiario, 8);
-      if (totalDiario > 8) {
-        extras = totalDiario - 8;
+      normales = Math.min(total, 8);
+      if (total > 8) {
+        extras = total - 8;
       }
     }
 
     totalNormales += normales;
     totalExtras += extras;
-    totalNocturnas += nocturnas;
     totalFestivas += festivas;
 
     rows.push({
@@ -141,7 +113,6 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
       'Salida': salida2,
       'Normales': toHM(normales),
       'Extras': toHM(extras),
-      'Nocturnas': toHM(nocturnas),
       'Festivas': toHM(festivas)
     });
     rowFlags.push({ isWeekend, isHoliday: entry.festivo });
@@ -156,7 +127,6 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     'Salida': '',
     'Normales': toHM(totalNormales),
     'Extras': toHM(totalExtras),
-    'Nocturnas': toHM(totalNocturnas),
     'Festivas': toHM(totalFestivas)
   };
 
@@ -169,7 +139,6 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     'Salida',
     'Normales',
     'Extras',
-    'Nocturnas',
     'Festivas'
   ];
 
@@ -189,16 +158,16 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
 
   // Row for logo
   const logoRow = worksheet.addRow([]);
-  logoRow.height = 80;
+  logoRow.height = 60;
 
   // Text rows
   const titleRow = worksheet.addRow([]);
   titleRow.getCell(1).value = 'Control horas trabajador';
-  titleRow.font = { name: fontName };
+  titleRow.font = { name: fontName, bold: true };
 
   const nameRow = worksheet.addRow([]);
   nameRow.getCell(1).value = `Nombre: ${trabajador.nombre}`;
-  nameRow.font = { name: fontName, bold: true, size: 16 };
+  nameRow.font = { name: fontName };
 
   const countryRow = worksheet.addRow([]);
   countryRow.getCell(1).value = `País: ${trabajador.pais || ''}`;
@@ -276,8 +245,8 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
 const imageId = workbook.addImage({ base64: logoBase64, extension: 'jpeg' });
 
   worksheet.addImage(imageId, {
-    tl: { col: 6, row: 0 },
-    ext: { width: 200, height: 80 }
+    tl: { col: 0, row: 0 },
+    ext: { width: 160, height: 60 }
   });
 
   // Apply global font
