@@ -113,7 +113,9 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
     'Total Horas'
   ];
 
+  // First row left empty as a placeholder for the company logo
   const aoa = [
+    [''],
     ['Control horas trabajador'],
     [`Nombre: ${trabajador.nombre}`],
     [`País: ${trabajador.pais || ''}`],
@@ -126,19 +128,44 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-  const firstDataRow = 6; // 1-indexed row where data starts
+  // Increase column widths for readability
+  ws['!cols'] = header.map(() => ({ wch: 20 }));
+
+  // Reserve height for logo on the first row
+  ws['!rows'] = [{ hpx: 80 }];
+
+  // Define a simple border style
+  const borderStyle = {
+    top: { style: 'thin', color: { rgb: '000000' } },
+    bottom: { style: 'thin', color: { rgb: '000000' } },
+    left: { style: 'thin', color: { rgb: '000000' } },
+    right: { style: 'thin', color: { rgb: '000000' } }
+  };
+
+  const headerRowIdx = 6;
+  for (let c = 0; c < header.length; c++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: headerRowIdx - 1, c })];
+    if (cell) {
+      cell.s = {
+        font: { bold: true },
+        border: borderStyle
+      };
+    }
+  }
+
+  const firstDataRow = 7; // 1-indexed row where data starts (after logo row)
   rows.forEach((_, idx) => {
     const flags = rowFlags[idx];
     const rowIdx = firstDataRow + idx;
     const color = flags.isHoliday ? 'E6E0FF' : flags.isWeekend ? 'D9D9D9' : null;
-    if (color) {
-      for (let c = 0; c < header.length; c++) {
-        const cell = ws[XLSX.utils.encode_cell({ r: rowIdx - 1, c })];
-        if (cell) {
-          cell.s = {
-            fill: { patternType: 'solid', fgColor: { rgb: color } }
-          };
+    for (let c = 0; c < header.length; c++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: rowIdx - 1, c })];
+      if (cell) {
+        cell.s = cell.s || {};
+        if (color) {
+          cell.s.fill = { patternType: 'solid', fgColor: { rgb: color } };
         }
+        cell.s.border = borderStyle;
       }
     }
   });

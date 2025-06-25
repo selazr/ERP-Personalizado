@@ -88,3 +88,4 @@ En `docs/templates` encontrarás archivos CSV con el formato de las plantillas d
 Si el segundo intervalo no se usa, se deben rellenar sus columnas con `00:00`.
 Al exportar los horarios a Excel también se mostrarán estas cuatro columnas para reflejar todas las entradas y salidas registradas.
 Las horas totales y extras se muestran en formato `HH:mm`. Las filas de fines de semana se colorean de gris y las de festivos de morado para diferenciarlas en la plantilla descargable.
+Las columnas del Excel se generan ahora con una anchura mayor y con bordes en todas las celdas. La primera fila queda vacía para que puedas colocar el logotipo de la empresa. Toda la lógica de exportación se encuentra en `gestor-frontend/src/utils/exportExcel.js`.
