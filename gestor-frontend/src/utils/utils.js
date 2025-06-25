@@ -19,5 +19,5 @@ export function formatHours(value) {
 export const formatHoursToHM = (total) => {
   const hours = Math.floor(total);
   const minutes = Math.round((total - hours) * 60);
-  return `${hours}:${minutes.toString().padStart(2, '0')}h`;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
 };

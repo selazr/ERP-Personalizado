@@ -5,7 +5,8 @@ import { es } from 'date-fns/locale';
 import Header from '@/components/Header';
 import HorarioModal from '@/components/HorarioModal';
 import { HoursSummary } from '@/components/HorasResumen';
-import { ChevronLeft, ChevronRight, Settings, Folder } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Settings, Folder, Download } from 'lucide-react';
+import { exportScheduleToExcel } from '@/utils/exportExcel';
 
 export default function ScheduleManager() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -66,6 +67,23 @@ export default function ScheduleManager() {
     });
   };
 
+  const handleDescargarPlantilla = async () => {
+    // Descarga el horario completo del trabajador seleccionado en formato Excel
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const trabajador = trabajadores.find(t => t.id === Number(selectedTrabajadorId));
+      if (trabajador) {
+        exportScheduleToExcel(trabajador, res.data);
+      }
+    } catch (err) {
+      console.error('Error al generar Excel:', err);
+      alert('No se pudo generar el archivo');
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     axios.get(`${import.meta.env.VITE_API_URL}/trabajadores`, {
@@ -89,7 +107,7 @@ export default function ScheduleManager() {
   const formatHoursToHM = (total) => {
     const hours = Math.floor(total);
     const minutes = Math.round((total - hours) * 60);
-    return `${hours}:${minutes.toString().padStart(2, '0')}h`;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
   };
 
   const groupedData = agruparHorarios(scheduleData);
@@ -189,6 +207,13 @@ export default function ScheduleManager() {
           >
             <Settings className="w-4 h-4" />
             Festivos Globales
+          </button>
+          <button
+            onClick={handleDescargarPlantilla}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4" />
+            Descargar Plantilla
           </button>
         </div>
 

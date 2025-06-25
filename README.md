@@ -75,3 +75,10 @@ En `docs/iso27001` se incluyen documentos básicos relacionados con la gestión 
 - `asset-inventory.md`
 - `incident-response-procedure.md`
 - `access-control-policy.md`
+
+## Plantillas de ejemplo
+
+En `docs/templates` encontrarás archivos CSV con el formato de las plantillas de horarios y de fichas de trabajador. Puedes modificarlos a tu gusto para generar tus propios modelos:
+
+- `plantilla_horarios.csv`
+- `plantilla_trabajador.csv`
