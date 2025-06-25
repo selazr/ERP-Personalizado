@@ -1,0 +1,2 @@
+trabajador_id,fecha,hora_inicio,hora_fin,festivo,proyecto_nombre
+1,2025-01-01,08:00,16:00,false,Proyecto Ejemplo
