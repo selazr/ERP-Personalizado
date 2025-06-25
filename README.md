@@ -87,3 +87,4 @@ En `docs/templates` encontrarás archivos CSV con el formato de las plantillas d
 `hora_entrada_1`, `hora_salida_1`, `hora_entrada_2` y `hora_salida_2`.
 Si el segundo intervalo no se usa, se deben rellenar sus columnas con `00:00`.
 Al exportar los horarios a Excel también se mostrarán estas cuatro columnas para reflejar todas las entradas y salidas registradas.
+Las horas totales y extras se muestran en formato `HH:mm`. Las filas de fines de semana se colorean de gris y las de festivos de morado para diferenciarlas en la plantilla descargable.

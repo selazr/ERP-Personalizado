@@ -1,4 +1,5 @@
-import * as XLSX from './xlsx.js';
+// Use the style-enabled build of sheetjs so we can apply colours
+import * as XLSX from 'xlsx-js-style';
 import { format, parseISO, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -8,8 +9,10 @@ function calcDuration(start, end) {
   return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
 }
 
-function round(num) {
-  return Math.round(num * 100) / 100;
+function toHM(num) {
+  const hours = Math.floor(num);
+  const minutes = Math.round((num - hours) * 60);
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
@@ -50,6 +53,7 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
   }
 
   const rows = [];
+  const rowFlags = [];
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
     const date = parseISO(fecha);
@@ -63,8 +67,8 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
       entrada1 = 'Festivo';
       salida1 = 'Festivo';
     } else if (entry.intervals.length === 0) {
-      entrada1 = '0';
-      salida1 = '0';
+      entrada1 = '';
+      salida1 = '';
     } else if (entry.intervals.length === 1) {
       entrada1 = entry.intervals[0].start;
       salida1 = entry.intervals[0].end;
@@ -90,21 +94,55 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
       'Hora de Salida 1': salida1,
       'Hora de Entrada 2': entrada2,
       'Hora de Salida 2': salida2,
-      'Horas Extra Laborables': round(extraLaborables),
-      'Horas Extra': round(extra),
-      'Total Horas': round(total)
+      'Horas Extra Laborables': toHM(extraLaborables),
+      'Horas Extra': toHM(extra),
+      'Total Horas': toHM(total)
     });
+    rowFlags.push({ isWeekend, isHoliday: entry.festivo });
   });
 
   const wb = XLSX.utils.book_new();
-  const info = [
+  const header = [
+    'Día',
+    'Hora de Entrada 1',
+    'Hora de Salida 1',
+    'Hora de Entrada 2',
+    'Hora de Salida 2',
+    'Horas Extra Laborables',
+    'Horas Extra',
+    'Total Horas'
+  ];
+
+  const aoa = [
     ['Control horas trabajador'],
     [`Nombre: ${trabajador.nombre}`],
     [`País: ${trabajador.pais || ''}`],
-    []
+    [],
+    header
   ];
-  const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
-  XLSX.utils.sheet_add_aoa(ws, info, { origin: 'A1' });
+  rows.forEach(r => {
+    aoa.push(header.map(h => r[h]));
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  const firstDataRow = 6; // 1-indexed row where data starts
+  rows.forEach((_, idx) => {
+    const flags = rowFlags[idx];
+    const rowIdx = firstDataRow + idx;
+    const color = flags.isHoliday ? 'E6E0FF' : flags.isWeekend ? 'D9D9D9' : null;
+    if (color) {
+      for (let c = 0; c < header.length; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r: rowIdx - 1, c })];
+        if (cell) {
+          cell.s = {
+            fill: { patternType: 'solid', fgColor: { rgb: color } }
+          };
+        }
+      }
+    }
+  });
+
   XLSX.utils.book_append_sheet(wb, ws, 'Horas');
   const monthName = format(monthDate, 'MMMM', { locale: es });
   XLSX.writeFile(wb, `horas_${trabajador.nombre}_${monthName}.xlsx`);
