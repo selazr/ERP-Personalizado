@@ -110,27 +110,6 @@ export default function ScheduleManager() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
   };
 
-  const calcularNocturnas = (intervals, weekend, isHoliday) => {
-    if (weekend || isHoliday) return 0;
-    let nocturnas = 0;
-    intervals.forEach(({ hora_inicio, hora_fin }) => {
-      if (!hora_inicio || !hora_fin) return;
-      const [h1, m1] = hora_inicio.split(':').map(Number);
-      const [h2, m2] = hora_fin.split(':').map(Number);
-      const start = h1 * 60 + m1;
-      const end = h2 * 60 + m2;
-      if (start < 360) {
-        const nocturnaFin = Math.min(end, 360);
-        nocturnas += (nocturnaFin - start) / 60;
-      }
-      if (end > 1320) {
-        const nocturnaInicio = Math.max(start, 1320);
-        nocturnas += (end - nocturnaInicio) / 60;
-      }
-    });
-    return nocturnas;
-  };
-
   const groupedData = agruparHorarios(scheduleData);
 
   const renderCalendar = () => {
@@ -153,7 +132,6 @@ export default function ScheduleManager() {
         const [h2, m2] = ev.hora_fin.split(':').map(Number);
         return sum + ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
       }, 0);
-      const horasNocturnas = calcularNocturnas(eventos, weekend, festivo);
 
       days.push(
         <div
@@ -179,15 +157,10 @@ export default function ScheduleManager() {
                 {formatHoursToHM(totalHoras)}
               </span>
               {eventos[0]?.proyecto_nombre && (
-                <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                   <Folder className="w-4 h-4" />
-                  <span className="truncate max-w-[6rem] font-medium">{eventos[0].proyecto_nombre}</span>
+                  <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
                 </div>
-              )}
-              {horasNocturnas > 0 && (
-                <span className="text-[10px] text-yellow-600 font-semibold mt-1">
-                  Nocturnas: {formatHoursToHM(horasNocturnas)}
-                </span>
               )}
             </>
           )}
@@ -215,9 +188,8 @@ export default function ScheduleManager() {
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto mb-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border rounded-lg p-4 bg-white shadow">
-            <div className="w-full sm:w-auto">
+        <div className="max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Trabajador:</label>
             <select
               className="w-full sm:w-64 p-3 text-base border border-gray-300 rounded bg-white shadow-sm text-black"
@@ -228,22 +200,21 @@ export default function ScheduleManager() {
                 <option key={t.id} value={t.id}>{t.nombre}</option>
               ))}
             </select>
-            </div>
-            <button
-              onClick={() => alert('Aquí iría el modal de festivos')}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
-            >
-              <Settings className="w-4 h-4" />
-              Festivos Globales
-            </button>
-            <button
-              onClick={handleDescargarPlantilla}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
-            >
-              <Download className="w-4 h-4" />
-              {`Descargar Plantilla (${format(currentDate, 'MMMM', { locale: es })})`}
-            </button>
           </div>
+          <button
+            onClick={() => alert('Aquí iría el modal de festivos')}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
+          >
+            <Settings className="w-4 h-4" />
+            Festivos Globales
+          </button>
+          <button
+            onClick={handleDescargarPlantilla}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4" />
+            {`Descargar Plantilla (${format(currentDate, 'MMMM', { locale: es })})`}
+          </button>
         </div>
 
         <div className="bg-white rounded-xl shadow-xl max-w-5xl mx-auto p-6">
