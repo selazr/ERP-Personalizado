@@ -10,6 +10,11 @@ function calcDuration(start, end) {
 }
 
 function toHM(num) {
+  // If the value is zero or undefined return an empty string so that
+  // the exported template does not display "00:00" for missing hours
+  if (num === 0 || num === undefined || num === null) {
+    return '';
+  }
   const hours = Math.floor(num);
   const minutes = Math.round((num - hours) * 60);
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
