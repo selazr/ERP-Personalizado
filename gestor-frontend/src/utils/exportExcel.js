@@ -55,17 +55,24 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
     const date = parseISO(fecha);
     const dayName = format(date, 'EEEE', { locale: es });
     const dayNum = format(date, 'd', { locale: es });
-    let entrada = '';
-    let salida = '';
+    let entrada1 = '';
+    let salida1 = '';
+    let entrada2 = '';
+    let salida2 = '';
     if (entry.festivo) {
-      entrada = 'Festivo';
-      salida = 'Festivo';
+      entrada1 = 'Festivo';
+      salida1 = 'Festivo';
     } else if (entry.intervals.length === 0) {
-      entrada = '0';
-      salida = '0';
+      entrada1 = '0';
+      salida1 = '0';
+    } else if (entry.intervals.length === 1) {
+      entrada1 = entry.intervals[0].start;
+      salida1 = entry.intervals[0].end;
     } else {
-      entrada = entry.intervals[0].start;
-      salida = entry.intervals[entry.intervals.length - 1].end;
+      entrada1 = entry.intervals[0].start;
+      salida1 = entry.intervals[0].end;
+      entrada2 = entry.intervals[1].start || '';
+      salida2 = entry.intervals[1].end || '';
     }
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
     let extraLaborables = 0;
@@ -79,8 +86,10 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
 
     rows.push({
       'Día': `${dayName} ${dayNum}`,
-      'Hora de Entrada': entrada,
-      'Hora de Salida': salida,
+      'Hora de Entrada 1': entrada1,
+      'Hora de Salida 1': salida1,
+      'Hora de Entrada 2': entrada2,
+      'Hora de Salida 2': salida2,
       'Horas Extra Laborables': round(extraLaborables),
       'Horas Extra': round(extra),
       'Total Horas': round(total)
