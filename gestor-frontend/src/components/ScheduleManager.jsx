@@ -76,7 +76,7 @@ export default function ScheduleManager() {
       });
       const trabajador = trabajadores.find(t => t.id === Number(selectedTrabajadorId));
       if (trabajador) {
-        exportScheduleToExcel(trabajador, res.data);
+        exportScheduleToExcel(trabajador, res.data, currentDate);
       }
     } catch (err) {
       console.error('Error al generar Excel:', err);
@@ -213,7 +213,7 @@ export default function ScheduleManager() {
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
           >
             <Download className="w-4 h-4" />
-            Descargar Plantilla
+            {`Descargar Plantilla (${format(currentDate, 'MMMM', { locale: es })})`}
           </button>
         </div>
 
