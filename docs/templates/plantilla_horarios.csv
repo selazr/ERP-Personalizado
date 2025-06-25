@@ -1,3 +1,3 @@
-trabajador_id,fecha,hora_entrada_1,hora_salida_1,hora_entrada_2,hora_salida_2,festivo,proyecto_nombre
+trabajador_id,fecha,entrada_1,salida_1,entrada_2,salida_2,festivo,proyecto_nombre
 1,2025-01-01,08:00,12:00,13:00,16:00,false,Proyecto Ejemplo
 1,2025-01-02,08:00,16:00,00:00,00:00,false,Proyecto Ejemplo

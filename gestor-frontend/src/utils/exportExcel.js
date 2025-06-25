@@ -59,6 +59,9 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
 
   const rows = [];
   const rowFlags = [];
+  let totalNormales = 0;
+  let totalExtras = 0;
+  let totalFestivas = 0;
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
     const date = parseISO(fecha);
@@ -84,38 +87,60 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
       salida2 = entry.intervals[1].end || '';
     }
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
-    let extraLaborables = 0;
-    let extra = 0;
+    let normales = 0;
+    let extras = 0;
+    let festivas = 0;
     const total = entry.total;
     if (entry.festivo || isWeekend) {
-      extra = total;
-    } else if (total > 8) {
-      extraLaborables = total - 8;
+      festivas = total;
+    } else {
+      normales = Math.min(total, 8);
+      if (total > 8) {
+        extras = total - 8;
+      }
     }
 
+    totalNormales += normales;
+    totalExtras += extras;
+    totalFestivas += festivas;
+
     rows.push({
-      'Día': `${dayName} ${dayNum}`,
-      'Hora de Entrada 1': entrada1,
-      'Hora de Salida 1': salida1,
-      'Hora de Entrada 2': entrada2,
-      'Hora de Salida 2': salida2,
-      'Horas Extra Laborables': toHM(extraLaborables),
-      'Horas Extra': toHM(extra),
-      'Total Horas': toHM(total)
+      'Día de la Semana': dayName,
+      'Día': dayNum,
+      'Entrada 1': entrada1,
+      'Salida 1': salida1,
+      'Entrada 2': entrada2,
+      'Salida 2': salida2,
+      'Horas Normales': toHM(normales),
+      'Horas Extras': toHM(extras),
+      'Horas Festivas': toHM(festivas)
     });
     rowFlags.push({ isWeekend, isHoliday: entry.festivo });
   });
 
+  const totalsRow = {
+    'Día de la Semana': 'Totales',
+    'Día': '',
+    'Entrada 1': '',
+    'Salida 1': '',
+    'Entrada 2': '',
+    'Salida 2': '',
+    'Horas Normales': toHM(totalNormales),
+    'Horas Extras': toHM(totalExtras),
+    'Horas Festivas': toHM(totalFestivas)
+  };
+
   const wb = XLSX.utils.book_new();
   const header = [
+    'Día de la Semana',
     'Día',
-    'Hora de Entrada 1',
-    'Hora de Salida 1',
-    'Hora de Entrada 2',
-    'Hora de Salida 2',
-    'Horas Extra Laborables',
-    'Horas Extra',
-    'Total Horas'
+    'Entrada 1',
+    'Salida 1',
+    'Entrada 2',
+    'Salida 2',
+    'Horas Normales',
+    'Horas Extras',
+    'Horas Festivas'
   ];
 
   // First row left empty as a placeholder for the company logo
@@ -130,11 +155,12 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
   rows.forEach(r => {
     aoa.push(header.map(h => r[h]));
   });
+  aoa.push(header.map(h => totalsRow[h]));
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
 
   // Increase column widths for readability
-  ws['!cols'] = header.map(() => ({ wch: 20 }));
+  ws['!cols'] = header.map(() => ({ wch: 15 }));
 
   // Reserve height for logo on the first row
   ws['!rows'] = [{ hpx: 80 }];
@@ -174,6 +200,14 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
       }
     }
   });
+
+  const totalsRowIdx = firstDataRow + rows.length;
+  for (let c = 0; c < header.length; c++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: totalsRowIdx - 1, c })];
+    if (cell) {
+      cell.s = { font: { bold: true }, border: borderStyle };
+    }
+  }
 
   XLSX.utils.book_append_sheet(wb, ws, 'Horas');
   const monthName = format(monthDate, 'MMMM', { locale: es });
