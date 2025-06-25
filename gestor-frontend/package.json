@@ -37,6 +37,7 @@
     "recharts": "^2.15.3",
     "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.0.0",
+    "exceljs": "^4.3.0",
     "tailwind-merge": "^1.14.0",
     "tailwind-variants": "^1.0.0",
     "tailwindcss-animate": "^1.0.7",

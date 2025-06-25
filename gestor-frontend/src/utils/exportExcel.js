@@ -1,5 +1,4 @@
-// Use the style-enabled build of sheetjs so we can apply colours
-import * as XLSX from 'xlsx-js-style';
+import ExcelJS from 'exceljs';
 import { format, parseISO, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -20,7 +19,7 @@ function toHM(num) {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
+export async function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
 
@@ -130,7 +129,6 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
     'Horas Festivas': toHM(totalFestivas)
   };
 
-  const wb = XLSX.utils.book_new();
   const header = [
     'Día de la Semana',
     'Día',
@@ -143,73 +141,120 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
     'Horas Festivas'
   ];
 
-  // First row left empty as a placeholder for the company logo
-  const aoa = [
-    [''],
-    ['Control horas trabajador'],
-    [`Nombre: ${trabajador.nombre}`],
-    [`País: ${trabajador.pais || ''}`],
-    [],
-    header
-  ];
-  rows.forEach(r => {
-    aoa.push(header.map(h => r[h]));
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Horas', {
+    pageSetup: {
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 1
+    }
   });
-  aoa.push(header.map(h => totalsRow[h]));
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  worksheet.columns = header.map(() => ({ width: 15 }));
 
-  // Increase column widths for readability
-  ws['!cols'] = header.map(() => ({ wch: 15 }));
+  const fontName = 'Century Gothic';
 
-  // Reserve height for logo on the first row
-  ws['!rows'] = [{ hpx: 80 }];
+  // Row for logo
+  const logoRow = worksheet.addRow([]);
+  logoRow.height = 60;
 
-  // Define a simple border style
+  // Text rows
+  const titleRow = worksheet.addRow([]);
+  titleRow.getCell(1).value = 'Control horas trabajador';
+  titleRow.font = { name: fontName, bold: true };
+
+  const nameRow = worksheet.addRow([]);
+  nameRow.getCell(1).value = `Nombre: ${trabajador.nombre}`;
+  nameRow.font = { name: fontName };
+
+  const countryRow = worksheet.addRow([]);
+  countryRow.getCell(1).value = `País: ${trabajador.pais || ''}`;
+  countryRow.font = { name: fontName };
+
+  const companyRow = worksheet.addRow([]);
+  companyRow.getCell(1).value = `Empresa: ${trabajador.empresa || ''}`;
+  companyRow.font = { name: fontName, bold: true };
+
+  const monthRow = worksheet.addRow([]);
+  monthRow.getCell(1).value = format(monthDate, 'MMMM yyyy', { locale: es });
+  monthRow.font = { name: fontName };
+
+  worksheet.addRow([]); // empty row before headers
+
+  const headerRow = worksheet.addRow(header);
+  headerRow.font = { name: fontName, bold: true };
+
   const borderStyle = {
-    top: { style: 'thin', color: { rgb: '000000' } },
-    bottom: { style: 'thin', color: { rgb: '000000' } },
-    left: { style: 'thin', color: { rgb: '000000' } },
-    right: { style: 'thin', color: { rgb: '000000' } }
+    top: { style: 'thin' },
+    bottom: { style: 'thin' },
+    left: { style: 'thin' },
+    right: { style: 'thin' }
   };
 
-  const headerRowIdx = 6;
-  for (let c = 0; c < header.length; c++) {
-    const cell = ws[XLSX.utils.encode_cell({ r: headerRowIdx - 1, c })];
-    if (cell) {
-      cell.s = {
-        font: { bold: true },
-        border: borderStyle
-      };
-    }
-  }
-
-  const firstDataRow = 7; // 1-indexed row where data starts (after logo row)
-  rows.forEach((_, idx) => {
-    const flags = rowFlags[idx];
-    const rowIdx = firstDataRow + idx;
-    const color = flags.isHoliday ? 'E6E0FF' : flags.isWeekend ? 'D9D9D9' : null;
-    for (let c = 0; c < header.length; c++) {
-      const cell = ws[XLSX.utils.encode_cell({ r: rowIdx - 1, c })];
-      if (cell) {
-        cell.s = cell.s || {};
-        if (color) {
-          cell.s.fill = { patternType: 'solid', fgColor: { rgb: color } };
-        }
-        cell.s.border = borderStyle;
-      }
+  headerRow.eachCell((cell, colNumber) => {
+    cell.border = { ...borderStyle };
+    if (colNumber === 6) {
+      cell.border = { ...borderStyle, right: { style: 'medium' } };
     }
   });
 
-  const totalsRowIdx = firstDataRow + rows.length;
-  for (let c = 0; c < header.length; c++) {
-    const cell = ws[XLSX.utils.encode_cell({ r: totalsRowIdx - 1, c })];
-    if (cell) {
-      cell.s = { font: { bold: true }, border: borderStyle };
-    }
-  }
+  rows.forEach((r, idx) => {
+    const row = worksheet.addRow(header.map(h => r[h]));
+    row.font = { name: fontName };
+    const flags = rowFlags[idx];
+    const color = flags.isHoliday ? 'E6E0FF' : flags.isWeekend ? 'D9D9D9' : null;
+    row.eachCell((cell, colNumber) => {
+      if (color) {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: color }
+        };
+      }
+      cell.border = { ...borderStyle };
+      if (colNumber === 6) {
+        cell.border = { ...borderStyle, right: { style: 'medium' } };
+      }
+    });
+  });
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Horas');
+  const totals = worksheet.addRow(header.map(h => totalsRow[h]));
+  totals.font = { name: fontName, bold: true };
+  totals.eachCell((cell, colNumber) => {
+    cell.border = { ...borderStyle };
+    if (colNumber === 6) {
+      cell.border = { ...borderStyle, right: { style: 'medium' } };
+    }
+  });
+
+  // Add logo image if available
+  const logoBase64 =
+    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDABALDA0KCg4PCwsPEBAVFhgaHhwcGCkiJiIpKygpKyw6PkAwOjhAREhISkhMXFlhaGJcXVlEQE9MV0xsdnYBDA0NFxAQGB4hIBMhIR0nKycrKz44PkZKS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAFAAUAMBIgACEQEDEQH/xAAXAAADAQAAAAAAAAAAAAAAAAAAAQID/8QAFhABAQEAAAAAAAAAAAAAAAAAAAECEv/aAAwDAQACEAMQAAAAnP/EABgQAQEBAQEAAAAAAAAAAAAAAAECABED/9oACAEBAAEFAlkJ7NP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/AT//xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/AT//xAAaEAACAwEBAAAAAAAAAAAAAAABEQACEhMi/9oACAEBAAY/Ah6/Z//EABkQAQEAAwEAAAAAAAAAAAAAAAERACExQf/aAAgBAQABPyHCJZGw2ssmv//Z';
+  const imageId = workbook.addImage({ base64: logoBase64, extension: 'jpeg' });
+  worksheet.addImage(imageId, {
+    tl: { col: 0, row: 0 },
+    ext: { width: 160, height: 60 }
+  });
+
+  // Apply global font
+  worksheet.eachRow(r => {
+    r.eachCell(c => {
+      c.font = c.font ? { ...c.font, name: fontName } : { name: fontName };
+    });
+  });
+
   const monthName = format(monthDate, 'MMMM', { locale: es });
-  XLSX.writeFile(wb, `horas_${trabajador.nombre}_${monthName}.xlsx`);
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type:
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `horas_${trabajador.nombre}_${monthName}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
+
