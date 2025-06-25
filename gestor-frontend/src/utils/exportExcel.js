@@ -22,6 +22,7 @@ function toHM(num) {
 export async function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
+  
 
   const filtered = horarios.filter(h => {
     const d = parseISO(h.fecha);
@@ -106,13 +107,13 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     rows.push({
       'Día de la Semana': dayName,
       'Día': dayNum,
-      'Entrada 1': entrada1,
-      'Salida 1': salida1,
-      'Entrada 2': entrada2,
-      'Salida 2': salida2,
-      'Horas Normales': toHM(normales),
-      'Horas Extras': toHM(extras),
-      'Horas Festivas': toHM(festivas)
+      'Entrada': entrada1,
+      'Salida': salida1,
+      'Entrada': entrada2,
+      'Salida': salida2,
+      'Normales': toHM(normales),
+      'Extras': toHM(extras),
+      'Festivas': toHM(festivas)
     });
     rowFlags.push({ isWeekend, isHoliday: entry.festivo });
   });
@@ -120,25 +121,25 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
   const totalsRow = {
     'Día de la Semana': 'Totales',
     'Día': '',
-    'Entrada 1': '',
-    'Salida 1': '',
-    'Entrada 2': '',
-    'Salida 2': '',
-    'Horas Normales': toHM(totalNormales),
-    'Horas Extras': toHM(totalExtras),
-    'Horas Festivas': toHM(totalFestivas)
+    'Entrada': '',
+    'Salida': '',
+    'Entrada': '',
+    'Salida': '',
+    'Normales': toHM(totalNormales),
+    'Extras': toHM(totalExtras),
+    'Festivas': toHM(totalFestivas)
   };
 
   const header = [
     'Día de la Semana',
     'Día',
-    'Entrada 1',
-    'Salida 1',
-    'Entrada 2',
-    'Salida 2',
-    'Horas Normales',
-    'Horas Extras',
-    'Horas Festivas'
+    'Entrada',
+    'Salida',
+    'Entrada',
+    'Salida',
+    'Normales',
+    'Extras',
+    'Festivas'
   ];
 
   const workbook = new ExcelJS.Workbook();
@@ -229,9 +230,20 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
   });
 
   // Add logo image if available
-  const logoBase64 =
-    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDABALDA0KCg4PCwsPEBAVFhgaHhwcGCkiJiIpKygpKyw6PkAwOjhAREhISkhMXFlhaGJcXVlEQE9MV0xsdnYBDA0NFxAQGB4hIBMhIR0nKycrKz44PkZKS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAFAAUAMBIgACEQEDEQH/xAAXAAADAQAAAAAAAAAAAAAAAAAAAQID/8QAFhABAQEAAAAAAAAAAAAAAAAAAAECEv/aAAwDAQACEAMQAAAAnP/EABgQAQEBAQEAAAAAAAAAAAAAAAECABED/9oACAEBAAEFAlkJ7NP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/AT//xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/AT//xAAaEAACAwEBAAAAAAAAAAAAAAABEQACEhMi/9oACAEBAAY/Ah6/Z//EABkQAQEAAwEAAAAAAAAAAAAAAAERACExQf/aAAgBAQABPyHCJZGw2ssmv//Z';
-  const imageId = workbook.addImage({ base64: logoBase64, extension: 'jpeg' });
+  async function loadImageAsBase64(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]); // sólo el base64 sin encabezado
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  const logoBase64 = await loadImageAsBase64('/lxh.jpg'); // desde public/
+const imageId = workbook.addImage({ base64: logoBase64, extension: 'jpeg' });
+
   worksheet.addImage(imageId, {
     tl: { col: 0, row: 0 },
     ext: { width: 160, height: 60 }

@@ -10,3 +10,5 @@ db/*.sql
 
 # Generated templates
 docs/templates/plantilla_trabajador.xlsx
+
+contabilidad
