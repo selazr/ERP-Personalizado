@@ -84,8 +84,8 @@ En `docs/templates` encontrarás archivos con el formato de las plantillas de ho
 - `plantilla_trabajador.xlsx` (generado con `npm --prefix gestor-frontend run worker-template`)
 
 `plantilla_horarios.csv` incluye columnas para hasta dos intervalos de trabajo:
-`hora_entrada_1`, `hora_salida_1`, `hora_entrada_2` y `hora_salida_2`.
+`entrada_1`, `salida_1`, `entrada_2` y `salida_2`.
 Si el segundo intervalo no se usa, se deben rellenar sus columnas con `00:00`.
-Al exportar los horarios a Excel también se mostrarán estas cuatro columnas para reflejar todas las entradas y salidas registradas.
-Las horas totales y extras se muestran en formato `HH:mm`. Las filas de fines de semana se colorean de gris y las de festivos de morado para diferenciarlas en la plantilla descargable.
-Las columnas del Excel se generan ahora con una anchura mayor y con bordes en todas las celdas. La primera fila queda vacía para que puedas colocar el logotipo de la empresa. Toda la lógica de exportación se encuentra en `gestor-frontend/src/utils/exportExcel.js`.
+Al exportar los horarios a Excel se muestran estas cuatro columnas junto con las horas normales, extras y festivas, y una fila de totales al final.
+Las horas se muestran en formato `HH:mm`. Las filas de fines de semana se colorean de gris y las de festivos de morado para diferenciarlas en la plantilla descargable.
+Las columnas del Excel se generan con una anchura moderada y con bordes en todas las celdas. La primera fila queda vacía para que puedas colocar el logotipo de la empresa. Toda la lógica de exportación se encuentra en `gestor-frontend/src/utils/exportExcel.js`.
