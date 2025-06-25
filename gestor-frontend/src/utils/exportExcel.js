@@ -55,13 +55,17 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
     const date = parseISO(fecha);
     const dayName = format(date, 'EEEE', { locale: es });
     const dayNum = format(date, 'd', { locale: es });
-    let horariosText = '';
+    let entrada = '';
+    let salida = '';
     if (entry.festivo) {
-      horariosText = 'Festivo';
+      entrada = 'Festivo';
+      salida = 'Festivo';
     } else if (entry.intervals.length === 0) {
-      horariosText = '0';
+      entrada = '0';
+      salida = '0';
     } else {
-      horariosText = entry.intervals.map(i => `${i.start}-${i.end}`).join(', ');
+      entrada = entry.intervals[0].start;
+      salida = entry.intervals[entry.intervals.length - 1].end;
     }
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
     let extraLaborables = 0;
@@ -75,7 +79,8 @@ export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date
 
     rows.push({
       'Día': `${dayName} ${dayNum}`,
-      'Horario': horariosText,
+      'Hora de Entrada': entrada,
+      'Hora de Salida': salida,
       'Horas Extra Laborables': round(extraLaborables),
       'Horas Extra': round(extra),
       'Total Horas': round(total)
