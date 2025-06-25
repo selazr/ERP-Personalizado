@@ -12,8 +12,16 @@ function round(num) {
   return Math.round(num * 100) / 100;
 }
 
-export function exportScheduleToExcel(trabajador, horarios) {
-  const sorted = [...horarios].sort((a, b) => {
+export function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+
+  const filtered = horarios.filter(h => {
+    const d = parseISO(h.fecha);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
     if (a.fecha === b.fecha) {
       return a.hora_inicio.localeCompare(b.hora_inicio);
     }
@@ -32,13 +40,29 @@ export function exportScheduleToExcel(trabajador, horarios) {
     dayData[fecha].intervals.push({ start: hora_inicio, end: hora_fin });
   });
 
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const iso = date.toISOString().slice(0, 10);
+    if (!dayData[iso]) {
+      dayData[iso] = { total: 0, festivo: false, intervals: [] };
+    }
+  }
+
   const rows = [];
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
     const date = parseISO(fecha);
     const dayName = format(date, 'EEEE', { locale: es });
     const dayNum = format(date, 'd', { locale: es });
-    const horariosText = entry.intervals.map(i => `${i.start}-${i.end}`).join(', ');
+    let horariosText = '';
+    if (entry.festivo) {
+      horariosText = 'Festivo';
+    } else if (entry.intervals.length === 0) {
+      horariosText = '0';
+    } else {
+      horariosText = entry.intervals.map(i => `${i.start}-${i.end}`).join(', ');
+    }
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
     let extraLaborables = 0;
     let extra = 0;
@@ -68,5 +92,6 @@ export function exportScheduleToExcel(trabajador, horarios) {
   const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
   XLSX.utils.sheet_add_aoa(ws, info, { origin: 'A1' });
   XLSX.utils.book_append_sheet(wb, ws, 'Horas');
-  XLSX.writeFile(wb, `horas_${trabajador.nombre}.xlsx`);
+  const monthName = format(monthDate, 'MMMM', { locale: es });
+  XLSX.writeFile(wb, `horas_${trabajador.nombre}_${monthName}.xlsx`);
 }
