@@ -8,4 +8,5 @@ dist/
 # Database dumps
 db/*.sql
 
-contabilidad
+# Generated templates
+docs/templates/plantilla_trabajador.xlsx

@@ -1,2 +1,0 @@
-nombre,dni,correo_electronico,telefono,tipo_trabajador,grupo,categoria,iban,nss,fecha_alta,fecha_baja,horas_contratadas,salario_neto,salario_bruto,direccion,desplazamiento,fecha_desplazamiento,cliente,a1,fecha_limosa,condiciones,pais,epis,fecha_epis,empresa
-Juan Perez,12345678A,juan@example.com,600000000,Fijo,G1,Oficial 1,ES12345678901234567890,123456789012,2025-01-01,,40,1600,1800,"Calle Falsa 123",false,,Empresa X,false,,"Contrato indefinido",España,false,,MiEmpresa

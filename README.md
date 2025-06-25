@@ -78,10 +78,10 @@ En `docs/iso27001` se incluyen documentos básicos relacionados con la gestión 
 
 ## Plantillas de ejemplo
 
-En `docs/templates` encontrarás archivos CSV con el formato de las plantillas de horarios y de fichas de trabajador. Puedes modificarlos a tu gusto para generar tus propios modelos:
+En `docs/templates` encontrarás archivos con el formato de las plantillas de horarios. Puedes modificarlos a tu gusto para generar tus propios modelos. La plantilla de trabajador en Excel se puede crear ejecutando el script proporcionado:
 
 - `plantilla_horarios.csv`
-- `plantilla_trabajador.csv`
+- `plantilla_trabajador.xlsx` (generado con `npm --prefix gestor-frontend run worker-template`)
 
 `plantilla_horarios.csv` incluye columnas para hasta dos intervalos de trabajo:
 `hora_entrada_1`, `hora_salida_1`, `hora_entrada_2` y `hora_salida_2`.
