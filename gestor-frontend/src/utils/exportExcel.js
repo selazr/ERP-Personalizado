@@ -8,6 +8,52 @@ function calcDuration(start, end) {
   return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
 }
 
+function classifyIntervals(intervals, date, isHoliday) {
+  const day = getDay(parseISO(date));
+  const isWeekend = day === 0 || day === 6;
+  if (isWeekend || isHoliday) {
+    const festivas = intervals.reduce(
+      (sum, { start, end }) => sum + calcDuration(start, end),
+      0
+    );
+    return { normales: 0, extras: 0, nocturnas: 0, festivas };
+  }
+
+  let nocturnas = 0;
+  let diurnas = 0;
+
+  intervals.forEach(({ start, end }) => {
+    const [h1, m1] = start.split(':').map(Number);
+    const [h2, m2] = end.split(':').map(Number);
+    let startMin = h1 * 60 + m1;
+    let endMin = h2 * 60 + m2;
+    if (startMin < 360) {
+      const noctEnd = Math.min(endMin, 360);
+      nocturnas += (noctEnd - startMin) / 60;
+      startMin = noctEnd;
+    }
+    if (endMin > 1320) {
+      const noctStart = Math.max(startMin, 1320);
+      nocturnas += (endMin - noctStart) / 60;
+      endMin = Math.min(endMin, 1320);
+    }
+    if (endMin > startMin) {
+      diurnas += (endMin - startMin) / 60;
+    }
+  });
+
+  let normales = 0;
+  let extras = 0;
+  if (diurnas > 8) {
+    normales = 8;
+    extras = diurnas - 8;
+  } else {
+    normales = diurnas;
+  }
+
+  return { normales, extras, nocturnas, festivas: 0 };
+}
+
 function toHM(num) {
   // If the value is zero or undefined return an empty string so that
   // the exported template does not display "00:00" for missing hours
@@ -61,6 +107,7 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
   const rowFlags = [];
   let totalNormales = 0;
   let totalExtras = 0;
+  let totalNocturnas = 0;
   let totalFestivas = 0;
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
@@ -87,21 +134,15 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
       salida2 = entry.intervals[1].end || '';
     }
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
-    let normales = 0;
-    let extras = 0;
-    let festivas = 0;
-    const total = entry.total;
-    if (entry.festivo || isWeekend) {
-      festivas = total;
-    } else {
-      normales = Math.min(total, 8);
-      if (total > 8) {
-        extras = total - 8;
-      }
-    }
+    const { normales, extras, nocturnas, festivas } = classifyIntervals(
+      entry.intervals,
+      fecha,
+      entry.festivo
+    );
 
     totalNormales += normales;
     totalExtras += extras;
+    totalNocturnas += nocturnas;
     totalFestivas += festivas;
 
     rows.push({
@@ -113,6 +154,7 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
       'Salida': salida2,
       'Normales': toHM(normales),
       'Extras': toHM(extras),
+      'Nocturnas': toHM(nocturnas),
       'Festivas': toHM(festivas)
     });
     rowFlags.push({ isWeekend, isHoliday: entry.festivo });
@@ -127,6 +169,7 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     'Salida': '',
     'Normales': toHM(totalNormales),
     'Extras': toHM(totalExtras),
+    'Nocturnas': toHM(totalNocturnas),
     'Festivas': toHM(totalFestivas)
   };
 
@@ -139,6 +182,7 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     'Salida',
     'Normales',
     'Extras',
+    'Nocturnas',
     'Festivas'
   ];
 
@@ -159,27 +203,53 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
   // Row for logo
   const logoRow = worksheet.addRow([]);
   logoRow.height = 60;
+  worksheet.mergeCells(logoRow.number, 1, logoRow.number, header.length);
+  logoRow.eachCell((cell) => {
+    cell.border = {
+      top: { style: 'thin' },
+      bottom: { style: 'thin' },
+      left: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+
 
   // Text rows
   const titleRow = worksheet.addRow([]);
   titleRow.getCell(1).value = 'Control horas trabajador';
   titleRow.font = { name: fontName, bold: true };
+  worksheet.mergeCells(titleRow.number, 1, titleRow.number, header.length);
 
   const nameRow = worksheet.addRow([]);
   nameRow.getCell(1).value = `Nombre: ${trabajador.nombre}`;
-  nameRow.font = { name: fontName };
+  nameRow.font = { name: fontName, size: 14 };
+  worksheet.mergeCells(nameRow.number, 1, nameRow.number, header.length);
 
   const countryRow = worksheet.addRow([]);
   countryRow.getCell(1).value = `País: ${trabajador.pais || ''}`;
   countryRow.font = { name: fontName };
+  worksheet.mergeCells(countryRow.number, 1, countryRow.number, header.length);
 
   const companyRow = worksheet.addRow([]);
   companyRow.getCell(1).value = `Empresa: ${trabajador.empresa || ''}`;
   companyRow.font = { name: fontName, bold: true };
+  worksheet.mergeCells(companyRow.number, 1, companyRow.number, header.length);
 
   const monthRow = worksheet.addRow([]);
   monthRow.getCell(1).value = format(monthDate, 'MMMM yyyy', { locale: es });
   monthRow.font = { name: fontName };
+  worksheet.mergeCells(monthRow.number, 1, monthRow.number, header.length);
+
+  const infoRows = [titleRow, nameRow, countryRow, companyRow, monthRow];
+  infoRows.forEach((r, idx) => {
+    r.eachCell((cell, col) => {
+      const top = idx === 0 ? { style: 'thin' } : undefined;
+      const bottom = idx === infoRows.length - 1 ? { style: 'thin' } : undefined;
+      const left = col === 1 ? { style: 'thin' } : undefined;
+      const right = col === header.length ? { style: 'thin' } : undefined;
+      cell.border = { top, bottom, left, right };
+    });
+  });
 
   worksheet.addRow([]); // empty row before headers
 
