@@ -92,3 +92,4 @@ Si el segundo intervalo no se usa, se deben rellenar sus columnas con `00:00`.
 Al exportar los horarios a Excel se muestran estas cuatro columnas junto con las horas normales, extras, nocturnas y festivas, y una fila de totales al final.
 Las horas se muestran en formato `HH:mm`. Las filas de fines de semana se colorean de gris y las de festivos de morado para diferenciarlas en la plantilla descargable.
 Las columnas del Excel se generan con una anchura moderada y con bordes en todas las celdas. El área superior ahora incluye un recuadro con la información del trabajador y un recuadro separado para el logotipo. Toda la lógica de exportación se encuentra en `gestor-frontend/src/utils/exportExcel.js`.
+Los cálculos de horas contemplan ahora intervalos que cruzan la medianoche, de forma que un rango como `22:00` a `04:00` se suma correctamente al total y a las horas nocturnas.

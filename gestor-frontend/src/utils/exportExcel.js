@@ -5,7 +5,12 @@ import { es } from 'date-fns/locale';
 function calcDuration(start, end) {
   const [h1, m1] = start.split(':').map(Number);
   const [h2, m2] = end.split(':').map(Number);
-  return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+  let s = h1 * 60 + m1;
+  let e = h2 * 60 + m2;
+  if (e <= s) {
+    e += 24 * 60; // crosses midnight
+  }
+  return (e - s) / 60;
 }
 
 function classifyIntervals(intervals, date, isHoliday) {
@@ -27,6 +32,9 @@ function classifyIntervals(intervals, date, isHoliday) {
     const [h2, m2] = end.split(':').map(Number);
     let startMin = h1 * 60 + m1;
     let endMin = h2 * 60 + m2;
+    if (endMin <= startMin) {
+      endMin += 24 * 60; // crosses midnight
+    }
     if (startMin < 360) {
       const noctEnd = Math.min(endMin, 360);
       nocturnas += (noctEnd - startMin) / 60;
