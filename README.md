@@ -15,6 +15,9 @@ Este proyecto es un ERP sencillo para gestionar trabajadores y programar sus hor
    DB_PASSWORD=tu_contraseña
    DB_NAME=gestor_horarios
    PORT=3001 # opcional
+   # CORS_ORIGIN admite una lista separada por comas. Si no se define,
+   # se permiten por defecto http://localhost:5173, http://localhost:3000
+   # y https://lxherp.es
    CORS_ORIGIN=http://localhost:5173,http://localhost:3000 # opcional
    ```
 3. Inicia el servidor ejecutando:
