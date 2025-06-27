@@ -19,24 +19,24 @@ if (missingEnv.length > 0) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-// LOCAL
-//✅ CORS: permite llamadas desde frontend en local
-/*app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://lxherp.es'
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));*/
+// Configuración CORS
+// Si se define CORS_ORIGIN se toma dicha lista separada por comas, de lo
+// contrario se utilizan dominios habituales de desarrollo y producción.
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://lxherp.es'
+    ];
 
-//PRODUCCION
-//✅ CORS: permite llamadas desde frontend en producción
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://lxherp.es',
-  credentials: true
-})); 
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    optionsSuccessStatus: 200
+  })
+);
 
 
 // Middlewares
