@@ -94,6 +94,20 @@ exports.createOrUpdateHorarios = async (req, res) => {
         horanegativa,
         dianegativo
       });
+    } else if (horanegativa > 0 || dianegativo) {
+      // Registrar horas o día negativo sin intervalos
+      nuevos.push({
+        trabajador_id,
+        fecha,
+        hora_inicio: '00:00:00',
+        hora_fin: '00:00:00',
+        festivo: false,
+        vacaciones: false,
+        bajamedica: false,
+        proyecto_nombre: proyecto_nombre || null,
+        horanegativa,
+        dianegativo,
+      });
     }
 
     if (nuevos.length > 0) {
