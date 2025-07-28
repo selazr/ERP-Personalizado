@@ -13,9 +13,16 @@ function calcDuration(start, end) {
   return (e - s) / 60;
 }
 
-function classifyIntervals(intervals, date, isHoliday) {
+function classifyIntervals(intervals, date, isHoliday, isVacation) {
   const day = getDay(parseISO(date));
   const isWeekend = day === 0 || day === 6;
+  if (isVacation) {
+    const extras = intervals.reduce(
+      (sum, { start, end }) => sum + calcDuration(start, end),
+      0
+    );
+    return { normales: 0, extras, nocturnas: 0, festivas: 0 };
+  }
   if (isWeekend || isHoliday) {
     const festivas = intervals.reduce(
       (sum, { start, end }) => sum + calcDuration(start, end),
@@ -92,13 +99,14 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
 
   const dayData = {};
   sorted.forEach((h) => {
-    const { fecha, hora_inicio, hora_fin, festivo } = h;
+    const { fecha, hora_inicio, hora_fin, festivo, vacaciones } = h;
     const dur = calcDuration(hora_inicio, hora_fin);
     if (!dayData[fecha]) {
-      dayData[fecha] = { total: 0, festivo: false, intervals: [] };
+      dayData[fecha] = { total: 0, festivo: false, vacaciones: false, intervals: [] };
     }
     dayData[fecha].total += dur;
     dayData[fecha].festivo = dayData[fecha].festivo || festivo;
+    dayData[fecha].vacaciones = dayData[fecha].vacaciones || vacaciones;
     dayData[fecha].intervals.push({ start: hora_inicio, end: hora_fin });
   });
 
@@ -107,7 +115,7 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     const date = new Date(year, month, d);
     const iso = date.toISOString().slice(0, 10);
     if (!dayData[iso]) {
-      dayData[iso] = { total: 0, festivo: false, intervals: [] };
+      dayData[iso] = { total: 0, festivo: false, vacaciones: false, intervals: [] };
     }
   }
 
@@ -129,6 +137,9 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     if (entry.festivo) {
       entrada1 = 'Festivo';
       salida1 = 'Festivo';
+    } else if (entry.vacaciones) {
+      entrada1 = 'Vacaciones';
+      salida1 = 'Vacaciones';
     } else if (entry.intervals.length === 0) {
       entrada1 = '';
       salida1 = '';
@@ -145,7 +156,8 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     const { normales, extras, nocturnas, festivas } = classifyIntervals(
       entry.intervals,
       fecha,
-      entry.festivo
+      entry.festivo,
+      entry.vacaciones
     );
 
     totalNormales += normales;
@@ -165,7 +177,7 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
       'Nocturnas': toHM(nocturnas),
       'Festivas': toHM(festivas)
     });
-    rowFlags.push({ isWeekend, isHoliday: entry.festivo });
+    rowFlags.push({ isWeekend, isHoliday: entry.festivo, isVacation: entry.vacaciones });
   });
 
   const totalsRow = {
@@ -282,7 +294,13 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     const row = worksheet.addRow(header.map(h => r[h]));
     row.font = { name: fontName };
     const flags = rowFlags[idx];
-    const color = flags.isHoliday ? 'E6E0FF' : flags.isWeekend ? 'D9D9D9' : null;
+    const color = flags.isHoliday
+      ? 'E6E0FF'
+      : flags.isVacation
+      ? 'E6FFE6'
+      : flags.isWeekend
+      ? 'D9D9D9'
+      : null;
     row.eachCell((cell, colNumber) => {
       if (color) {
         cell.fill = {

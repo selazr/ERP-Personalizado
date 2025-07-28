@@ -23,12 +23,13 @@ export default function ScheduleManager() {
 
   const agruparHorarios = (horarios) => {
     const result = {};
-    horarios.forEach(({ fecha, hora_inicio, hora_fin, festivo, proyecto_nombre }) => {
+    horarios.forEach(({ fecha, hora_inicio, hora_fin, festivo, vacaciones, proyecto_nombre }) => {
       if (!result[fecha]) {
-        result[fecha] = { intervals: [], isHoliday: false };
+        result[fecha] = { intervals: [], isHoliday: false, isVacation: false };
       }
       result[fecha].intervals.push({ hora_inicio, hora_fin, proyecto_nombre });
       if (festivo) result[fecha].isHoliday = true;
+      if (vacaciones) result[fecha].isVacation = true;
     });
     return result;
   };
@@ -40,18 +41,20 @@ export default function ScheduleManager() {
     const grouped = groupedData[fecha] || {};
     const eventos = grouped.intervals || [];
     const isHoliday = grouped.isHoliday || false;
+    const isVacation = grouped.isVacation || false;
 
-    setSelectedDay({ fecha, eventos, isHoliday });
+    setSelectedDay({ fecha, eventos, isHoliday, isVacation });
     setIsModalOpen(true);
   };
 
-  const handleGuardarHorarios = ({ fecha, intervals, festivo, proyecto_nombre }) => {
+  const handleGuardarHorarios = ({ fecha, intervals, festivo, vacaciones, proyecto_nombre }) => {
     const token = localStorage.getItem('token');
     axios.post(`${import.meta.env.VITE_API_URL}/horarios`, {
       trabajador_id: selectedTrabajadorId,
       fecha,
       horarios: intervals,
       festivo,
+      vacaciones,
       proyecto_nombre
     }, {
       headers: { Authorization: `Bearer ${token}` }
@@ -61,9 +64,10 @@ export default function ScheduleManager() {
         ...intervals.map(i => ({
           ...i,
           fecha,
-          proyecto_nombre
+          proyecto_nombre,
+          vacaciones
         })),
-        ...(festivo ? [{ fecha, festivo }] : [])
+        ...(festivo || vacaciones ? [{ fecha, festivo, vacaciones }] : [])
       ]);
     });
   };
@@ -125,6 +129,7 @@ export default function ScheduleManager() {
       const grouped = groupedData[dateKey];
       const eventos = grouped?.intervals || [];
       const festivo = grouped?.isHoliday || false;
+      const vacaciones = grouped?.isVacation || false;
       const weekend = date.getDay() === 6 || date.getDay() === 0;
 
       const totalHoras = eventos.reduce((sum, ev) => {
@@ -141,8 +146,9 @@ export default function ScheduleManager() {
           className={`
             cursor-pointer border rounded-lg h-24 w-full p-2 text-sm font-medium flex flex-col items-center justify-center relative transition-all duration-200
             ${festivo ? 'bg-purple-100 text-purple-700' : ''}
-            ${totalHoras > 0 && !festivo ? 'bg-blue-100 text-blue-700' : ''}
-            ${weekend && !festivo && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
+            ${vacaciones ? 'bg-green-100 text-green-700' : ''}
+            ${totalHoras > 0 && !festivo && !vacaciones ? 'bg-blue-100 text-blue-700' : ''}
+            ${weekend && !festivo && !vacaciones && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
             hover:shadow-md
           `}
         >
@@ -151,8 +157,11 @@ export default function ScheduleManager() {
           {festivo && (
             <span className="text-xs font-semibold mt-2">Festivo</span>
           )}
+          {vacaciones && !festivo && (
+            <span className="text-xs font-semibold mt-2">Vacaciones</span>
+          )}
 
-          {totalHoras > 0 && !festivo && (
+          {totalHoras > 0 && !festivo && !vacaciones && (
             <>
               <span className="text-base font-bold">
                 {formatHoursToHM(totalHoras)}
@@ -257,6 +266,7 @@ export default function ScheduleManager() {
         fecha={selectedDay?.fecha}
         initialData={selectedDay?.eventos || []}
         initialFestivo={selectedDay?.isHoliday || false}
+        initialVacaciones={selectedDay?.isVacation || false}
       />
     </>
   );
