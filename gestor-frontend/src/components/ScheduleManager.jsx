@@ -8,7 +8,11 @@ import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { HoursSummary } from '@/components/HorasResumen';
 import { YearHoursSummary } from '@/components/HorasResumenAnual';
 import { ChevronLeft, ChevronRight, Settings, Folder, Download } from 'lucide-react';
-import { exportScheduleToExcel, exportAllSchedulesToExcel } from '@/utils/exportExcel';
+import {
+  exportScheduleToExcel,
+  exportAllSchedulesToExcel,
+  exportYearScheduleToExcel
+} from '@/utils/exportExcel';
 
 export default function ScheduleManager() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -86,6 +90,25 @@ export default function ScheduleManager() {
       const trabajador = trabajadores.find(t => t.id === Number(selectedTrabajadorId));
       if (trabajador) {
         exportScheduleToExcel(trabajador, res.data, currentDate);
+      }
+    } catch (err) {
+      console.error('Error al generar Excel:', err);
+      alert('No se pudo generar el archivo');
+    }
+  };
+
+  const handleDescargarPlantillaAnual = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const trabajador = trabajadores.find(
+        t => t.id === Number(selectedTrabajadorId)
+      );
+      if (trabajador) {
+        exportYearScheduleToExcel(trabajador, res.data, currentDate);
       }
     } catch (err) {
       console.error('Error al generar Excel:', err);
@@ -240,13 +263,6 @@ export default function ScheduleManager() {
             Festivos Globales
           </button>
           <button
-            onClick={handleDescargarPlantilla}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
-          >
-            <Download className="w-4 h-4" />
-            {`Descargar Plantilla (${format(currentDate, 'MMMM', { locale: es })})`}
-          </button>
-          <button
             onClick={handleDescargarTodasPlantillas}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
           >
@@ -288,8 +304,16 @@ export default function ScheduleManager() {
         </div>
 
         <div className="max-w-5xl mx-auto">
-          <HoursSummary currentDate={currentDate} scheduleData={agruparHorarios(scheduleData)} />
-          <YearHoursSummary currentDate={currentDate} scheduleData={agruparHorarios(scheduleData)} />
+          <HoursSummary
+            currentDate={currentDate}
+            scheduleData={agruparHorarios(scheduleData)}
+            onDownload={handleDescargarPlantilla}
+          />
+          <YearHoursSummary
+            currentDate={currentDate}
+            scheduleData={agruparHorarios(scheduleData)}
+            onDownload={handleDescargarPlantillaAnual}
+          />
         </div>
       </div>
       <HorarioModal
