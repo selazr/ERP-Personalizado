@@ -6,7 +6,7 @@ import { getYear, getMonth, getDay, parseISO } from 'date-fns';
 import { calculateTotalHoursFromIntervals, formatHoursToHM } from '../utils/utils';
 
 
-function calcularTipoHoras(intervals, dateKey, isFestivo) {
+function calcularTipoHoras(intervals, dateKey, isFestivo, isVacaciones) {
   let totalDiario = 0;
   let normales = 0,
     extras = 0,
@@ -25,6 +25,11 @@ function calcularTipoHoras(intervals, dateKey, isFestivo) {
     let total = (end - start) / 60;
 
     const dia = getDay(parseISO(dateKey));
+
+    if (isVacaciones) {
+      extras += total;
+      return;
+    }
 
     if (dia === 0 || dia === 6 || isFestivo) {
       festivas += total;
@@ -66,7 +71,12 @@ export function HoursSummary({ currentDate, scheduleData }) {
   Object.entries(scheduleData).forEach(([dateKey, entry]) => {
     const d = parseISO(dateKey);
     if (getYear(d) === year && getMonth(d) === month) {
-      const tipo = calcularTipoHoras(entry.intervals || [], dateKey, entry.isHoliday);
+      const tipo = calcularTipoHoras(
+        entry.intervals || [],
+        dateKey,
+        entry.isHoliday,
+        entry.isVacation
+      );
       resumen.normales += tipo.normales;
       resumen.extras += tipo.extras;
       resumen.nocturnas += tipo.nocturnas;

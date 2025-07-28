@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    vacaciones: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     proyecto_nombre: {
       type: DataTypes.STRING,
       allowNull: true,

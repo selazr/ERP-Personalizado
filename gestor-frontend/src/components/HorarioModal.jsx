@@ -3,15 +3,17 @@ import { Dialog } from '@headlessui/react';
 import { format, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialData = [], initialFestivo = false }) {
+export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialData = [], initialFestivo = false, initialVacaciones = false }) {
   const [intervals, setIntervals] = useState([]);
   const [isHoliday, setIsHoliday] = useState(false);
+  const [isVacation, setIsVacation] = useState(false);
   const [proyectoNombre, setProyectoNombre] = useState(null);
   const [editarProyecto, setEditarProyecto] = useState(false);
   
   useEffect(() => {
-  setIntervals(initialData.map(item => ({ ...item, id: uuidv4() })));
-  setIsHoliday(initialFestivo);
+    setIntervals(initialData.map(item => ({ ...item, id: uuidv4() })));
+    setIsHoliday(initialFestivo);
+    setIsVacation(initialVacaciones);
 
   // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
   if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
@@ -21,7 +23,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     setProyectoNombre('');
     setEditarProyecto(false);
   }
-}, [initialData, initialFestivo, fecha]);
+  }, [initialData, initialFestivo, initialVacaciones, fecha]);
 
 
   const handleAddInterval = () => {
@@ -41,6 +43,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
       fecha,
       intervals,
       festivo: isHoliday,
+      vacaciones: isVacation,
       proyecto_nombre: proyectoNombre?.trim() || null
     });
     onClose();
@@ -49,6 +52,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
   const handleClear = () => {
     setIntervals([]);
     setIsHoliday(false);
+    setIsVacation(false);
     setProyectoNombre(null);
     setEditarProyecto(false);
   };
@@ -71,7 +75,11 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     <Dialog open={isOpen} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen p-4 bg-black/40">
           <Dialog.Panel className={`w-full max-w-md rounded-lg shadow-lg p-6 transition-colors duration-300 ${
-            isHoliday ? 'bg-purple-50 text-purple-900' : 'bg-white text-black'
+            isVacation
+              ? 'bg-green-50 text-green-900'
+              : isHoliday
+              ? 'bg-purple-50 text-purple-900'
+              : 'bg-white text-black'
           }`}>
           <Dialog.Title className="text-lg font-bold mb-2">Gestionar Horas</Dialog.Title>
           <p className="text-sm mb-4">
@@ -109,6 +117,15 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
                 onChange={(e) => setIsHoliday(e.target.checked)}
               />
               Marcar como Festivo (para este trabajador)
+            </label>
+
+            <label className="flex items-center gap-2 mt-3">
+              <input
+                type="checkbox"
+                checked={isVacation}
+                onChange={(e) => setIsVacation(e.target.checked)}
+              />
+              Marcar como Vacaciones (para este trabajador)
             </label>
 
             <label className="flex flex-col gap-2 mt-3">
