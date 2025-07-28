@@ -405,13 +405,14 @@ export async function exportYearScheduleToExcel(
   const year = format(yearDate, 'yyyy');
   for (let m = 0; m < 12; m++) {
     const monthDate = new Date(yearDate.getFullYear(), m, 1);
-    const sheetLabel = `${format(monthDate, 'MMM', { locale: es })}`;
+    const sheetLabel = format(monthDate, 'MMM', { locale: es });
+    const baseName = trabajador.nombre ? trabajador.nombre.substring(0, 27) : '';
     await addScheduleWorksheet(
       workbook,
       trabajador,
       horarios,
       monthDate,
-      `${trabajador.nombre}-${sheetLabel}`
+      `${baseName}-${sheetLabel}`
     );
   }
   const buffer = await workbook.xlsx.writeBuffer();
