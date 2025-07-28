@@ -14,7 +14,7 @@ exports.getHorariosByTrabajador = async (req, res) => {
 };
 exports.createOrUpdateHorarios = async (req, res) => {
   try {
-    const { trabajador_id, fecha, horarios, festivo, vacaciones, proyecto_nombre } = req.body;
+    const { trabajador_id, fecha, horarios, festivo, vacaciones, bajamedica, proyecto_nombre } = req.body;
 
     // Borrar los horarios anteriores del mismo día
     await Horario.destroy({
@@ -32,6 +32,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
           hora_fin: h.hora_fin,
           festivo: festivo || false,
           vacaciones: vacaciones || false,
+          bajamedica: bajamedica || false,
           proyecto_nombre: proyecto_nombre || null
         });
       });
@@ -44,6 +45,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         hora_fin: '00:00:00',
         festivo: true,
         vacaciones: vacaciones || false,
+        bajamedica: false,
         proyecto_nombre: proyecto_nombre || null
       });
     } else if (vacaciones) {
@@ -55,6 +57,18 @@ exports.createOrUpdateHorarios = async (req, res) => {
         hora_fin: '00:00:00',
         festivo: false,
         vacaciones: true,
+        bajamedica: false,
+        proyecto_nombre: proyecto_nombre || null
+      });
+    } else if (bajamedica) {
+      nuevos.push({
+        trabajador_id,
+        fecha,
+        hora_inicio: '00:00:00',
+        hora_fin: '00:00:00',
+        festivo: false,
+        vacaciones: false,
+        bajamedica: true,
         proyecto_nombre: proyecto_nombre || null
       });
     }

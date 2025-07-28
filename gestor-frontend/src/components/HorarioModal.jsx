@@ -3,10 +3,11 @@ import { Dialog } from '@headlessui/react';
 import { format, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialData = [], initialFestivo = false, initialVacaciones = false }) {
+export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialData = [], initialFestivo = false, initialVacaciones = false, initialBaja = false }) {
   const [intervals, setIntervals] = useState([]);
   const [isHoliday, setIsHoliday] = useState(false);
   const [isVacation, setIsVacation] = useState(false);
+  const [isBaja, setIsBaja] = useState(false);
   const [proyectoNombre, setProyectoNombre] = useState(null);
   const [editarProyecto, setEditarProyecto] = useState(false);
   
@@ -14,6 +15,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     setIntervals(initialData.map(item => ({ ...item, id: uuidv4() })));
     setIsHoliday(initialFestivo);
     setIsVacation(initialVacaciones);
+    setIsBaja(initialBaja);
 
   // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
   if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
@@ -23,7 +25,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     setProyectoNombre('');
     setEditarProyecto(false);
   }
-  }, [initialData, initialFestivo, initialVacaciones, fecha]);
+  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha]);
 
 
   const handleAddInterval = () => {
@@ -44,6 +46,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
       intervals,
       festivo: isHoliday,
       vacaciones: isVacation,
+      bajamedica: isBaja,
       proyecto_nombre: proyectoNombre?.trim() || null
     });
     onClose();
@@ -53,6 +56,7 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     setIntervals([]);
     setIsHoliday(false);
     setIsVacation(false);
+    setIsBaja(false);
     setProyectoNombre(null);
     setEditarProyecto(false);
   };
@@ -75,7 +79,9 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     <Dialog open={isOpen} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen p-4 bg-black/40">
           <Dialog.Panel className={`w-full max-w-md rounded-lg shadow-lg p-6 transition-colors duration-300 ${
-            isVacation
+            isBaja
+              ? 'bg-red-50 text-red-900'
+              : isVacation
               ? 'bg-green-50 text-green-900'
               : isHoliday
               ? 'bg-purple-50 text-purple-900'
@@ -126,6 +132,15 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
                 onChange={(e) => setIsVacation(e.target.checked)}
               />
               Marcar como Vacaciones (para este trabajador)
+            </label>
+
+            <label className="flex items-center gap-2 mt-3">
+              <input
+                type="checkbox"
+                checked={isBaja}
+                onChange={(e) => setIsBaja(e.target.checked)}
+              />
+              Marcar como Baja Médica
             </label>
 
             <label className="flex flex-col gap-2 mt-3">

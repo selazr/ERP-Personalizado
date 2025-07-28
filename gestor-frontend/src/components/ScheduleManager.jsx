@@ -23,13 +23,14 @@ export default function ScheduleManager() {
 
   const agruparHorarios = (horarios) => {
     const result = {};
-    horarios.forEach(({ fecha, hora_inicio, hora_fin, festivo, vacaciones, proyecto_nombre }) => {
+    horarios.forEach(({ fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica, proyecto_nombre }) => {
       if (!result[fecha]) {
-        result[fecha] = { intervals: [], isHoliday: false, isVacation: false };
+        result[fecha] = { intervals: [], isHoliday: false, isVacation: false, isBaja: false };
       }
       result[fecha].intervals.push({ hora_inicio, hora_fin, proyecto_nombre });
       if (festivo) result[fecha].isHoliday = true;
       if (vacaciones) result[fecha].isVacation = true;
+      if (bajamedica) result[fecha].isBaja = true;
     });
     return result;
   };
@@ -42,12 +43,13 @@ export default function ScheduleManager() {
     const eventos = grouped.intervals || [];
     const isHoliday = grouped.isHoliday || false;
     const isVacation = grouped.isVacation || false;
+    const isBaja = grouped.isBaja || false;
 
-    setSelectedDay({ fecha, eventos, isHoliday, isVacation });
+    setSelectedDay({ fecha, eventos, isHoliday, isVacation, isBaja });
     setIsModalOpen(true);
   };
 
-  const handleGuardarHorarios = ({ fecha, intervals, festivo, vacaciones, proyecto_nombre }) => {
+  const handleGuardarHorarios = ({ fecha, intervals, festivo, vacaciones, bajamedica, proyecto_nombre }) => {
     const token = localStorage.getItem('token');
     axios.post(`${import.meta.env.VITE_API_URL}/horarios`, {
       trabajador_id: selectedTrabajadorId,
@@ -55,6 +57,7 @@ export default function ScheduleManager() {
       horarios: intervals,
       festivo,
       vacaciones,
+      bajamedica,
       proyecto_nombre
     }, {
       headers: { Authorization: `Bearer ${token}` }
@@ -67,7 +70,7 @@ export default function ScheduleManager() {
           proyecto_nombre,
           vacaciones
         })),
-        ...(festivo || vacaciones ? [{ fecha, festivo, vacaciones }] : [])
+        ...(festivo || vacaciones || bajamedica ? [{ fecha, festivo, vacaciones, bajamedica }] : [])
       ]);
     });
   };
@@ -130,6 +133,7 @@ export default function ScheduleManager() {
       const eventos = grouped?.intervals || [];
       const festivo = grouped?.isHoliday || false;
       const vacaciones = grouped?.isVacation || false;
+      const bajamedica = grouped?.isBaja || false;
       const weekend = date.getDay() === 6 || date.getDay() === 0;
 
       const totalHoras = eventos.reduce((sum, ev) => {
@@ -145,23 +149,27 @@ export default function ScheduleManager() {
           onClick={() => handleDayClick(day)}
           className={`
             cursor-pointer border rounded-lg h-24 w-full p-2 text-sm font-medium flex flex-col items-center justify-center relative transition-all duration-200
+            ${bajamedica ? 'bg-red-100 text-red-700' : ''}
             ${festivo ? 'bg-purple-100 text-purple-700' : ''}
             ${vacaciones ? 'bg-green-100 text-green-700' : ''}
-            ${totalHoras > 0 && !festivo && !vacaciones ? 'bg-blue-100 text-blue-700' : ''}
-            ${weekend && !festivo && !vacaciones && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
+            ${totalHoras > 0 && !festivo && !vacaciones && !bajamedica ? 'bg-blue-100 text-blue-700' : ''}
+            ${weekend && !festivo && !vacaciones && !bajamedica && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
             hover:shadow-md
           `}
         >
           <span className="absolute top-1 left-1 text-xs font-semibold text-gray-500">{day}</span>
 
-          {festivo && (
+          {bajamedica && (
+            <span className="text-xs font-semibold mt-2">Baja</span>
+          )}
+          {festivo && !bajamedica && (
             <span className="text-xs font-semibold mt-2">Festivo</span>
           )}
-          {vacaciones && !festivo && (
+          {vacaciones && !festivo && !bajamedica && (
             <span className="text-xs font-semibold mt-2">Vacaciones</span>
           )}
 
-          {totalHoras > 0 && !festivo && !vacaciones && (
+          {totalHoras > 0 && !festivo && !vacaciones && !bajamedica && (
             <>
               <span className="text-base font-bold">
                 {formatHoursToHM(totalHoras)}
@@ -175,7 +183,7 @@ export default function ScheduleManager() {
             </>
           )}
 
-          {totalHoras === 0 && !festivo && weekend && (
+          {totalHoras === 0 && !festivo && !bajamedica && weekend && (
             <span className="text-xs italic absolute bottom-1 right-1 text-gray-400">Libre</span>
           )}
         </div>
@@ -267,6 +275,7 @@ export default function ScheduleManager() {
         initialData={selectedDay?.eventos || []}
         initialFestivo={selectedDay?.isHoliday || false}
         initialVacaciones={selectedDay?.isVacation || false}
+        initialBaja={selectedDay?.isBaja || false}
       />
     </>
   );
