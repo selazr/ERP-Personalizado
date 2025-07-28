@@ -2,14 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { format, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 
-export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialData = [], initialFestivo = false, initialVacaciones = false, initialBaja = false }) {
+export default function HorarioModal({
+  isOpen,
+  onClose,
+  fecha,
+  onSave,
+  initialData = [],
+  initialFestivo = false,
+  initialVacaciones = false,
+  initialBaja = false,
+  workers = []
+}) {
   const [intervals, setIntervals] = useState([]);
   const [isHoliday, setIsHoliday] = useState(false);
   const [isVacation, setIsVacation] = useState(false);
   const [isBaja, setIsBaja] = useState(false);
   const [proyectoNombre, setProyectoNombre] = useState(null);
   const [editarProyecto, setEditarProyecto] = useState(false);
+  const [extraWorkers, setExtraWorkers] = useState([]);
+  const [extraDates, setExtraDates] = useState([]);
   
   useEffect(() => {
     setIntervals(initialData.map(item => ({ ...item, id: uuidv4() })));
@@ -40,6 +53,30 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     setIntervals(prev => prev.filter(intv => intv.id !== id));
   };
 
+  const addWorker = () => {
+    setExtraWorkers(prev => [...prev, '']);
+  };
+
+  const changeWorker = (index, value) => {
+    setExtraWorkers(prev => prev.map((w, i) => i === index ? value : w));
+  };
+
+  const removeWorker = (index) => {
+    setExtraWorkers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addDate = () => {
+    setExtraDates(prev => [...prev, fecha]);
+  };
+
+  const changeDate = (index, value) => {
+    setExtraDates(prev => prev.map((d, i) => i === index ? value : d));
+  };
+
+  const removeDate = (index) => {
+    setExtraDates(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSave = () => {
     onSave({
       fecha,
@@ -47,7 +84,9 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
       festivo: isHoliday,
       vacaciones: isVacation,
       bajamedica: isBaja,
-      proyecto_nombre: proyectoNombre?.trim() || null
+      proyecto_nombre: proyectoNombre?.trim() || null,
+      trabajadoresExtra: extraWorkers.filter(Boolean),
+      fechasExtra: extraDates.filter(Boolean)
     });
     onClose();
   };
@@ -59,6 +98,8 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
     setIsBaja(false);
     setProyectoNombre(null);
     setEditarProyecto(false);
+    setExtraWorkers([]);
+    setExtraDates([]);
   };
 
   const totalHoras = intervals.reduce((sum, intv) => {
@@ -165,7 +206,62 @@ export default function HorarioModal({ isOpen, onClose, fecha, onSave, initialDa
                   className="p-2 border border-gray-300 rounded"
                 />
               )}
-            </label>  
+            </label>
+
+            <div className="mt-4">
+              <h3 className="font-medium">Asignar a más trabajadores</h3>
+              {extraWorkers.map((w, idx) => (
+                <div key={idx} className="flex items-center gap-2 mt-2">
+                  <WorkerAutocomplete
+                    workers={workers}
+                    selectedId={w}
+                    onChange={(id) => changeWorker(idx, id)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeWorker(idx)}
+                    className="text-red-500"
+                  >
+                    &#x2716;
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addWorker}
+                className="w-full border-dashed border p-2 text-center rounded hover:bg-gray-100 mt-2"
+              >
+                + Agregar Trabajador
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="font-medium">Aplicar a más días</h3>
+              {extraDates.map((d, idx) => (
+                <div key={idx} className="flex items-center gap-2 mt-2">
+                  <input
+                    type="date"
+                    value={d}
+                    onChange={(e) => changeDate(idx, e.target.value)}
+                    className="border p-1 rounded w-full text-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeDate(idx)}
+                    className="text-red-500"
+                  >
+                    &#x2716;
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addDate}
+                className="w-full border-dashed border p-2 text-center rounded hover:bg-gray-100 mt-2"
+              >
+                + Agregar Día
+              </button>
+            </div>
 
           </div>
 
