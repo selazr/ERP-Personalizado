@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import HorarioModal from '@/components/HorarioModal';
 import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { HoursSummary } from '@/components/HorasResumen';
+import { YearHoursSummary } from '@/components/HorasResumenAnual';
 import { ChevronLeft, ChevronRight, Settings, Folder, Download } from 'lucide-react';
 import { exportScheduleToExcel, exportAllSchedulesToExcel } from '@/utils/exportExcel';
 
@@ -288,6 +289,7 @@ export default function ScheduleManager() {
 
         <div className="max-w-5xl mx-auto">
           <HoursSummary currentDate={currentDate} scheduleData={agruparHorarios(scheduleData)} />
+          <YearHoursSummary currentDate={currentDate} scheduleData={agruparHorarios(scheduleData)} />
         </div>
       </div>
       <HorarioModal
