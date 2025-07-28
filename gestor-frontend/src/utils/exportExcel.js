@@ -74,7 +74,13 @@ function toHM(num) {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-export async function addScheduleWorksheet(workbook, trabajador, horarios, monthDate) {
+export async function addScheduleWorksheet(
+  workbook,
+  trabajador,
+  horarios,
+  monthDate,
+  sheetName
+) {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   
@@ -205,7 +211,8 @@ export async function addScheduleWorksheet(workbook, trabajador, horarios, month
     'Festivas'
   ];
 
-  const worksheetName = trabajador.nombre?.substring(0, 31) || 'Horas';
+  const baseName = trabajador.nombre || 'Horas';
+  const worksheetName = (sheetName || baseName).substring(0, 31);
   const worksheet = workbook.addWorksheet(worksheetName, {
     pageSetup: {
       orientation: 'landscape',
@@ -384,6 +391,36 @@ export async function exportAllSchedulesToExcel(items, monthDate = new Date()) {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `HORARIOS_${monthName}_${year}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+export async function exportYearScheduleToExcel(
+  trabajador,
+  horarios,
+  yearDate = new Date()
+) {
+  const workbook = new ExcelJS.Workbook();
+  const year = format(yearDate, 'yyyy');
+  for (let m = 0; m < 12; m++) {
+    const monthDate = new Date(yearDate.getFullYear(), m, 1);
+    const sheetLabel = `${format(monthDate, 'MMM', { locale: es })}`;
+    await addScheduleWorksheet(
+      workbook,
+      trabajador,
+      horarios,
+      monthDate,
+      `${trabajador.nombre}-${sheetLabel}`
+    );
+  }
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `HORARIOS_${trabajador.nombre}_${year}.xlsx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
