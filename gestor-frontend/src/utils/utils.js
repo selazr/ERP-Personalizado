@@ -1,16 +1,21 @@
 // src/utils/utils.js
 
+export function calcDuration(start, end) {
+  const [h1, m1] = start.split(':').map(Number);
+  const [h2, m2] = end.split(':').map(Number);
+  let s = h1 * 60 + m1;
+  let e = h2 * 60 + m2;
+  if (s === e) return 0; // treat equal times as zero duration
+  if (e <= s) {
+    e += 24 * 60; // crosses midnight
+  }
+  return (e - s) / 60;
+}
+
 export function calculateTotalHoursFromIntervals(intervals) {
   return intervals.reduce((sum, { hora_inicio, hora_fin }) => {
     if (hora_inicio && hora_fin) {
-      const [h1, m1] = hora_inicio.split(':').map(Number);
-      const [h2, m2] = hora_fin.split(':').map(Number);
-      let start = h1 * 60 + m1;
-      let end = h2 * 60 + m2;
-      if (end <= start) {
-        end += 24 * 60; // Crosses midnight
-      }
-      return sum + (end - start) / 60;
+      return sum + calcDuration(hora_inicio, hora_fin);
     }
     return sum;
   }, 0);

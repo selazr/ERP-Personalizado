@@ -19,6 +19,7 @@ function calcularTipoHoras(intervals, dateKey, isFestivo, isVacaciones) {
     const [h2, m2] = hora_fin.split(':').map(Number);
     let start = h1 * 60 + m1;
     let end = h2 * 60 + m2;
+    if (start === end) return; // zero length interval
     if (end <= start) {
       end += 24 * 60; // Interval crosses midnight
     }

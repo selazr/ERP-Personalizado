@@ -1,17 +1,8 @@
 import ExcelJS from 'exceljs';
 import { format, parseISO, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { calcDuration } from './utils';
 
-function calcDuration(start, end) {
-  const [h1, m1] = start.split(':').map(Number);
-  const [h2, m2] = end.split(':').map(Number);
-  let s = h1 * 60 + m1;
-  let e = h2 * 60 + m2;
-  if (e <= s) {
-    e += 24 * 60; // crosses midnight
-  }
-  return (e - s) / 60;
-}
 
 function classifyIntervals(intervals, date, isHoliday, isVacation) {
   const day = getDay(parseISO(date));
@@ -39,6 +30,9 @@ function classifyIntervals(intervals, date, isHoliday, isVacation) {
     const [h2, m2] = end.split(':').map(Number);
     let startMin = h1 * 60 + m1;
     let endMin = h2 * 60 + m2;
+    if (startMin === endMin) {
+      return; // zero length interval
+    }
     if (endMin <= startMin) {
       endMin += 24 * 60; // crosses midnight
     }
