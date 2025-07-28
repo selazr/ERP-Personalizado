@@ -34,6 +34,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    horanegativa: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    dianegativo: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     proyecto_nombre: {
       type: DataTypes.STRING,
       allowNull: true,

@@ -69,7 +69,7 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
   const year = getYear(currentDate);
   const month = getMonth(currentDate);
   const monthLabel = format(currentDate, 'MMMM', { locale: es });
-  let resumen = { normales: 0, extras: 0, nocturnas: 0, festivas: 0 };
+  let resumen = { normales: 0, extras: 0, nocturnas: 0, festivas: 0, adeber: 0 };
 
   Object.entries(scheduleData).forEach(([dateKey, entry]) => {
     const d = parseISO(dateKey);
@@ -81,10 +81,22 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         entry.isVacation,
         entry.isBaja
       );
+      let extrasDia = tipo.extras;
+      const neg = entry.horaNegativa || 0;
+      let adeberDia = 0;
+      if (neg > 0) {
+        if (extrasDia >= neg) {
+          extrasDia -= neg;
+        } else {
+          adeberDia = neg - extrasDia;
+          extrasDia = 0;
+        }
+      }
       resumen.normales += tipo.normales;
-      resumen.extras += tipo.extras;
+      resumen.extras += extrasDia;
       resumen.nocturnas += tipo.nocturnas;
       resumen.festivas += tipo.festivas;
+      resumen.adeber += adeberDia;
     }
   });
 
@@ -135,6 +147,13 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
           <span className="text-purple-600 font-medium">Horas Extra laborable</span>
           <span className="text-md font-semibold text-purple-500">
             {formatHoursToHM(resumen.extras)}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center border-b pb-2">
+          <span className="text-rose-600 font-medium">Horas a deber</span>
+          <span className="text-md font-semibold text-rose-500">
+            {formatHoursToHM(resumen.adeber)}
           </span>
         </div>
 
