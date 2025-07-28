@@ -11,6 +11,7 @@ import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import { exportWorkerToExcel } from '@/utils/exportWorkerExcel';
+import { formatCurrency } from '@/utils/utils';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
@@ -238,8 +239,8 @@ const handleBaja = async (id) => {
                     <p><Calendar className="inline w-4 h-4 mr-1 text-blue-500" /> Alta: {formatDate(t.fecha_alta)}</p>
                     {t.fecha_baja && (<p><Calendar className="inline w-4 h-4 mr-1 text-red-500" /> Baja: {formatDate(t.fecha_baja)}</p>)}
                     <p><Clock className="inline w-4 h-4 mr-1 text-gray-700" /> Horas: {t.horas_contratadas}</p>
-                    <p><Euro className="inline w-4 h-4 mr-1 text-emerald-500" /> Salario Neto: {t.salario_neto} €</p>
-                    <p><Euro className="inline w-4 h-4 mr-1 text-emerald-300" /> Salario Bruto: {t.salario_bruto} €</p>
+                    <p><Euro className="inline w-4 h-4 mr-1 text-emerald-500" /> Salario Neto: {formatCurrency(t.salario_neto)} €</p>
+                    <p><Euro className="inline w-4 h-4 mr-1 text-emerald-300" /> Salario Bruto: {formatCurrency(t.salario_bruto)} €</p>
                     <p><User className="inline w-4 h-4 mr-1 text-red-500" /> Cliente: {t.cliente}</p>
                     <p>A1: {t.a1 ? 'Sí' : 'No'}</p>
                     <p>Fecha A1: {t.fecha_limosa ? formatDate(t.fecha_limosa) : 'N/A'}</p>

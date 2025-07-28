@@ -31,3 +31,22 @@ export const formatHoursToHM = (total) => {
   const minutes = Math.round((total - hours) * 60);
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
 };
+
+export function formatCurrency(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const number = typeof value === 'number' ? value : parseCurrency(value);
+  if (number === null) return '';
+  return new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(number);
+}
+
+export function parseCurrency(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const str = String(value).replace(/[^0-9.,]/g, '');
+  if (str.includes(',')) {
+    return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+  }
+  return parseFloat(str);
+}
