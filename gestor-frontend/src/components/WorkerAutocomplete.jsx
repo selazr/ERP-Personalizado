@@ -11,7 +11,10 @@ export default function WorkerAutocomplete({ workers = [], selectedId, onChange 
     }
   }, [selectedId, workers]);
 
-  const filtered = workers.filter(w => w.nombre.toLowerCase().includes(query.toLowerCase()));
+  const sortedWorkers = [...workers].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const filtered = sortedWorkers.filter(w =>
+    w.nombre.toLowerCase().includes(query.toLowerCase())
+  );
 
   const handleSelect = (worker) => {
     onChange(worker.id);
@@ -38,7 +41,7 @@ export default function WorkerAutocomplete({ workers = [], selectedId, onChange 
           {filtered.map((w) => (
             <li
               key={w.id}
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-black"
               onMouseDown={() => handleSelect(w)}
             >
               {w.nombre}
