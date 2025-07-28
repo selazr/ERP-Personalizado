@@ -30,6 +30,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    bajamedica: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     proyecto_nombre: {
       type: DataTypes.STRING,
       allowNull: true,
