@@ -74,7 +74,7 @@ function toHM(num) {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-export async function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
+export async function addScheduleWorksheet(workbook, trabajador, horarios, monthDate) {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   
@@ -205,8 +205,8 @@ export async function exportScheduleToExcel(trabajador, horarios, monthDate = ne
     'Festivas'
   ];
 
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Horas', {
+  const worksheetName = trabajador.nombre?.substring(0, 31) || 'Horas';
+  const worksheet = workbook.addWorksheet(worksheetName, {
     pageSetup: {
       orientation: 'landscape',
       fitToPage: true,
@@ -352,16 +352,38 @@ const imageId = workbook.addImage({ base64: logoBase64, extension: 'jpeg' });
       c.font = c.font ? { ...c.font, name: fontName } : { name: fontName };
     });
   });
+}
 
+export async function exportScheduleToExcel(trabajador, horarios, monthDate = new Date()) {
+  const workbook = new ExcelJS.Workbook();
+  await addScheduleWorksheet(workbook, trabajador, horarios, monthDate);
   const monthName = format(monthDate, 'MMMM', { locale: es });
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
-    type:
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `horas_${trabajador.nombre}_${monthName}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+export async function exportAllSchedulesToExcel(items, monthDate = new Date()) {
+  const workbook = new ExcelJS.Workbook();
+  for (const { trabajador, horarios } of items) {
+    await addScheduleWorksheet(workbook, trabajador, horarios, monthDate);
+  }
+  const monthName = format(monthDate, 'MMMM', { locale: es });
+  const year = format(monthDate, 'yyyy');
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `HORARIOS_${monthName}_${year}.xlsx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

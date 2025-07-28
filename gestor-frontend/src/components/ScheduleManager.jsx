@@ -7,7 +7,7 @@ import HorarioModal from '@/components/HorarioModal';
 import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { HoursSummary } from '@/components/HorasResumen';
 import { ChevronLeft, ChevronRight, Settings, Folder, Download } from 'lucide-react';
-import { exportScheduleToExcel } from '@/utils/exportExcel';
+import { exportScheduleToExcel, exportAllSchedulesToExcel } from '@/utils/exportExcel';
 
 export default function ScheduleManager() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -86,6 +86,22 @@ export default function ScheduleManager() {
       if (trabajador) {
         exportScheduleToExcel(trabajador, res.data, currentDate);
       }
+    } catch (err) {
+      console.error('Error al generar Excel:', err);
+      alert('No se pudo generar el archivo');
+    }
+  };
+
+  const handleDescargarTodasPlantillas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const requests = trabajadores.map(t =>
+        axios.get(`${import.meta.env.VITE_API_URL}/horarios/${t.id}`,
+          { headers: { Authorization: `Bearer ${token}` } })
+      );
+      const responses = await Promise.all(requests);
+      const items = trabajadores.map((t, idx) => ({ trabajador: t, horarios: responses[idx].data }));
+      exportAllSchedulesToExcel(items, currentDate);
     } catch (err) {
       console.error('Error al generar Excel:', err);
       alert('No se pudo generar el archivo');
@@ -228,6 +244,13 @@ export default function ScheduleManager() {
           >
             <Download className="w-4 h-4" />
             {`Descargar Plantilla (${format(currentDate, 'MMMM', { locale: es })})`}
+          </button>
+          <button
+            onClick={handleDescargarTodasPlantillas}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4" />
+            {`Descargar Todas (${format(currentDate, 'MMMM', { locale: es })})`}
           </button>
         </div>
 
