@@ -14,7 +14,7 @@ exports.getHorariosByTrabajador = async (req, res) => {
 };
 exports.createOrUpdateHorarios = async (req, res) => {
   try {
-    const { trabajador_id, fecha, horarios, festivo, vacaciones, bajamedica, proyecto_nombre } = req.body;
+    const { trabajador_id, fecha, horarios, festivo, vacaciones, bajamedica, proyecto_nombre, horanegativa = 0, dianegativo = false } = req.body;
 
     // Borrar los horarios anteriores del mismo día
     await Horario.destroy({
@@ -33,7 +33,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
           festivo: festivo || false,
           vacaciones: vacaciones || false,
           bajamedica: bajamedica || false,
-          proyecto_nombre: proyecto_nombre || null
+          proyecto_nombre: proyecto_nombre || null,
+          horanegativa,
+          dianegativo
         });
       });
     } else if (festivo) {
@@ -46,7 +48,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         festivo: true,
         vacaciones: vacaciones || false,
         bajamedica: false,
-        proyecto_nombre: proyecto_nombre || null
+        proyecto_nombre: proyecto_nombre || null,
+        horanegativa,
+        dianegativo
       });
     } else if (vacaciones) {
       // Registrar el día como vacaciones sin horas
@@ -58,7 +62,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         festivo: false,
         vacaciones: true,
         bajamedica: false,
-        proyecto_nombre: proyecto_nombre || null
+        proyecto_nombre: proyecto_nombre || null,
+        horanegativa,
+        dianegativo
       });
     } else if (bajamedica) {
       nuevos.push({
@@ -69,7 +75,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         festivo: false,
         vacaciones: false,
         bajamedica: true,
-        proyecto_nombre: proyecto_nombre || null
+        proyecto_nombre: proyecto_nombre || null,
+        horanegativa,
+        dianegativo
       });
     }
     // Permitir asignar un proyecto sin intervalos
@@ -82,7 +90,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         festivo: false,
         vacaciones: false,
         bajamedica: false,
-        proyecto_nombre
+        proyecto_nombre,
+        horanegativa,
+        dianegativo
       });
     }
 

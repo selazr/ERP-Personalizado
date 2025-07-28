@@ -13,6 +13,8 @@ export default function HorarioModal({
   initialFestivo = false,
   initialVacaciones = false,
   initialBaja = false,
+  initialHoraNegativa = 0,
+  initialDiaNegativo = false,
   workers = []
 }) {
   const [intervals, setIntervals] = useState([]);
@@ -23,12 +25,16 @@ export default function HorarioModal({
   const [editarProyecto, setEditarProyecto] = useState(false);
   const [extraWorkers, setExtraWorkers] = useState([]);
   const [extraDates, setExtraDates] = useState([]);
+  const [useNegative, setUseNegative] = useState(false);
+  const [negativeHours, setNegativeHours] = useState('');
   
   useEffect(() => {
     setIntervals(initialData.map(item => ({ ...item, id: uuidv4() })));
     setIsHoliday(initialFestivo);
     setIsVacation(initialVacaciones);
     setIsBaja(initialBaja);
+    setUseNegative(initialHoraNegativa > 0 || initialDiaNegativo);
+    setNegativeHours(initialHoraNegativa ? String(initialHoraNegativa) : '');
 
   // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
   if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
@@ -38,7 +44,7 @@ export default function HorarioModal({
     setProyectoNombre('');
     setEditarProyecto(false);
   }
-  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha]);
+  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha, initialHoraNegativa, initialDiaNegativo]);
 
 
   const handleAddInterval = () => {
@@ -85,6 +91,8 @@ export default function HorarioModal({
       vacaciones: isVacation,
       bajamedica: isBaja,
       proyecto_nombre: proyectoNombre?.trim() || null,
+      horaNegativa: useNegative ? Number(negativeHours) || 0 : 0,
+      diaNegativo: useNegative && (!negativeHours || Number(negativeHours) === 0),
       trabajadoresExtra: extraWorkers.filter(Boolean),
       fechasExtra: extraDates.filter(Boolean)
     });
@@ -100,6 +108,8 @@ export default function HorarioModal({
     setEditarProyecto(false);
     setExtraWorkers([]);
     setExtraDates([]);
+    setUseNegative(false);
+    setNegativeHours('');
   };
 
   const totalHoras = intervals.reduce((sum, intv) => {
@@ -156,6 +166,27 @@ export default function HorarioModal({
             <button onClick={handleAddInterval} className="w-full border-dashed border p-2 text-center rounded hover:bg-gray-100">
               + Añadir Intervalo
             </button>
+
+            <label className="flex items-center gap-2 mt-3">
+              <input
+                type="checkbox"
+                checked={useNegative}
+                onChange={(e) => setUseNegative(e.target.checked)}
+              />
+              Registrar horas negativas
+            </label>
+
+            {useNegative && (
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                value={negativeHours}
+                onChange={(e) => setNegativeHours(e.target.value)}
+                placeholder="Cantidad de horas negativas"
+                className="p-2 border border-gray-300 rounded w-full mt-1"
+              />
+            )}
 
             <label className="flex items-center gap-2 mt-3">
               <input

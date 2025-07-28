@@ -99,16 +99,18 @@ export async function addScheduleWorksheet(
 
   const dayData = {};
   sorted.forEach((h) => {
-    const { fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica } = h;
+    const { fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica, horanegativa, dianegativo } = h;
     const dur = calcDuration(hora_inicio, hora_fin);
     if (!dayData[fecha]) {
-      dayData[fecha] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [] };
+      dayData[fecha] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [], horanegativa: 0, dianegativo: false };
     }
     dayData[fecha].total += dur;
     dayData[fecha].festivo = dayData[fecha].festivo || festivo;
     dayData[fecha].vacaciones = dayData[fecha].vacaciones || vacaciones;
     dayData[fecha].baja = dayData[fecha].baja || bajamedica;
     dayData[fecha].intervals.push({ start: hora_inicio, end: hora_fin });
+    if (horanegativa) dayData[fecha].horanegativa = horanegativa;
+    if (dianegativo) dayData[fecha].dianegativo = true;
   });
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -116,7 +118,7 @@ export async function addScheduleWorksheet(
     const date = new Date(year, month, d);
     const iso = date.toISOString().slice(0, 10);
     if (!dayData[iso]) {
-      dayData[iso] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [] };
+      dayData[iso] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [], horanegativa: 0, dianegativo: false };
     }
   }
 
@@ -124,6 +126,7 @@ export async function addScheduleWorksheet(
   const rowFlags = [];
   let totalNormales = 0;
   let totalExtras = 0;
+  let totalAdeber = 0;
   let totalNocturnas = 0;
   let totalFestivas = 0;
   Object.keys(dayData).sort().forEach((fecha) => {
@@ -165,8 +168,21 @@ export async function addScheduleWorksheet(
       entry.baja
     );
 
+    let extrasFinal = extras;
+    let adeber = 0;
+    const neg = entry.horanegativa || 0;
+    if (neg > 0) {
+      if (extrasFinal >= neg) {
+        extrasFinal -= neg;
+      } else {
+        adeber = neg - extrasFinal;
+        extrasFinal = 0;
+      }
+    }
+
     totalNormales += normales;
-    totalExtras += extras;
+    totalExtras += extrasFinal;
+    totalAdeber += adeber;
     totalNocturnas += nocturnas;
     totalFestivas += festivas;
 
@@ -178,7 +194,8 @@ export async function addScheduleWorksheet(
       'Entrada 2': entrada2,
       'Salida 2': salida2,
       'Normales': toHM(normales),
-      'Extras': toHM(extras),
+      'Extras': toHM(extrasFinal),
+      'A Deber': toHM(adeber),
       'Nocturnas': toHM(nocturnas),
       'Festivas': toHM(festivas)
     });
@@ -194,6 +211,7 @@ export async function addScheduleWorksheet(
     'Salida 2': '',
     'Normales': toHM(totalNormales),
     'Extras': toHM(totalExtras),
+    'A Deber': toHM(totalAdeber),
     'Nocturnas': toHM(totalNocturnas),
     'Festivas': toHM(totalFestivas)
   };
@@ -207,6 +225,7 @@ export async function addScheduleWorksheet(
     'Salida 2',
     'Normales',
     'Extras',
+    'A Deber',
     'Nocturnas',
     'Festivas'
   ];
