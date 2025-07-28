@@ -4,6 +4,7 @@ import { format, startOfMonth, getDaysInMonth, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Header from '@/components/Header';
 import HorarioModal from '@/components/HorarioModal';
+import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { HoursSummary } from '@/components/HorasResumen';
 import { ChevronLeft, ChevronRight, Settings, Folder, Download } from 'lucide-react';
 import { exportScheduleToExcel } from '@/utils/exportExcel';
@@ -191,15 +192,11 @@ export default function ScheduleManager() {
         <div className="max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Trabajador:</label>
-            <select
-              className="w-full sm:w-64 p-3 text-base border border-gray-300 rounded bg-white shadow-sm text-black"
-              value={selectedTrabajadorId}
-              onChange={(e) => setSelectedTrabajadorId(e.target.value)}
-            >
-              {trabajadores.map((t) => (
-                <option key={t.id} value={t.id}>{t.nombre}</option>
-              ))}
-            </select>
+            <WorkerAutocomplete
+              workers={trabajadores}
+              selectedId={selectedTrabajadorId}
+              onChange={setSelectedTrabajadorId}
+            />
           </div>
           <button
             onClick={() => alert('Aquí iría el modal de festivos')}
