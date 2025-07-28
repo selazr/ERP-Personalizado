@@ -243,7 +243,14 @@ export default function ScheduleManager() {
             </>
           )}
 
-          {totalHoras === 0 && !festivo && !bajamedica && weekend && (
+          {totalHoras === 0 && !festivo && !bajamedica && eventos[0]?.proyecto_nombre && (
+            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+              <Folder className="w-4 h-4" />
+              <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
+            </div>
+          )}
+
+          {totalHoras === 0 && !festivo && !bajamedica && weekend && !eventos[0]?.proyecto_nombre && (
             <span className="text-xs italic absolute bottom-1 right-1 text-gray-400">Libre</span>
           )}
         </div>

@@ -72,6 +72,19 @@ exports.createOrUpdateHorarios = async (req, res) => {
         proyecto_nombre: proyecto_nombre || null
       });
     }
+    // Permitir asignar un proyecto sin intervalos
+    else if (proyecto_nombre) {
+      nuevos.push({
+        trabajador_id,
+        fecha,
+        hora_inicio: '00:00:00',
+        hora_fin: '00:00:00',
+        festivo: false,
+        vacaciones: false,
+        bajamedica: false,
+        proyecto_nombre
+      });
+    }
 
     if (nuevos.length > 0) {
       await Horario.bulkCreate(nuevos);
