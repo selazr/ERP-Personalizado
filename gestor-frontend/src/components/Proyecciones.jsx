@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { formatCurrency } from '@/utils/utils';
 
 export default function Proyecciones() {
   const [stats, setStats] = useState(null);
@@ -55,9 +56,9 @@ export default function Proyecciones() {
               <StatCard title="Trabajadores totales" value={stats.totalTrabajadores} />
               <StatCard title="Activos" value={stats.trabajadoresActivos} />
               <StatCard title="Inactivos" value={stats.trabajadoresInactivos} />
-              <StatCard title="Coste mensual bruto" value={`€ ${stats.costeMensualBruto}`} />
-              <StatCard title="Coste anual bruto" value={`€ ${stats.costeAnualBruto}`} />
-              <StatCard title="Salario bruto promedio" value={`€ ${stats.salarioBrutoPromedio.toFixed(2)}`} />
+              <StatCard title="Coste mensual bruto" value={`€ ${formatCurrency(stats.costeMensualBruto)}`} />
+              <StatCard title="Coste anual bruto" value={`€ ${formatCurrency(stats.costeAnualBruto)}`} />
+              <StatCard title="Salario bruto promedio" value={`€ ${formatCurrency(stats.salarioBrutoPromedio)}`} />
             </div>
 
             <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-xl">

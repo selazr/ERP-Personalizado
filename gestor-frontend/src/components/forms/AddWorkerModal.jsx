@@ -1,6 +1,7 @@
 // src/components/forms/AddWorkerModal.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { parseCurrency } from '@/utils/utils';
 
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [form, setForm] = useState({
@@ -35,7 +36,12 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    if (["salario_neto", "salario_bruto"].includes(name)) {
+      const formatted = value.replace(/[^0-9.,]/g, "");
+      setForm((prev) => ({ ...prev, [name]: formatted }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    }
     setFormErrors((prev) => ({ ...prev, [name]: undefined })); // limpia error del campo al modificar
   };
 
@@ -68,6 +74,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         Object.entries(form).map(([key, value]) => {
           if (value === '') return [key, null];
           if (["a1", "epis", "desplazamiento"].includes(key)) return [key, Boolean(value)];
+          if (["salario_neto", "salario_bruto"].includes(key)) return [key, parseCurrency(value)];
           return [key, value];
         })
       );
@@ -156,8 +163,8 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
               {form.tipo_trabajador !== 'Fijo' &&
                 renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
               {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
-              {renderInput('Salario Neto/Mes (€)', 'salario_neto', 'Ej: 1600', 'number')}
-              {renderInput('Salario Bruto/Mes (€)', 'salario_bruto', 'Ej: 1800', 'number')}
+              {renderInput('Salario Neto/Mes (€)', 'salario_neto', 'Ej: 1.600,50')}
+              {renderInput('Salario Bruto/Mes (€)', 'salario_bruto', 'Ej: 1.800,75')}
               {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
               {renderInput('País', 'pais', 'Ej: España')}
               {renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
