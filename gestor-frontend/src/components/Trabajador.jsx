@@ -28,12 +28,21 @@ export function formatDate(dateStr) {
   return `${day}-${month}-${year}`;
 }
 
+const filterOptions = [
+  { value: 'nombre', label: 'Nombre' },
+  { value: 'empresa', label: 'Empresa' },
+  { value: 'pais', label: 'País' },
+  { value: 'dni', label: 'DNI' },
+  { value: 'telefono', label: 'Teléfono' },
+  { value: 'correo_electronico', label: 'Correo' }
+];
+
 export default function Trabajador() {
   const [trabajadores, setTrabajadores] = useState([]);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('');
+  const [filterBy, setFilterBy] = useState('nombre');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState(null);
@@ -41,11 +50,15 @@ export default function Trabajador() {
   const workersPerPage = 6; // o el número que prefieras
 
   const filteredTrabajadores = trabajadores
-    .filter((t) => t.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((t) => {
+      const valor = (t[filterBy] || '').toString().toLowerCase();
+      return valor.includes(searchTerm.toLowerCase());
+    })
     .sort((a, b) => {
-      if (!sortBy) return 0;
-      if ((a[sortBy] || '').toLowerCase() < (b[sortBy] || '').toLowerCase()) return -1;
-      if ((a[sortBy] || '').toLowerCase() > (b[sortBy] || '').toLowerCase()) return 1;
+      const valorA = (a[filterBy] || '').toString().toLowerCase();
+      const valorB = (b[filterBy] || '').toString().toLowerCase();
+      if (valorA < valorB) return -1;
+      if (valorA > valorB) return 1;
       return 0;
     });
 
@@ -86,7 +99,7 @@ useEffect(() => {
 
 useEffect(() => {
   setCurrentPage(1);
-}, [searchTerm, sortBy]);
+}, [searchTerm, filterBy]);
 
 
 // 3. Dar de alta usando fetchWorkers
@@ -157,7 +170,7 @@ const handleBaja = async (id) => {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <input
             type="text"
-            placeholder="Buscar por nombre..."
+            placeholder={`Buscar por ${filterOptions.find(o => o.value === filterBy)?.label.toLowerCase()}...`}
             className="w-full md:w-64 p-3 text-black text-base border border-gray-300 rounded"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -165,13 +178,12 @@ const handleBaja = async (id) => {
 
           <select
             className="w-full md:w-48 p-3 text-black text-base border border-gray-300 rounded"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            value={filterBy}
+            onChange={(e) => setFilterBy(e.target.value)}
           >
-            <option value="">Filtrar por...</option>
-            <option value="nombre">Nombre (A-Z)</option>
-            <option value="empresa">Empresa</option>
-            <option value="pais">País</option>
+            {filterOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 
