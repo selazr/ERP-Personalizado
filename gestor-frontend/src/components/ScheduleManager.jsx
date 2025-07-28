@@ -54,29 +54,49 @@ export default function ScheduleManager() {
     setIsModalOpen(true);
   };
 
-  const handleGuardarHorarios = ({ fecha, intervals, festivo, vacaciones, bajamedica, proyecto_nombre }) => {
+  const handleGuardarHorarios = ({
+    fecha,
+    intervals,
+    festivo,
+    vacaciones,
+    bajamedica,
+    proyecto_nombre,
+    trabajadoresExtra = [],
+    fechasExtra = []
+  }) => {
     const token = localStorage.getItem('token');
-    axios.post(`${import.meta.env.VITE_API_URL}/horarios`, {
-      trabajador_id: selectedTrabajadorId,
-      fecha,
-      horarios: intervals,
-      festivo,
-      vacaciones,
-      bajamedica,
-      proyecto_nombre
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(() => {
-      setScheduleData(prev => [
-        ...prev.filter(ev => ev.fecha !== fecha),
-        ...intervals.map(i => ({
-          ...i,
-          fecha,
-          proyecto_nombre,
-          vacaciones
-        })),
-        ...(festivo || vacaciones || bajamedica ? [{ fecha, festivo, vacaciones, bajamedica }] : [])
-      ]);
+    const workerIds = [selectedTrabajadorId, ...trabajadoresExtra];
+    const fechas = [fecha, ...fechasExtra];
+
+    const requests = [];
+    workerIds.forEach(wid => {
+      fechas.forEach(f => {
+        requests.push(
+          axios.post(
+            `${import.meta.env.VITE_API_URL}/horarios`,
+            {
+              trabajador_id: wid,
+              fecha: f,
+              horarios: intervals,
+              festivo,
+              vacaciones,
+              bajamedica,
+              proyecto_nombre
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      });
+    });
+
+    Promise.all(requests).then(() => {
+      axios
+        .get(`${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => {
+          setScheduleData(res.data);
+        });
     });
   };
 
@@ -325,6 +345,7 @@ export default function ScheduleManager() {
         initialFestivo={selectedDay?.isHoliday || false}
         initialVacaciones={selectedDay?.isVacation || false}
         initialBaja={selectedDay?.isBaja || false}
+        workers={trabajadores}
       />
     </>
   );
