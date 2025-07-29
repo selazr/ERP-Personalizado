@@ -6,6 +6,7 @@ import {
   CalendarClock,
   Users,
   TrendingUp,
+  Building2,
   Menu,
   Bell
 } from 'lucide-react';
@@ -125,6 +126,10 @@ export default function Header() {
                   <TrendingUp className="mr-2 h-5 w-5" />
                   Proyecciones
                 </NavLink>
+                <NavLink to="/organizacion" className={navLinkClasses}>
+                  <Building2 className="mr-2 h-5 w-5" />
+                  Organización
+                </NavLink>
               </div>
             </nav>
           </div>
@@ -232,6 +237,9 @@ export default function Header() {
               </NavLink>
               <NavLink to="/proyecciones" className={navLinkClasses}>
                 <TrendingUp className="mr-2 h-5 w-5" /> Proyecciones
+              </NavLink>
+              <NavLink to="/organizacion" className={navLinkClasses}>
+                <Building2 className="mr-2 h-5 w-5" /> Organización
               </NavLink>
               <button
                 onClick={handleLogout}
