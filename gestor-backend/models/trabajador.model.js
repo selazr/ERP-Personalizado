@@ -24,6 +24,9 @@ module.exports = (sequelize, DataTypes) => {
     epis: { type: DataTypes.BOOLEAN, defaultValue: false },
     fecha_epis: DataTypes.DATEONLY,
     fecha_limosa: DataTypes.DATEONLY,
+    fechafin_limosa: DataTypes.DATEONLY,
+    fecha_a1: DataTypes.DATEONLY,
+    fechafin_a1: DataTypes.DATEONLY,
     condiciones: DataTypes.TEXT
   }, {
     freezeTableName: true // 👈 esto evita la pluralización (Trabajadors)
