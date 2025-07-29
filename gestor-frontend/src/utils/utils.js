@@ -49,6 +49,12 @@ export function parseCurrency(value) {
   if (str.includes(',')) {
     return parseFloat(str.replace(/\./g, '').replace(',', '.'));
   }
+  if (str.includes('.')) {
+    const parts = str.split('.');
+    if (parts.length === 2 && parts[1].length <= 2) {
+      return parseFloat(str);
+    }
+  }
   // If there are dots but no comma, they represent thousand separators
   // so we strip them before parsing to avoid interpreting "1.000" as 1
   return parseFloat(str.replace(/\./g, ''));
