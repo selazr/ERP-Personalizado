@@ -37,10 +37,10 @@ export function formatCurrency(value) {
   const number = typeof value === 'number' ? value : parseCurrency(value);
   if (number === null) return '';
   const hasDecimals = number % 1 !== 0;
-  return new Intl.NumberFormat('es-ES', {
-    minimumFractionDigits: hasDecimals ? 2 : 0,
-    maximumFractionDigits: hasDecimals ? 2 : 0
-  }).format(number);
+  const fixed = number.toFixed(hasDecimals ? 2 : 0);
+  let [intPart, decPart] = fixed.split('.');
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return decPart ? `${intPart},${decPart}` : intPart;
 }
 
 export function parseCurrency(value) {
