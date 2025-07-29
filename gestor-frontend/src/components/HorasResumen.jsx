@@ -153,7 +153,9 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         <div className="flex justify-between items-center border-b pb-2">
           <span className="text-rose-600 font-medium">Horas a deber</span>
           <span className="text-md font-semibold text-rose-500">
-            {formatHoursToHM(resumen.adeber)}
+            {resumen.adeber > 0
+              ? `-${formatHoursToHM(resumen.adeber)}`
+              : formatHoursToHM(resumen.adeber)}
           </span>
         </div>
 
