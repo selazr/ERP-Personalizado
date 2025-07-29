@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
     desplazamiento: { type: DataTypes.BOOLEAN, defaultValue: false },
     fecha_desplazamiento: DataTypes.DATEONLY,
     cliente: DataTypes.STRING,
-    a1: { type: DataTypes.BOOLEAN, defaultValue: false }, // antes era limosa
+    a1: { type: DataTypes.BOOLEAN, defaultValue: false },
+    limosa: { type: DataTypes.BOOLEAN, defaultValue: false },
     pais: DataTypes.STRING,
     empresa: DataTypes.STRING,
     epis: { type: DataTypes.BOOLEAN, defaultValue: false },
