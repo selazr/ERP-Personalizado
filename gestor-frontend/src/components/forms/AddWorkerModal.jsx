@@ -37,7 +37,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (["salario_neto", "salario_bruto"].includes(name)) {
-      const formatted = value.replace(/[^0-9.,]/g, "");
+      const formatted = value.replace(/[^0-9]/g, "");
       setForm((prev) => ({ ...prev, [name]: formatted }));
     } else {
       setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));

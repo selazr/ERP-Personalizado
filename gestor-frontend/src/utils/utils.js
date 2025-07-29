@@ -37,16 +37,22 @@ export function formatCurrency(value) {
   const number = typeof value === 'number' ? value : parseCurrency(value);
   if (number === null) return '';
   return new Intl.NumberFormat('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 0
   }).format(number);
 }
 
 export function parseCurrency(value) {
   if (value === null || value === undefined || value === '') return null;
   const str = String(value).replace(/[^0-9.,]/g, '');
-  if (str.includes(',')) {
-    return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+  if (str === '') return null;
+
+  let number;
+  if (str.includes(',') || str.includes('.')) {
+    number = parseFloat(str.replace(/\./g, '').replace(',', '.'));
+  } else {
+    number = parseFloat(str);
   }
-  return parseFloat(str);
+
+  if (Number.isNaN(number)) return null;
+  return Math.trunc(number);
 }
