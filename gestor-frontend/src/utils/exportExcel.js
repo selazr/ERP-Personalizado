@@ -116,7 +116,7 @@ export async function addScheduleWorksheet(
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
-    const iso = date.toISOString().slice(0, 10);
+    const iso = format(date, 'yyyy-MM-dd');
     if (!dayData[iso]) {
       dayData[iso] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [], horanegativa: 0, dianegativo: false };
     }
