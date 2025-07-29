@@ -140,10 +140,11 @@ CREATE TABLE `trabajador` (
   `fecha_desplazamiento` date DEFAULT NULL,
   `cliente` varchar(255) DEFAULT NULL,
   `a1` tinyint(1) DEFAULT '0',
-  `fecha_limosa` date DEFAULT NULL,
-  `fechafin_limosa` date DEFAULT NULL,
+  `limosa` tinyint(1) DEFAULT '0',
   `fecha_a1` date DEFAULT NULL,
   `fechafin_a1` date DEFAULT NULL,
+  `fecha_limosa` date DEFAULT NULL,
+  `fechafin_limosa` date DEFAULT NULL,
   `condiciones` text,
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
@@ -163,7 +164,7 @@ CREATE TABLE `trabajador` (
 
 LOCK TABLES `trabajador` WRITE;
 /*!40000 ALTER TABLE `trabajador` DISABLE KEYS */;
-INSERT INTO `trabajador` VALUES (21,'Cesar Antonio Arenas Cañizales','27364083V','selazr@protonmail.com','722393061','Fijo','G1','Oficial 1','ES6112343456420456323532','123456789012','2000-01-12',NULL,40.00,1600.00,'Carrer de la sabateria 24',0,NULL,'No',0,NULL,NULL,NULL,NULL,NULL,'2025-05-27 07:03:51','2025-05-27 07:33:39','España',0,NULL,'Line-X Hispania');
+INSERT INTO `trabajador` VALUES (21,'Cesar Antonio Arenas Cañizales','27364083V','selazr@protonmail.com','722393061','Fijo','G1','Oficial 1','ES6112343456420456323532','123456789012','2000-01-12',NULL,40.00,1600.00,'Carrer de la sabateria 24',0,NULL,'No',0,0,NULL,NULL,NULL,NULL,NULL,'2025-05-27 07:03:51','2025-05-27 07:33:39','España',0,NULL,'Line-X Hispania');
 /*!40000 ALTER TABLE `trabajador` ENABLE KEYS */;
 UNLOCK TABLES;
 
