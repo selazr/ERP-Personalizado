@@ -89,10 +89,31 @@ exports.getStats = async (req, res) => {
 };
 
 // Información de organización: trabajadores por empresa y país,
-// junto con los empleados con mayor antigüedad.
+// junto con los empleados con mayor antigüedad y varias estadísticas
+// adicionales como nuevas incorporaciones, tipo de contrato, rol y
+// resúmenes de horas trabajadas.
 exports.getOrganizationInfo = async (req, res) => {
   try {
     const today = new Date();
+    const { Op } = db.Sequelize;
+
+    // Nuevas incorporaciones
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    const lastQuarter = new Date();
+    lastQuarter.setMonth(lastQuarter.getMonth() - 3);
+
+    const incorporacionesMes = await Trabajador.count({
+      where: {
+        fecha_alta: { [Op.gte]: lastMonth }
+      }
+    });
+
+    const incorporacionesTrimestre = await Trabajador.count({
+      where: {
+        fecha_alta: { [Op.gte]: lastQuarter }
+      }
+    });
 
     const porEmpresa = await Trabajador.findAll({
       attributes: [
@@ -114,6 +135,26 @@ exports.getOrganizationInfo = async (req, res) => {
       order: [[db.Sequelize.literal('count'), 'DESC']]
     });
 
+    const porContrato = await Trabajador.findAll({
+      attributes: [
+        'tipo_trabajador',
+        [db.Sequelize.fn('COUNT', db.Sequelize.col('tipo_trabajador')), 'count']
+      ],
+      group: ['tipo_trabajador'],
+      raw: true,
+      order: [[db.Sequelize.literal('count'), 'DESC']]
+    });
+
+    const porRol = await Trabajador.findAll({
+      attributes: [
+        'categoria',
+        [db.Sequelize.fn('COUNT', db.Sequelize.col('categoria')), 'count']
+      ],
+      group: ['categoria'],
+      raw: true,
+      order: [[db.Sequelize.literal('count'), 'DESC']]
+    });
+
     const veteranos = await Trabajador.findAll({
       attributes: ['id', 'nombre', 'fecha_alta'],
       order: [['fecha_alta', 'ASC']],
@@ -126,7 +167,53 @@ exports.getOrganizationInfo = async (req, res) => {
       return { ...v, antiguedad: years };
     });
 
-    res.json({ porEmpresa, porPais, veteranos: veteranosConAntiguedad });
+    // Promedios de horas y extras usando la tabla Horario
+    const fourWeeksAgo = new Date();
+    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+    const horasSemana = await db.Horario.findAll({
+      attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(hora_fin, hora_inicio))/3600')), 'horas']],
+      where: { fecha: { [Op.gte]: fourWeeksAgo } },
+      raw: true
+    });
+
+    const horasMes = await db.Horario.findAll({
+      attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(hora_fin, hora_inicio))/3600')), 'horas']],
+      where: { fecha: { [Op.gte]: monthAgo } },
+      raw: true
+    });
+
+    const horasExtras = await db.Horario.findAll({
+      attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('GREATEST(TIME_TO_SEC(TIMEDIFF(hora_fin, hora_inicio))/3600 - 8,0)')), 'extras']],
+      raw: true
+    });
+
+    const promedioHorasSemana = parseFloat(horasSemana[0].horas || 0) / 4;
+    const promedioHorasMes = parseFloat(horasMes[0].horas || 0);
+    const horasExtrasAcumuladas = parseFloat(horasExtras[0].extras || 0);
+
+    // Promedio de antigüedad como proxy de edad
+    const edadPromedioRow = await Trabajador.findOne({
+      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.literal('TIMESTAMPDIFF(YEAR, fecha_alta, CURDATE())')), 'promedio']],
+      raw: true
+    });
+    const edadPromedio = parseFloat(edadPromedioRow.promedio || 0);
+
+    res.json({
+      porEmpresa,
+      porPais,
+      veteranos: veteranosConAntiguedad,
+      incorporacionesMes,
+      incorporacionesTrimestre,
+      porContrato,
+      porRol,
+      promedioHorasSemana,
+      promedioHorasMes,
+      horasExtrasAcumuladas,
+      edadPromedio
+    });
   } catch (err) {
     console.error('Error en getOrganizationInfo:', err);
     res.status(500).json({ error: err.message });
