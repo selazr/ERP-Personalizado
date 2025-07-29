@@ -36,9 +36,10 @@ export function formatCurrency(value) {
   if (value === null || value === undefined || value === '') return '';
   const number = typeof value === 'number' ? value : parseCurrency(value);
   if (number === null) return '';
+  const hasDecimals = number % 1 !== 0;
   return new Intl.NumberFormat('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: hasDecimals ? 2 : 0
   }).format(number);
 }
 
