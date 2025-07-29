@@ -87,3 +87,48 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Información de organización: trabajadores por empresa y país,
+// junto con los empleados con mayor antigüedad.
+exports.getOrganizationInfo = async (req, res) => {
+  try {
+    const today = new Date();
+
+    const porEmpresa = await Trabajador.findAll({
+      attributes: [
+        'empresa',
+        [db.Sequelize.fn('COUNT', db.Sequelize.col('empresa')), 'count']
+      ],
+      group: ['empresa'],
+      raw: true,
+      order: [[db.Sequelize.literal('count'), 'DESC']]
+    });
+
+    const porPais = await Trabajador.findAll({
+      attributes: [
+        'pais',
+        [db.Sequelize.fn('COUNT', db.Sequelize.col('pais')), 'count']
+      ],
+      group: ['pais'],
+      raw: true,
+      order: [[db.Sequelize.literal('count'), 'DESC']]
+    });
+
+    const veteranos = await Trabajador.findAll({
+      attributes: ['id', 'nombre', 'fecha_alta'],
+      order: [['fecha_alta', 'ASC']],
+      limit: 5,
+      raw: true
+    });
+
+    const veteranosConAntiguedad = veteranos.map(v => {
+      const years = Math.floor((today - new Date(v.fecha_alta)) / (365.25 * 24 * 60 * 60 * 1000));
+      return { ...v, antiguedad: years };
+    });
+
+    res.json({ porEmpresa, porPais, veteranos: veteranosConAntiguedad });
+  } catch (err) {
+    console.error('Error en getOrganizationInfo:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
