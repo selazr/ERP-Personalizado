@@ -186,7 +186,6 @@ export async function addScheduleWorksheet(
     totalNocturnas += nocturnas;
     totalFestivas += festivas;
 
-    const negativoVal = neg > 0 ? `-${neg}h` : entry.dianegativo ? 'Día negativo' : '';
     rows.push({
       'Día de la Semana': dayName,
       'Día': dayNum,
@@ -194,10 +193,9 @@ export async function addScheduleWorksheet(
       'Salida 1': salida1,
       'Entrada 2': entrada2,
       'Salida 2': salida2,
-      'Negativo': negativoVal,
       'Normales': toHM(normales),
       'Extras': toHM(extrasFinal),
-      'A Deber': toHM(adeber),
+      'A Deber': entry.dianegativo ? 'Día negativo' : adeber > 0 ? `-${toHM(adeber)}` : '',
       'Nocturnas': toHM(nocturnas),
       'Festivas': toHM(festivas)
     });
@@ -211,10 +209,9 @@ export async function addScheduleWorksheet(
     'Salida 1': '',
     'Entrada 2': '',
     'Salida 2': '',
-    'Negativo': '',
     'Normales': toHM(totalNormales),
     'Extras': toHM(totalExtras),
-    'A Deber': toHM(totalAdeber),
+    'A Deber': totalAdeber > 0 ? `-${toHM(totalAdeber)}` : '',
     'Nocturnas': toHM(totalNocturnas),
     'Festivas': toHM(totalFestivas)
   };
@@ -226,7 +223,6 @@ export async function addScheduleWorksheet(
     'Salida 1',
     'Entrada 2',
     'Salida 2',
-    'Negativo',
     'Normales',
     'Extras',
     'A Deber',
@@ -314,7 +310,7 @@ export async function addScheduleWorksheet(
 
   headerRow.eachCell((cell, colNumber) => {
     cell.border = { ...borderStyle };
-    if (colNumber === 7) {
+    if (colNumber === 6) {
       cell.border = { ...borderStyle, right: { style: 'medium' } };
     }
   });
@@ -341,7 +337,7 @@ export async function addScheduleWorksheet(
         };
       }
       cell.border = { ...borderStyle };
-      if (colNumber === 7) {
+      if (colNumber === 6) {
         cell.border = { ...borderStyle, right: { style: 'medium' } };
       }
     });
@@ -351,7 +347,7 @@ export async function addScheduleWorksheet(
   totals.font = { name: fontName, bold: true };
   totals.eachCell((cell, colNumber) => {
     cell.border = { ...borderStyle };
-    if (colNumber === 7) {
+    if (colNumber === 6) {
       cell.border = { ...borderStyle, right: { style: 'medium' } };
     }
   });
