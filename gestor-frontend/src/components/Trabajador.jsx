@@ -47,7 +47,7 @@ export default function Trabajador() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const workersPerPage = 6; // o el número que prefieras
+  const workersPerPage = 9; // mostrar 9 trabajadores por página
 
   const filteredTrabajadores = trabajadores
     .filter((t) => {
@@ -70,6 +70,7 @@ export default function Trabajador() {
   const indexOfLastWorker = currentPage * workersPerPage;
   const indexOfFirstWorker = indexOfLastWorker - workersPerPage;
   const currentTrabajadores = filteredTrabajadores.slice(indexOfFirstWorker, indexOfLastWorker);
+  const totalPages = Math.ceil(filteredTrabajadores.length / workersPerPage);
 
 
 
@@ -332,24 +333,35 @@ const handleBaja = async (id) => {
 
 
       </div>
-<div className="mt-8 flex justify-center items-center gap-2">
-  <button
-    disabled={currentPage === 1}
-    onClick={() => setCurrentPage(prev => prev - 1)}
-    className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    Anterior
-  </button>
+<div className="mt-8 flex flex-col items-center gap-2">
+  <div className="flex items-center gap-2">
+    <button
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage(prev => prev - 1)}
+      className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Anterior
+    </button>
 
-  <span className="text-black font-medium">{currentPage}</span>
+    {Array.from({ length: totalPages }, (_, i) => (
+      <button
+        key={i + 1}
+        onClick={() => setCurrentPage(i + 1)}
+        className={`px-3 py-1 rounded border ${currentPage === i + 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-800 hover:bg-gray-100 border-gray-300'}`}
+      >
+        {i + 1}
+      </button>
+    ))}
 
-  <button
-    disabled={indexOfLastWorker >= filteredTrabajadores.length}
-    onClick={() => setCurrentPage(prev => prev + 1)}
-    className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    Siguiente
-  </button>
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() => setCurrentPage(prev => prev + 1)}
+      className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Siguiente
+    </button>
+  </div>
+  <span className="text-black font-medium">Página {currentPage} de {totalPages}</span>
 </div>
 
 
