@@ -28,6 +28,16 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     setFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (["salario_neto", "salario_bruto"].includes(name) && value) {
+      const parsed = parseCurrency(value);
+      if (parsed !== null) {
+        setForm((prev) => ({ ...prev, [name]: formatCurrency(parsed) }));
+      }
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!form.nombre) errors.nombre = 'El nombre es obligatorio';
@@ -92,6 +102,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         placeholder={placeholder}
         value={form[name] || ''}
         onChange={handleChange}
+        onBlur={handleBlur}
         type={type}
         className={`border p-2 rounded ${formErrors[name] ? 'border-red-500' : ''}`}
       />

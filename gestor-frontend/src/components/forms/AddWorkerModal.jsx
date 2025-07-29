@@ -1,7 +1,7 @@
 // src/components/forms/AddWorkerModal.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { parseCurrency } from '@/utils/utils';
+import { parseCurrency, formatCurrency } from '@/utils/utils';
 
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [form, setForm] = useState({
@@ -43,6 +43,16 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
       setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     }
     setFormErrors((prev) => ({ ...prev, [name]: undefined })); // limpia error del campo al modificar
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (["salario_neto", "salario_bruto"].includes(name) && value) {
+      const parsed = parseCurrency(value);
+      if (parsed !== null) {
+        setForm((prev) => ({ ...prev, [name]: formatCurrency(parsed) }));
+      }
+    }
   };
 
   const validateForm = () => {
@@ -109,6 +119,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         placeholder={placeholder}
         value={form[name] || ''}
         onChange={handleChange}
+        onBlur={handleBlur}
         type={type}
         className={`border p-2 rounded ${formErrors[name] ? 'border-red-500' : ''}`}
       />
