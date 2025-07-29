@@ -45,7 +45,7 @@ export default function Organizacion() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              <div className="bg-white p-6 rounded-xl shadow">
+              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Trabajadores por empresa</h2>
                 <ul className="space-y-2">
                   {stats.porEmpresa.map((e) => (
@@ -57,7 +57,7 @@ export default function Organizacion() {
                 </ul>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow">
+              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Trabajadores por país</h2>
                 <ul className="space-y-2">
                   {stats.porPais.map((p) => (
@@ -70,7 +70,7 @@ export default function Organizacion() {
               </div>
             </div>
 
-            <div className="max-w-5xl mx-auto mt-6 bg-white p-6 rounded-xl shadow">
+            <div className="max-w-5xl mx-auto mt-6 bg-white text-gray-800 p-6 rounded-xl shadow">
               <h2 className="text-lg font-semibold mb-4">Trabajadores con más antigüedad</h2>
               <ul className="space-y-2">
                 {stats.veteranos.map((v) => (
@@ -80,6 +80,70 @@ export default function Organizacion() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-6">
+              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+                <h2 className="text-lg font-semibold mb-4">Nuevas incorporaciones</h2>
+                <ul className="space-y-2">
+                  <li className="flex justify-between">
+                    <span>Último mes</span>
+                    <span className="font-bold">{stats.incorporacionesMes}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Último trimestre</span>
+                    <span className="font-bold">{stats.incorporacionesTrimestre}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+                <h2 className="text-lg font-semibold mb-4">Distribución por contrato</h2>
+                <ul className="space-y-2">
+                  {stats.porContrato.map((c) => (
+                    <li key={c.tipo_trabajador} className="flex justify-between">
+                      <span>{c.tipo_trabajador || 'Sin especificar'}</span>
+                      <span className="font-bold">{c.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-6">
+              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+                <h2 className="text-lg font-semibold mb-4">Distribución por rol</h2>
+                <ul className="space-y-2">
+                  {stats.porRol.map((r) => (
+                    <li key={r.categoria} className="flex justify-between">
+                      <span>{r.categoria || 'Sin especificar'}</span>
+                      <span className="font-bold">{r.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+                <h2 className="text-lg font-semibold mb-4">Promedios y extras</h2>
+                <ul className="space-y-2">
+                  <li className="flex justify-between">
+                    <span>Edad promedio (años)</span>
+                    <span className="font-bold">{stats.edadPromedio?.toFixed(1)}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Horas/semana</span>
+                    <span className="font-bold">{stats.promedioHorasSemana?.toFixed(1)}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Horas/mes</span>
+                    <span className="font-bold">{stats.promedioHorasMes?.toFixed(1)}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Horas extras acumuladas</span>
+                    <span className="font-bold">{stats.horasExtrasAcumuladas?.toFixed(1)}</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </>
         )}
