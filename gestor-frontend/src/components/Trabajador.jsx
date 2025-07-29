@@ -256,7 +256,10 @@ const handleBaja = async (id) => {
                     <p><Euro className="inline w-4 h-4 mr-1 text-emerald-300" /> Salario Bruto: {formatCurrency(t.salario_bruto)} €</p>
                     <p><User className="inline w-4 h-4 mr-1 text-red-500" /> Cliente: {t.cliente}</p>
                     <p>A1: {t.a1 ? 'Sí' : 'No'}</p>
-                    <p>Fecha A1: {t.fecha_limosa ? formatDate(t.fecha_limosa) : 'N/A'}</p>
+                    <p>Fecha Limosa: {t.fecha_limosa ? formatDate(t.fecha_limosa) : 'N/A'}</p>
+                    <p>Fin Limosa: {t.fechafin_limosa ? formatDate(t.fechafin_limosa) : 'N/A'}</p>
+                    <p>Fecha A1: {t.fecha_a1 ? formatDate(t.fecha_a1) : 'N/A'}</p>
+                    <p>Fin A1: {t.fechafin_a1 ? formatDate(t.fechafin_a1) : 'N/A'}</p>
                     <p>Desplazamiento: {t.desplazamiento ? 'Sí' : 'No'}</p>
                     <p>Fecha Desplazamiento: {t.fecha_desplazamiento ? formatDate(t.fecha_desplazamiento) : 'N/A'}</p>
                     <p><HardHat className="inline w-4 h-4 mr-1 text-yellow-600" /> EPIs: {t.epis ? 'Sí' : 'No'}</p>

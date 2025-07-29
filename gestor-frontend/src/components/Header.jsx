@@ -36,10 +36,44 @@ export default function Header() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const today = new Date();
-        const upcoming = res.data.filter((w) => {
-          if (!w.fecha_baja) return false;
-          const diff = (new Date(w.fecha_baja) - today) / (1000 * 60 * 60 * 24);
-          return diff >= 0 && diff <= 7;
+        const upcoming = [];
+        res.data.forEach((w) => {
+          if (w.fecha_baja) {
+            const diff = (new Date(w.fecha_baja) - today) / (1000 * 60 * 60 * 24);
+            if (diff >= 0 && diff <= 7) {
+              const dias = Math.ceil(diff);
+              const mensaje = dias === 7
+                ? `A ${w.nombre} le queda 1 semana de contrato`
+                : dias === 1
+                  ? `A ${w.nombre} le queda 1 día de contrato`
+                  : `A ${w.nombre} le quedan ${dias} días de contrato`;
+              upcoming.push({ id: `baja-${w.id}`, mensaje });
+            }
+          }
+          if (w.fechafin_limosa) {
+            const diff = (new Date(w.fechafin_limosa) - today) / (1000 * 60 * 60 * 24);
+            if (diff >= 0 && diff <= 7) {
+              const dias = Math.ceil(diff);
+              const mensaje = dias === 7
+                ? `La Limosa de ${w.nombre} vence en 1 semana`
+                : dias === 1
+                  ? `La Limosa de ${w.nombre} vence en 1 día`
+                  : `La Limosa de ${w.nombre} vence en ${dias} días`;
+              upcoming.push({ id: `limosa-${w.id}`, mensaje });
+            }
+          }
+          if (w.fechafin_a1) {
+            const diff = (new Date(w.fechafin_a1) - today) / (1000 * 60 * 60 * 24);
+            if (diff >= 0 && diff <= 7) {
+              const dias = Math.ceil(diff);
+              const mensaje = dias === 7
+                ? `El A1 de ${w.nombre} vence en 1 semana`
+                : dias === 1
+                  ? `El A1 de ${w.nombre} vence en 1 día`
+                  : `El A1 de ${w.nombre} vence en ${dias} días`;
+              upcoming.push({ id: `a1-${w.id}`, mensaje });
+            }
+          }
         });
         setNotifications(upcoming);
       } catch (err) {
@@ -119,19 +153,11 @@ export default function Header() {
                     {notifications.length === 0 && (
                       <div className="px-4 py-2 text-sm">Sin notificaciones</div>
                     )}
-                    {notifications.map((n) => {
-                      const diff = Math.ceil((new Date(n.fecha_baja) - new Date()) / 86400000);
-                      const mensaje = diff === 7
-                        ? `A ${n.nombre} le queda 1 semana de contrato`
-                        : diff === 1
-                          ? `A ${n.nombre} le queda 1 día de contrato`
-                          : `A ${n.nombre} le quedan ${diff} días de contrato`;
-                      return (
-                        <div key={n.id} className="px-4 py-2 text-sm border-b last:border-b-0">
-                          {mensaje}
-                        </div>
-                      );
-                    })}
+                    {notifications.map((n) => (
+                      <div key={n.id} className="px-4 py-2 text-sm border-b last:border-b-0">
+                        {n.mensaje}
+                      </div>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -169,19 +195,11 @@ export default function Header() {
                     {notifications.length === 0 && (
                       <div className="px-4 py-2 text-sm">Sin notificaciones</div>
                     )}
-                    {notifications.map((n) => {
-                      const diff = Math.ceil((new Date(n.fecha_baja) - new Date()) / 86400000);
-                      const mensaje = diff === 7
-                        ? `A ${n.nombre} le queda 1 semana de contrato`
-                        : diff === 1
-                          ? `A ${n.nombre} le queda 1 día de contrato`
-                          : `A ${n.nombre} le quedan ${diff} días de contrato`;
-                      return (
-                        <div key={n.id} className="px-4 py-2 text-sm border-b last:border-b-0">
-                          {mensaje}
-                        </div>
-                      );
-                    })}
+                    {notifications.map((n) => (
+                      <div key={n.id} className="px-4 py-2 text-sm border-b last:border-b-0">
+                        {n.mensaje}
+                      </div>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -48,7 +48,10 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (!form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
     if (!form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
     if (!form.salario_bruto) errors.salario_bruto = 'El salario bruto mensual es obligatorio';
-    if (form.a1 && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha A1';
+    if (form.a1 && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha Limosa';
+    if (form.a1 && !form.fechafin_limosa) errors.fechafin_limosa = 'Debe especificar la fecha fin Limosa';
+    if (form.a1 && !form.fecha_a1) errors.fecha_a1 = 'Debe especificar la fecha A1';
+    if (form.a1 && !form.fechafin_a1) errors.fechafin_a1 = 'Debe especificar la fecha fin A1';
     if (form.epis && !form.fecha_epis) errors.fecha_epis = 'Debe especificar la fecha de EPIs';
     if (form.desplazamiento && !form.fecha_desplazamiento) errors.fecha_desplazamiento = 'Debe especificar la fecha de desplazamiento';
     return errors;
@@ -162,7 +165,10 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
               <label className="flex items-center gap-2 col-span-full">
                 <input type="checkbox" name="a1" checked={form.a1} onChange={handleChange} /> ¿Tiene A1?
               </label>
-              {form.a1 && renderInput('Fecha A1', 'fecha_limosa', '', 'date')}
+              {form.a1 && renderInput('Fecha Limosa', 'fecha_limosa', '', 'date')}
+              {form.a1 && renderInput('Fin Limosa', 'fechafin_limosa', '', 'date')}
+              {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
+              {form.a1 && renderInput('Fin A1', 'fechafin_a1', '', 'date')}
               <label className="flex items-center gap-2 col-span-full">
                 <input type="checkbox" name="epis" checked={form.epis} onChange={handleChange} /> ¿Tiene EPIs?
               </label>
