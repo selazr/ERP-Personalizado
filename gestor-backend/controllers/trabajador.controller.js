@@ -103,15 +103,25 @@ exports.getOrganizationInfo = async (req, res) => {
     const lastQuarter = new Date();
     lastQuarter.setMonth(lastQuarter.getMonth() - 3);
 
+    const activeCondition = {
+      fecha_alta: { [Op.lte]: today },
+      [Op.or]: [
+        { fecha_baja: null },
+        { fecha_baja: { [Op.gte]: today } }
+      ]
+    };
+
     const incorporacionesMes = await Trabajador.count({
       where: {
-        fecha_alta: { [Op.gte]: lastMonth }
+        ...activeCondition,
+        fecha_alta: { [Op.gte]: lastMonth, [Op.lte]: today }
       }
     });
 
     const incorporacionesTrimestre = await Trabajador.count({
       where: {
-        fecha_alta: { [Op.gte]: lastQuarter }
+        ...activeCondition,
+        fecha_alta: { [Op.gte]: lastQuarter, [Op.lte]: today }
       }
     });
 
@@ -120,6 +130,7 @@ exports.getOrganizationInfo = async (req, res) => {
         'empresa',
         [db.Sequelize.fn('COUNT', db.Sequelize.col('empresa')), 'count']
       ],
+      where: activeCondition,
       group: ['empresa'],
       raw: true,
       order: [[db.Sequelize.literal('count'), 'DESC']]
@@ -130,6 +141,7 @@ exports.getOrganizationInfo = async (req, res) => {
         'pais',
         [db.Sequelize.fn('COUNT', db.Sequelize.col('pais')), 'count']
       ],
+      where: activeCondition,
       group: ['pais'],
       raw: true,
       order: [[db.Sequelize.literal('count'), 'DESC']]
@@ -140,6 +152,7 @@ exports.getOrganizationInfo = async (req, res) => {
         'tipo_trabajador',
         [db.Sequelize.fn('COUNT', db.Sequelize.col('tipo_trabajador')), 'count']
       ],
+      where: activeCondition,
       group: ['tipo_trabajador'],
       raw: true,
       order: [[db.Sequelize.literal('count'), 'DESC']]
@@ -150,6 +163,7 @@ exports.getOrganizationInfo = async (req, res) => {
         'categoria',
         [db.Sequelize.fn('COUNT', db.Sequelize.col('categoria')), 'count']
       ],
+      where: activeCondition,
       group: ['categoria'],
       raw: true,
       order: [[db.Sequelize.literal('count'), 'DESC']]
@@ -157,6 +171,7 @@ exports.getOrganizationInfo = async (req, res) => {
 
     const veteranos = await Trabajador.findAll({
       attributes: ['id', 'nombre', 'fecha_alta'],
+      where: activeCondition,
       order: [['fecha_alta', 'ASC']],
       limit: 5,
       raw: true
@@ -176,17 +191,20 @@ exports.getOrganizationInfo = async (req, res) => {
     const horasSemana = await db.Horario.findAll({
       attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(hora_fin, hora_inicio))/3600')), 'horas']],
       where: { fecha: { [Op.gte]: fourWeeksAgo } },
+      include: [{ model: Trabajador, attributes: [], where: activeCondition }],
       raw: true
     });
 
     const horasMes = await db.Horario.findAll({
       attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(hora_fin, hora_inicio))/3600')), 'horas']],
       where: { fecha: { [Op.gte]: monthAgo } },
+      include: [{ model: Trabajador, attributes: [], where: activeCondition }],
       raw: true
     });
 
     const horasExtras = await db.Horario.findAll({
       attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('GREATEST(TIME_TO_SEC(TIMEDIFF(hora_fin, hora_inicio))/3600 - 8,0)')), 'extras']],
+      include: [{ model: Trabajador, attributes: [], where: activeCondition }],
       raw: true
     });
 
@@ -197,6 +215,7 @@ exports.getOrganizationInfo = async (req, res) => {
     // Promedio de antigüedad como proxy de edad
     const edadPromedioRow = await Trabajador.findOne({
       attributes: [[db.Sequelize.fn('AVG', db.Sequelize.literal('TIMESTAMPDIFF(YEAR, fecha_alta, CURDATE())')), 'promedio']],
+      where: activeCondition,
       raw: true
     });
     const edadPromedio = parseFloat(edadPromedioRow.promedio || 0);
