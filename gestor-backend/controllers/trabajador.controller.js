@@ -170,17 +170,20 @@ exports.getOrganizationInfo = async (req, res) => {
     });
 
     const veteranos = await Trabajador.findAll({
-      attributes: ['id', 'nombre', 'fecha_alta'],
+      attributes: ['id', 'nombre', 'fecha_alta', 'fecha_baja'],
       where: activeCondition,
       order: [['fecha_alta', 'ASC']],
       limit: 5,
       raw: true
     });
 
-    const veteranosConAntiguedad = veteranos.map(v => {
-      const years = Math.floor((today - new Date(v.fecha_alta)) / (365.25 * 24 * 60 * 60 * 1000));
-      return { ...v, antiguedad: years };
-    });
+    // Filtramos cualquier trabajador que ya no esté activo por seguridad
+    const veteranosConAntiguedad = veteranos
+      .filter(v => !v.fecha_baja || new Date(v.fecha_baja) >= today)
+      .map(v => {
+        const years = Math.floor((today - new Date(v.fecha_alta)) / (365.25 * 24 * 60 * 60 * 1000));
+        return { id: v.id, nombre: v.nombre, fecha_alta: v.fecha_alta, antiguedad: years };
+      });
 
     // Promedios de horas y extras usando la tabla Horario
     const fourWeeksAgo = new Date();
