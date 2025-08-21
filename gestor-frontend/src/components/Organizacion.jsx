@@ -31,7 +31,7 @@ export default function Organizacion() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
             Organización
           </h1>
-          <p className="text-gray-600 mt-2">Resumen de empresas, países y antigüedad.</p>
+          <p className="text-gray-600 mt-2">Resumen de empresas, países y antigüedad de trabajadores activos.</p>
         </div>
 
         {error && (
