@@ -240,7 +240,7 @@ export default function ScheduleManager() {
             <span className="text-xs font-semibold mt-2">Vacaciones</span>
           )}
 
-          {totalHoras > 0 && !festivo && !vacaciones && !bajamedica && horaNegativa <= 0 && !diaNegativo && (
+          {totalHoras > 0 && !festivo && !vacaciones && !bajamedica && (
             <>
               <span className="text-base font-bold">
                 {formatHoursToHM(totalHoras)}
@@ -254,7 +254,7 @@ export default function ScheduleManager() {
             </>
           )}
 
-          {totalHoras === 0 && !festivo && !bajamedica && horaNegativa <= 0 && !diaNegativo && eventos[0]?.proyecto_nombre && (
+          {totalHoras === 0 && !festivo && !bajamedica && eventos[0]?.proyecto_nombre && (
             <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
               <Folder className="w-4 h-4" />
               <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
@@ -267,7 +267,7 @@ export default function ScheduleManager() {
 
           {(horaNegativa > 0 || diaNegativo) && (
             <span className="text-base font-bold text-red-700 mt-1">
-              {horaNegativa > 0 ? `-${horaNegativa}h` : 'Día negativo'}
+              {horaNegativa > 0 ? `-${formatHoursToHM(horaNegativa)}` : 'Día negativo'}
             </span>
           )}
         </div>

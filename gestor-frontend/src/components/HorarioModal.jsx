@@ -27,6 +27,23 @@ export default function HorarioModal({
   const [extraDates, setExtraDates] = useState([]);
   const [useNegative, setUseNegative] = useState(false);
   const [negativeHours, setNegativeHours] = useState('');
+
+  const parseHoursInput = (val) => {
+    if (!val) return 0;
+    const normalized = val.replace(',', '.');
+    const [hPart, mPart = '0'] = normalized.split('.');
+    const hours = parseInt(hPart, 10) || 0;
+    let minutes = parseInt(mPart, 10) || 0;
+    if (mPart.length === 1) minutes *= 6;
+    if (minutes > 59) minutes = 59;
+    return hours + minutes / 60;
+  };
+
+  const formatHoursInput = (val) => {
+    const hours = Math.floor(val);
+    const minutes = Math.round((val - hours) * 60);
+    return `${hours},${minutes.toString().padStart(2, '0')}`;
+  };
   
   useEffect(() => {
     setIntervals(initialData.map(item => ({ ...item, id: uuidv4() })));
@@ -34,7 +51,7 @@ export default function HorarioModal({
     setIsVacation(initialVacaciones);
     setIsBaja(initialBaja);
     setUseNegative(initialHoraNegativa > 0 || initialDiaNegativo);
-    setNegativeHours(initialHoraNegativa ? String(initialHoraNegativa) : '');
+    setNegativeHours(initialHoraNegativa ? formatHoursInput(initialHoraNegativa) : '');
 
   // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
   if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
@@ -84,6 +101,7 @@ export default function HorarioModal({
   };
 
   const handleSave = () => {
+    const parsedNegative = useNegative ? parseHoursInput(negativeHours) : 0;
     onSave({
       fecha,
       intervals,
@@ -91,8 +109,8 @@ export default function HorarioModal({
       vacaciones: isVacation,
       bajamedica: isBaja,
       proyecto_nombre: proyectoNombre?.trim() || null,
-      horaNegativa: useNegative ? Number(negativeHours) || 0 : 0,
-      diaNegativo: useNegative && (!negativeHours || Number(negativeHours) === 0),
+      horaNegativa: parsedNegative,
+      diaNegativo: useNegative && parsedNegative === 0,
       trabajadoresExtra: extraWorkers.filter(Boolean),
       fechasExtra: extraDates.filter(Boolean)
     });
@@ -178,12 +196,10 @@ export default function HorarioModal({
 
             {useNegative && (
               <input
-                type="number"
-                min="0"
-                step="0.5"
+                type="text"
                 value={negativeHours}
                 onChange={(e) => setNegativeHours(e.target.value)}
-                placeholder="Cantidad de horas negativas"
+                placeholder="Horas negativas (HH,MM)"
                 className="p-2 border border-gray-300 rounded w-full mt-1"
               />
             )}
