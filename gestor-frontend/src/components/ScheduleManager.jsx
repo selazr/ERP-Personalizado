@@ -235,21 +235,28 @@ export default function ScheduleManager() {
             <span className="text-xs font-semibold mt-2">Vacaciones</span>
           )}
 
-          {totalHoras > 0 && !festivo && !vacaciones && !bajamedica && (
-            <>
-              <span className="text-base font-bold">
-                {formatHoursToHM(totalHoras)}
-              </span>
+          {(totalHoras > 0 || horaNegativa > 0 || diaNegativo) && !festivo && !vacaciones && !bajamedica && (
+            <div className="flex flex-col items-center">
+              {totalHoras > 0 && (
+                <span className="text-base font-bold">
+                  {formatHoursToHM(totalHoras)}
+                </span>
+              )}
+              {(horaNegativa > 0 || diaNegativo) && (
+                <span className="text-base font-bold text-red-700 mt-1">
+                  {horaNegativa > 0 ? `-${formatHoursToHM(horaNegativa)}` : 'Día negativo'}
+                </span>
+              )}
               {eventos[0]?.proyecto_nombre && (
                 <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                   <Folder className="w-4 h-4" />
                   <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
                 </div>
               )}
-            </>
+            </div>
           )}
 
-          {totalHoras === 0 && !festivo && !bajamedica && eventos[0]?.proyecto_nombre && (
+          {totalHoras === 0 && horaNegativa <= 0 && !diaNegativo && !festivo && !bajamedica && eventos[0]?.proyecto_nombre && (
             <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
               <Folder className="w-4 h-4" />
               <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
@@ -258,12 +265,6 @@ export default function ScheduleManager() {
 
           {totalHoras === 0 && !festivo && !bajamedica && weekend && !eventos[0]?.proyecto_nombre && horaNegativa <= 0 && !diaNegativo && (
             <span className="text-xs italic absolute bottom-1 right-1 text-gray-400">Libre</span>
-          )}
-
-          {(horaNegativa > 0 || diaNegativo) && (
-            <span className="text-base font-bold text-red-700 mt-1">
-              {horaNegativa > 0 ? `-${formatHoursToHM(horaNegativa)}` : 'Día negativo'}
-            </span>
           )}
         </div>
       );
