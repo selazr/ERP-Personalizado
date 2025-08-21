@@ -27,9 +27,15 @@ export function formatHours(value) {
 
 
 export const formatHoursToHM = (total) => {
-  const hours = Math.floor(total);
-  const minutes = Math.round((total - hours) * 60);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
+  const sign = total < 0 ? '-' : '';
+  const absTotal = Math.abs(total);
+  let hours = Math.floor(absTotal);
+  let minutes = Math.round((absTotal - hours) * 60);
+  if (minutes === 60) {
+    hours += 1;
+    minutes = 0;
+  }
+  return `${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
 };
 
 export function formatCurrency(value) {

@@ -13,6 +13,7 @@ import {
   exportAllSchedulesToExcel,
   exportYearScheduleToExcel
 } from '@/utils/exportExcel';
+import { formatHoursToHM } from '@/utils/utils';
 
 export default function ScheduleManager() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -179,12 +180,6 @@ export default function ScheduleManager() {
       setScheduleData(res.data);
     });
   }, [selectedTrabajadorId, currentDate]);
-
-  const formatHoursToHM = (total) => {
-    const hours = Math.floor(total);
-    const minutes = Math.round((total - hours) * 60);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
-  };
 
   const groupedData = agruparHorarios(scheduleData);
 
