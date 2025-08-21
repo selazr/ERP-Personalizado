@@ -31,18 +31,26 @@ export default function HorarioModal({
   const parseHoursInput = (val) => {
     if (!val) return 0;
     const normalized = val.replace(',', '.');
-    const [hPart, mPart = '0'] = normalized.split('.');
+    const sign = normalized.trim().startsWith('-') ? -1 : 1;
+    const unsigned = normalized.replace('-', '');
+    const [hPart, mPart = '0'] = unsigned.split('.');
     const hours = parseInt(hPart, 10) || 0;
     let minutes = parseInt(mPart, 10) || 0;
     if (mPart.length === 1) minutes *= 6;
     if (minutes > 59) minutes = 59;
-    return hours + minutes / 60;
+    return sign * (hours + minutes / 60);
   };
 
   const formatHoursInput = (val) => {
-    const hours = Math.floor(val);
-    const minutes = Math.round((val - hours) * 60);
-    return `${hours},${minutes.toString().padStart(2, '0')}`;
+    const sign = val < 0 ? '-' : '';
+    const absVal = Math.abs(val);
+    let hours = Math.floor(absVal);
+    let minutes = Math.round((absVal - hours) * 60);
+    if (minutes === 60) {
+      hours += 1;
+      minutes = 0;
+    }
+    return `${sign}${hours},${minutes.toString().padStart(2, '0')}`;
   };
   
   useEffect(() => {
@@ -162,7 +170,7 @@ export default function HorarioModal({
           </p>
 
           <div className="space-y-2">
-            {intervals.map((intv, i) => (
+            {intervals.map((intv) => (
               <div key={intv.id} className="flex gap-2 items-center">
                 <input
                   type="time"

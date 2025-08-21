@@ -69,9 +69,15 @@ function toHM(num) {
   if (num === 0 || num === undefined || num === null) {
     return '';
   }
-  const hours = Math.floor(num);
-  const minutes = Math.round((num - hours) * 60);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  const sign = num < 0 ? '-' : '';
+  const absVal = Math.abs(num);
+  let hours = Math.floor(absVal);
+  let minutes = Math.round((absVal - hours) * 60);
+  if (minutes === 60) {
+    hours += 1;
+    minutes = 0;
+  }
+  return `${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export async function addScheduleWorksheet(
