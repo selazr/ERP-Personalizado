@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: false,
     },
     horanegativa: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(5, 2),
       defaultValue: 0,
     },
     dianegativo: {
