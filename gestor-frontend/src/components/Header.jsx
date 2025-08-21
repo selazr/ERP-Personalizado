@@ -21,6 +21,13 @@ export default function Header() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const isActivo = (trabajador) => {
+    const today = new Date();
+    const fechaAlta = new Date(trabajador.fecha_alta);
+    const fechaBaja = trabajador.fecha_baja ? new Date(trabajador.fecha_baja) : null;
+    return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
+  };
+
   const handleResize = () => setIsMobile(window.innerWidth < 768);
 
   useEffect(() => {
@@ -38,7 +45,7 @@ export default function Header() {
         );
         const today = new Date();
         const upcoming = [];
-        res.data.forEach((w) => {
+        res.data.filter(isActivo).forEach((w) => {
           if (w.fecha_baja) {
             const diff = (new Date(w.fecha_baja) - today) / (1000 * 60 * 60 * 24);
             if (diff >= 0 && diff <= 7) {
