@@ -6,6 +6,7 @@ import {
   Calendar, Euro, ClipboardSignature, Edit3, HardHat,
   Clock, Users, Tag, Banknote, Shield
 } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
@@ -61,11 +62,6 @@ export default function Trabajador() {
       if (valorA > valorB) return 1;
       return 0;
     });
-
-  const paginatedTrabajadores = filteredTrabajadores.slice(
-    (currentPage - 1) * workersPerPage,
-    currentPage * workersPerPage
-  );
 
   const indexOfLastWorker = currentPage * workersPerPage;
   const indexOfFirstWorker = indexOfLastWorker - workersPerPage;
@@ -166,9 +162,9 @@ const handleBaja = async (id) => {
   return (
     <>
     <Header />
-    <div className="min-h-screen bg-slate-100 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+    <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
+      <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <input
             type="text"
             placeholder={`Buscar por ${filterOptions.find(o => o.value === filterBy)?.label.toLowerCase()}...`}
@@ -190,7 +186,7 @@ const handleBaja = async (id) => {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full md:w-auto"
         >
           Añadir Trabajador
         </button>
@@ -199,11 +195,11 @@ const handleBaja = async (id) => {
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {currentTrabajadores.map((t) => (
           <div
             key={t.id}
-            className={`rounded-xl p-6 space-y-3 text-sm shadow transition-all duration-300 ${
+            className={`rounded-xl p-4 sm:p-6 space-y-3 text-sm shadow transition-all duration-300 ${
               isActivo(t) ? 'bg-white border border-gray-200' : 'bg-red-50 border border-red-400'
             }`}
           >
