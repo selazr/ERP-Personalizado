@@ -174,6 +174,7 @@ export default function HorarioModal({
               <div key={intv.id} className="flex gap-2 items-center">
                 <input
                   type="time"
+                  lang="es"
                   value={intv.hora_inicio}
                   onChange={(e) => handleChange(intv.id, 'hora_inicio', e.target.value)}
                   className="border p-1 rounded w-full text-black"
@@ -181,6 +182,7 @@ export default function HorarioModal({
                 <span>-</span>
                 <input
                   type="time"
+                  lang="es"
                   value={intv.hora_fin}
                   onChange={(e) => handleChange(intv.id, 'hora_fin', e.target.value)}
                   className="border p-1 rounded w-full text-black"
