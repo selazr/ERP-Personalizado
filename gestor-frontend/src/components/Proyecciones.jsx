@@ -36,23 +36,23 @@ export default function Proyecciones() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-slate-100 p-6">
-        <div className="max-w-5xl mx-auto mb-6 text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
+      <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
+        <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center px-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
             Proyecciones y Estadísticas
           </h1>
           <p className="text-gray-600 mt-2">Visualiza el estado económico de tu plantilla.</p>
         </div>
 
         {error && (
-          <div className="max-w-5xl mx-auto mb-4 bg-red-100 text-red-700 p-4 rounded shadow">
+          <div className="w-full max-w-5xl mx-auto mb-4 bg-red-100 text-red-700 p-4 rounded shadow">
             {error}
           </div>
         )}
 
         {stats ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-5xl mx-auto mb-10 px-4">
               <StatCard title="Trabajadores totales" value={stats.totalTrabajadores} />
               <StatCard title="Activos" value={stats.trabajadoresActivos} />
               <StatCard title="Inactivos" value={stats.trabajadoresInactivos} />
@@ -61,8 +61,8 @@ export default function Proyecciones() {
               <StatCard title="Salario bruto promedio" value={`€ ${formatCurrency(stats.salarioBrutoPromedio)}`} />
             </div>
 
-            <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-xl">
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">Gráfico comparativo</h2>
+            <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Gráfico comparativo</h2>
               <div className="w-full h-80">
                 <ResponsiveContainer>
                   <BarChart data={chartData}>
@@ -86,7 +86,7 @@ export default function Proyecciones() {
 
 function StatCard({ title, value }) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow hover:shadow-md transition text-center">
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow hover:shadow-md transition text-center">
       <p className="text-gray-500 text-sm">{title}</p>
       <p className="text-2xl font-bold text-blue-700 mt-2">{value}</p>
     </div>

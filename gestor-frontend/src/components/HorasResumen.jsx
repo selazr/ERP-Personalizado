@@ -1,10 +1,9 @@
 // src/components/HorasResumen.jsx
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Clock, Calendar, Download } from 'lucide-react';
 import { getYear, getMonth, getDay, parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { calculateTotalHoursFromIntervals, formatHoursToHM } from '../utils/utils';
+import { formatHoursToHM } from '../utils/utils';
 
 
 function calcularTipoHoras(intervals, dateKey, isFestivo, isVacaciones, isBaja) {

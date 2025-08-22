@@ -1,6 +1,5 @@
 // src/components/HorasResumenAnual.jsx
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Clock, Download } from 'lucide-react';
 import { getYear, getDay, parseISO, format } from 'date-fns';
 import { formatHoursToHM } from '../utils/utils';
