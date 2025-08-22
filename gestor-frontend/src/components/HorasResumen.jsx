@@ -38,14 +38,14 @@ function calcularTipoHoras(intervals, dateKey, isFestivo, isVacaciones, isBaja) 
       return; // Todo el intervalo es festivo
     }
 
-    // 360 minutos = 6:00 AM
+    // 360 minutos = 06:00
     if (start < 360) {
       const nocturnaFin = Math.min(end, 360); // límite superior hasta las 6:00
       nocturnas += (nocturnaFin - start) / 60;
       total -= (nocturnaFin - start) / 60;
     }
 
-    // 1320 minutos = 22:00 PM
+    // 1320 minutos = 22:00
     if (end > 1320) {
       const nocturnaInicio = Math.max(start, 1320); // límite inferior desde las 22:00
       nocturnas += (end - nocturnaInicio) / 60;
