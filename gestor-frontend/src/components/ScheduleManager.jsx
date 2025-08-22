@@ -276,9 +276,9 @@ export default function ScheduleManager() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-slate-100 p-6">
-        <div className="max-w-5xl mx-auto mb-6 text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+      <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
+        <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center px-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
             Gestor Avanzado de Horarios
           </h1>
           <p className="text-gray-600 mt-2">
@@ -286,7 +286,7 @@ export default function ScheduleManager() {
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="w-full max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
           <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Trabajador:</label>
             <WorkerAutocomplete
@@ -311,7 +311,7 @@ export default function ScheduleManager() {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-xl max-w-5xl mx-auto p-6">
+        <div className="w-full bg-white rounded-xl shadow-xl max-w-5xl mx-auto p-4 sm:p-6">
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}
@@ -343,7 +343,7 @@ export default function ScheduleManager() {
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto">
+        <div className="w-full max-w-5xl mx-auto px-4">
           <HoursSummary
             currentDate={currentDate}
             scheduleData={agruparHorarios(scheduleData)}

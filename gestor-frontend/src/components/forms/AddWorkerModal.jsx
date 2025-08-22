@@ -1,6 +1,6 @@
 // src/components/forms/AddWorkerModal.jsx
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
 
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {

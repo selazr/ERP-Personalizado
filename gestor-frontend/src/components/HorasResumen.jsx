@@ -1,10 +1,10 @@
 // src/components/HorasResumen.jsx
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Clock, Calendar, Download } from 'lucide-react';
+import { motion as Motion } from 'framer-motion';
 import { getYear, getMonth, getDay, parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { calculateTotalHoursFromIntervals, formatHoursToHM } from '../utils/utils';
+import { formatHoursToHM } from '../utils/utils';
 
 
 function calcularTipoHoras(intervals, dateKey, isFestivo, isVacaciones, isBaja) {
@@ -103,7 +103,7 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
   const total = resumen.normales + resumen.extras + resumen.nocturnas + resumen.festivas;
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
@@ -175,6 +175,6 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
       </div>
 
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }

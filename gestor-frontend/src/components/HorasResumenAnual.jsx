@@ -1,7 +1,7 @@
 // src/components/HorasResumenAnual.jsx
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Clock, Download } from 'lucide-react';
+import { motion as Motion } from 'framer-motion';
 import { getYear, getDay, parseISO, format } from 'date-fns';
 import { formatHoursToHM } from '../utils/utils';
 
@@ -99,7 +99,7 @@ export function YearHoursSummary({ currentDate, scheduleData, onDownload }) {
     resumen.normales + resumen.extras + resumen.nocturnas + resumen.festivas;
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
@@ -170,6 +170,6 @@ export function YearHoursSummary({ currentDate, scheduleData, onDownload }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }

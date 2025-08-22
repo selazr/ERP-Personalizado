@@ -1,6 +1,6 @@
 // src/components/Header.jsx
 import { useState, useEffect } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LogOut,
   CalendarClock,
@@ -10,14 +10,13 @@ import {
   Menu,
   Bell
 } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -28,12 +27,6 @@ export default function Header() {
     return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
   };
 
-  const handleResize = () => setIsMobile(window.innerWidth < 768);
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     const fetchNotifications = async () => {

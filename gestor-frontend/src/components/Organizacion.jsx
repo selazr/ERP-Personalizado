@@ -26,16 +26,16 @@ export default function Organizacion() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-slate-100 p-6">
-        <div className="max-w-5xl mx-auto mb-6 text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
+      <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
+        <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center px-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
             Organización
           </h1>
           <p className="text-gray-600 mt-2">Resumen de empresas, países y antigüedad de trabajadores activos.</p>
         </div>
 
         {error && (
-          <div className="max-w-5xl mx-auto mb-4 bg-red-100 text-red-700 p-4 rounded shadow">
+          <div className="w-full max-w-5xl mx-auto mb-4 bg-red-100 text-red-700 p-4 rounded shadow">
             {error}
           </div>
         )}
@@ -44,8 +44,8 @@ export default function Organizacion() {
           <p className="text-center text-gray-600 mt-12">Cargando datos...</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-5xl mx-auto px-4">
+              <div className="bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Trabajadores por empresa</h2>
                 <ul className="space-y-2">
                   {stats.porEmpresa.map((e) => (
@@ -57,7 +57,7 @@ export default function Organizacion() {
                 </ul>
               </div>
 
-              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+              <div className="bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Trabajadores por país</h2>
                 <ul className="space-y-2">
                   {stats.porPais.map((p) => (
@@ -70,7 +70,7 @@ export default function Organizacion() {
               </div>
             </div>
 
-            <div className="max-w-5xl mx-auto mt-6 bg-white text-gray-800 p-6 rounded-xl shadow">
+            <div className="w-full max-w-5xl mx-auto mt-6 bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
               <h2 className="text-lg font-semibold mb-4">Trabajadores con más antigüedad</h2>
               <ul className="space-y-2">
                 {stats.veteranos.map((v) => (
@@ -82,8 +82,8 @@ export default function Organizacion() {
               </ul>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-6">
-              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-5xl mx-auto mt-6 px-4">
+              <div className="bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Nuevas incorporaciones</h2>
                 <ul className="space-y-2">
                   <li className="flex justify-between">
@@ -97,7 +97,7 @@ export default function Organizacion() {
                 </ul>
               </div>
 
-              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+              <div className="bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Distribución por contrato</h2>
                 <ul className="space-y-2">
                   {stats.porContrato.map((c) => (
@@ -110,8 +110,8 @@ export default function Organizacion() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-6">
-              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-5xl mx-auto mt-6 px-4">
+              <div className="bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Distribución por rol</h2>
                 <ul className="space-y-2">
                   {stats.porRol.map((r) => (
@@ -123,7 +123,7 @@ export default function Organizacion() {
                 </ul>
               </div>
 
-              <div className="bg-white text-gray-800 p-6 rounded-xl shadow">
+              <div className="bg-white text-gray-800 p-4 sm:p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">Promedios y extras</h2>
                 <ul className="space-y-2">
                   <li className="flex justify-between">
