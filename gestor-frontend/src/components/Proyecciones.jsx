@@ -11,7 +11,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { formatCurrency } from '@/utils/utils';
-import SalaryBinsWithPoints from '@/components/SalaryBinsWithPoints';
+import SalaryLineChart from '@/components/SalaryLineChart';
 
 export default function Proyecciones() {
   const [stats, setStats] = useState(null);
@@ -94,7 +94,7 @@ export default function Proyecciones() {
 
             <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
               <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Distribución de salarios</h2>
-              <SalaryBinsWithPoints workers={workers} />
+              <SalaryLineChart workers={workers} />
             </div>
           </>
         ) : (
