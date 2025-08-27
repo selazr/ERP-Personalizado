@@ -13,6 +13,13 @@ import {
 import { formatCurrency } from '@/utils/utils';
 import SalaryLineChart from '@/components/SalaryLineChart';
 
+function isActivo(trabajador) {
+  const today = new Date();
+  const fechaAlta = new Date(trabajador.fecha_alta);
+  const fechaBaja = trabajador.fecha_baja ? new Date(trabajador.fecha_baja) : null;
+  return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
+}
+
 export default function Proyecciones() {
   const [stats, setStats] = useState(null);
   const [workers, setWorkers] = useState([]);
@@ -31,7 +38,8 @@ export default function Proyecciones() {
         const mappedWorkers = workersRes.data.map((w) => ({
           id: w.id,
           name: w.nombre,
-          salary: w.salario_bruto
+          salary: w.salario_bruto,
+          active: isActivo(w)
         }));
         setWorkers(mappedWorkers);
       } catch (err) {
