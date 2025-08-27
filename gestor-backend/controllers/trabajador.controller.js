@@ -125,65 +125,56 @@ exports.getOrganizationInfo = async (req, res) => {
       }
     });
 
-    const porEmpresa = await Trabajador.findAll({
+    // Obtener todos los trabajadores activos para agruparlos
+    const activeWorkers = await Trabajador.findAll({
       attributes: [
+        'id',
+        'nombre',
         'empresa',
-        [db.Sequelize.fn('COUNT', db.Sequelize.col('empresa')), 'count']
-      ],
-      where: activeCondition,
-      group: ['empresa'],
-      raw: true,
-      order: [[db.Sequelize.literal('count'), 'DESC']]
-    });
-
-    const porPais = await Trabajador.findAll({
-      attributes: [
         'pais',
-        [db.Sequelize.fn('COUNT', db.Sequelize.col('pais')), 'count']
-      ],
-      where: activeCondition,
-      group: ['pais'],
-      raw: true,
-      order: [[db.Sequelize.literal('count'), 'DESC']]
-    });
-
-    const porContrato = await Trabajador.findAll({
-      attributes: [
         'tipo_trabajador',
-        [db.Sequelize.fn('COUNT', db.Sequelize.col('tipo_trabajador')), 'count']
-      ],
-      where: activeCondition,
-      group: ['tipo_trabajador'],
-      raw: true,
-      order: [[db.Sequelize.literal('count'), 'DESC']]
-    });
-
-    const porRol = await Trabajador.findAll({
-      attributes: [
         'categoria',
-        [db.Sequelize.fn('COUNT', db.Sequelize.col('categoria')), 'count']
+        'fecha_alta',
+        'fecha_baja'
       ],
       where: activeCondition,
-      group: ['categoria'],
-      raw: true,
-      order: [[db.Sequelize.literal('count'), 'DESC']]
-    });
-
-    const veteranos = await Trabajador.findAll({
-      attributes: ['id', 'nombre', 'fecha_alta', 'fecha_baja'],
-      where: activeCondition,
-      order: [['fecha_alta', 'ASC']],
-      limit: 5,
       raw: true
     });
 
-    // Filtramos cualquier trabajador que ya no esté activo por seguridad
-    const veteranosConAntiguedad = veteranos
-      .filter(v => !v.fecha_baja || new Date(v.fecha_baja) >= today)
-      .map(v => {
-        const years = Math.floor((today - new Date(v.fecha_alta)) / (365.25 * 24 * 60 * 60 * 1000));
-        return { id: v.id, nombre: v.nombre, fecha_alta: v.fecha_alta, antiguedad: years };
+    // Función auxiliar para agrupar trabajadores
+    const groupBy = (key, label) => {
+      const groups = {};
+      activeWorkers.forEach(w => {
+        const value = w[key] || 'Sin especificar';
+        if (!groups[value]) {
+          groups[value] = { [label]: w[key], count: 0, workers: [] };
+        }
+        groups[value].count++;
+        groups[value].workers.push({
+          id: w.id,
+          nombre: w.nombre,
+          fecha_alta: w.fecha_alta,
+          fecha_baja: w.fecha_baja
+        });
       });
+      return Object.values(groups).sort((a, b) => b.count - a.count);
+    };
+
+    const porEmpresa = groupBy('empresa', 'empresa');
+    const porPais = groupBy('pais', 'pais');
+    const porContrato = groupBy('tipo_trabajador', 'tipo_trabajador');
+    const porRol = groupBy('categoria', 'categoria');
+
+    const veteranos = activeWorkers
+      .map(v => ({
+        id: v.id,
+        nombre: v.nombre,
+        fecha_alta: v.fecha_alta,
+        fecha_baja: v.fecha_baja,
+        antiguedad: Math.floor((today - new Date(v.fecha_alta)) / (365.25 * 24 * 60 * 60 * 1000))
+      }))
+      .sort((a, b) => new Date(a.fecha_alta) - new Date(b.fecha_alta))
+      .slice(0, 5);
 
     // Promedios de horas y extras usando la tabla Horario
     const fourWeeksAgo = new Date();
@@ -226,7 +217,7 @@ exports.getOrganizationInfo = async (req, res) => {
     res.json({
       porEmpresa,
       porPais,
-      veteranos: veteranosConAntiguedad,
+      veteranos,
       incorporacionesMes,
       incorporacionesTrimestre,
       porContrato,
