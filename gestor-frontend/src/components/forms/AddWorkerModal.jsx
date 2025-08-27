@@ -1,6 +1,6 @@
 // src/components/forms/AddWorkerModal.jsx
 import React, { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
 
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
@@ -157,7 +157,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div 
+        <Motion.div
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }} 
           exit={{ opacity: 0 }} 
@@ -225,7 +225,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
               <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Añadir Trabajador</button>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       )}
     </AnimatePresence>
   );

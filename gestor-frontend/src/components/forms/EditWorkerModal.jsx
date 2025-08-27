@@ -1,6 +1,6 @@
 // src/components/forms/EditWorkerModal.jsx
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
 
 export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initialData }) {
@@ -134,7 +134,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -201,7 +201,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
               <button onClick={handleSubmit} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Actualizar</button>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       )}
     </AnimatePresence>
   );
