@@ -2,29 +2,45 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Header from '@/components/Header';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from 'recharts';
 import { formatCurrency } from '@/utils/utils';
+import SalaryBinsWithPoints from '@/components/SalaryBinsWithPoints';
 
 export default function Proyecciones() {
   const [stats, setStats] = useState(null);
+  const [workers, setWorkers] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/trabajadores/estadisticas`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setStats(res.data);
+        const headers = { Authorization: `Bearer ${token}` };
+        const [statsRes, workersRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API_URL}/trabajadores/estadisticas`, { headers }),
+          axios.get(`${import.meta.env.VITE_API_URL}/trabajadores`, { headers })
+        ]);
+        setStats(statsRes.data);
+        const mappedWorkers = workersRes.data.map((w) => ({
+          id: w.id,
+          name: w.nombre,
+          salary: w.salario_bruto
+        }));
+        setWorkers(mappedWorkers);
       } catch (err) {
         console.error(err);
         setError('No se pudieron cargar las estadísticas');
       }
     };
 
-    fetchStats();
+    fetchData();
   }, []);
 
   const chartData = stats ? [
@@ -74,6 +90,11 @@ export default function Proyecciones() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+
+            <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Distribución de salarios</h2>
+              <SalaryBinsWithPoints workers={workers} />
             </div>
           </>
         ) : (
