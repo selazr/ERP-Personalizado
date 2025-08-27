@@ -38,7 +38,8 @@ export default function Proyecciones() {
         const mappedWorkers = workersRes.data.map((w) => ({
           id: w.id,
           name: w.nombre,
-          salary: w.salario_bruto,
+          bruto: Number(w.salario_bruto),
+          neto: Number(w.salario_neto),
           active: isActivo(w)
         }));
         setWorkers(mappedWorkers);
