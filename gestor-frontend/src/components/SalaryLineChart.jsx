@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/utils';
 
 export default function SalaryLineChart({ workers = [] }) {
@@ -16,7 +16,7 @@ export default function SalaryLineChart({ workers = [] }) {
   });
 
   const maxSalary = validWorkers.length
-    ? Math.max(...validWorkers.map(w => Math.max(w.bruto, w.neto)))
+    ? Math.max(...validWorkers.map((w) => w.neto))
     : 0;
   const maxRange = Math.ceil(maxSalary / 100) * 100 || 100;
   const binsCount = Math.ceil(maxRange / 100);
@@ -26,21 +26,15 @@ export default function SalaryLineChart({ workers = [] }) {
     return {
       x: start,
       label: `${start}–${start + 100}`,
-      bruto: 0,
-      neto: 0,
-      workersBruto: [],
-      workersNeto: []
+      count: 0,
+      workers: []
     };
   });
 
   validWorkers.forEach((w) => {
-    const indexBruto = Math.min(Math.floor(w.bruto / 100), bins.length - 1);
-    bins[indexBruto].bruto += 1;
-    bins[indexBruto].workersBruto.push(w);
-
-    const indexNeto = Math.min(Math.floor(w.neto / 100), bins.length - 1);
-    bins[indexNeto].neto += 1;
-    bins[indexNeto].workersNeto.push(w);
+    const index = Math.min(Math.floor(w.neto / 100), bins.length - 1);
+    bins[index].count += 1;
+    bins[index].workers.push(w);
   });
 
   const step = bins.length > 20 ? 500 : 100;
@@ -52,34 +46,15 @@ export default function SalaryLineChart({ workers = [] }) {
 
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
-    const { label, bruto, neto, workersBruto, workersNeto } = payload[0].payload;
+    const { label, count, workers } = payload[0].payload;
     return (
       <div className="bg-white text-gray-800 p-2 border rounded shadow text-sm max-w-xs">
         <p className="font-semibold">{label}</p>
-        <p>{`Bruto: ${bruto}`}</p>
-        {workersBruto?.length > 0 && (
+        <p>{`Personas: ${count}`}</p>
+        {workers?.length > 0 && (
           <ul className="mt-1 space-y-1">
-            {workersBruto.map((w, idx) => (
-              <li key={`b-${idx}`} className="flex items-center justify-between">
-                <span>{w.name}</span>
-                <span className="ml-2">B: €{formatCurrency(w.bruto)}</span>
-                <span className="ml-2">N: €{formatCurrency(w.neto)}</span>
-                <span
-                  className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${
-                    w.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {w.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p>{`Neto: ${neto}`}</p>
-        {workersNeto?.length > 0 && (
-          <ul className="mt-1 space-y-1">
-            {workersNeto.map((w, idx) => (
-              <li key={`n-${idx}`} className="flex items-center justify-between">
+            {workers.map((w, idx) => (
+              <li key={idx} className="flex items-center justify-between">
                 <span>{w.name}</span>
                 <span className="ml-2">B: €{formatCurrency(w.bruto)}</span>
                 <span className="ml-2">N: €{formatCurrency(w.neto)}</span>
@@ -113,14 +88,31 @@ export default function SalaryLineChart({ workers = [] }) {
             />
             <YAxis type="number" allowDecimals={false} domain={[0, 'dataMax + 1']} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Line type="monotone" dataKey="bruto" stroke="#6366f1" name="Bruto" dot />
-            <Line type="monotone" dataKey="neto" stroke="#34d399" name="Neto" dot />
+            <Line type="monotone" dataKey="count" stroke="#6366f1" name="Salarios" dot />
           </LineChart>
         </ResponsiveContainer>
       </div>
       {invalidCount > 0 && (
         <p className="text-sm text-gray-500 mt-2">Registros sin salario: {invalidCount}</p>
+      )}
+
+      {validWorkers.length > 0 && (
+        <table className="mt-4 w-full text-left border-collapse">
+          <thead>
+            <tr>
+              <th className="border px-2 py-1">TRABAJADOR</th>
+              <th className="border px-2 py-1">SALARIO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {validWorkers.map((w) => (
+              <tr key={w.id}>
+                <td className="border px-2 py-1">{w.name}</td>
+                <td className="border px-2 py-1">€{formatCurrency(w.neto)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
