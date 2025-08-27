@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency } from '@/utils/utils';
 
 export default function SalaryLineChart({ workers = [] }) {
@@ -6,27 +6,41 @@ export default function SalaryLineChart({ workers = [] }) {
   const validWorkers = [];
 
   workers.forEach((w) => {
-    const salary = Number(w.salary);
-    if (Number.isFinite(salary)) {
-      validWorkers.push({ ...w, salary });
+    const bruto = Number(w.bruto);
+    const neto = Number(w.neto);
+    if (Number.isFinite(bruto) && Number.isFinite(neto)) {
+      validWorkers.push({ ...w, bruto, neto });
     } else {
       invalidCount += 1;
     }
   });
 
-  const maxSalary = validWorkers.length ? Math.max(...validWorkers.map(w => w.salary)) : 0;
+  const maxSalary = validWorkers.length
+    ? Math.max(...validWorkers.map(w => Math.max(w.bruto, w.neto)))
+    : 0;
   const maxRange = Math.ceil(maxSalary / 100) * 100 || 100;
   const binsCount = Math.ceil(maxRange / 100);
 
   const bins = Array.from({ length: binsCount }, (_, i) => {
     const start = i * 100;
-    return { x: start, y: 0, label: `${start}–${start + 100}` , workers: [] };
+    return {
+      x: start,
+      label: `${start}–${start + 100}`,
+      bruto: 0,
+      neto: 0,
+      workersBruto: [],
+      workersNeto: []
+    };
   });
 
   validWorkers.forEach((w) => {
-    const index = Math.min(Math.floor(w.salary / 100), bins.length - 1);
-    bins[index].y += 1;
-    bins[index].workers.push(w);
+    const indexBruto = Math.min(Math.floor(w.bruto / 100), bins.length - 1);
+    bins[indexBruto].bruto += 1;
+    bins[indexBruto].workersBruto.push(w);
+
+    const indexNeto = Math.min(Math.floor(w.neto / 100), bins.length - 1);
+    bins[indexNeto].neto += 1;
+    bins[indexNeto].workersNeto.push(w);
   });
 
   const step = bins.length > 20 ? 500 : 100;
@@ -38,17 +52,37 @@ export default function SalaryLineChart({ workers = [] }) {
 
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
-    const { label, y, workers: ws } = payload[0].payload;
+    const { label, bruto, neto, workersBruto, workersNeto } = payload[0].payload;
     return (
       <div className="bg-white text-gray-800 p-2 border rounded shadow text-sm max-w-xs">
         <p className="font-semibold">{label}</p>
-        <p>{`Personas: ${y}`}</p>
-        {ws?.length > 0 && (
+        <p>{`Bruto: ${bruto}`}</p>
+        {workersBruto?.length > 0 && (
           <ul className="mt-1 space-y-1">
-            {ws.map((w, idx) => (
-              <li key={idx} className="flex items-center justify-between">
+            {workersBruto.map((w, idx) => (
+              <li key={`b-${idx}`} className="flex items-center justify-between">
                 <span>{w.name}</span>
-                <span className="ml-2">€{formatCurrency(w.salary)}</span>
+                <span className="ml-2">B: €{formatCurrency(w.bruto)}</span>
+                <span className="ml-2">N: €{formatCurrency(w.neto)}</span>
+                <span
+                  className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${
+                    w.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {w.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p>{`Neto: ${neto}`}</p>
+        {workersNeto?.length > 0 && (
+          <ul className="mt-1 space-y-1">
+            {workersNeto.map((w, idx) => (
+              <li key={`n-${idx}`} className="flex items-center justify-between">
+                <span>{w.name}</span>
+                <span className="ml-2">B: €{formatCurrency(w.bruto)}</span>
+                <span className="ml-2">N: €{formatCurrency(w.neto)}</span>
                 <span
                   className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${
                     w.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -79,7 +113,9 @@ export default function SalaryLineChart({ workers = [] }) {
             />
             <YAxis type="number" allowDecimals={false} domain={[0, 'dataMax + 1']} />
             <Tooltip content={<CustomTooltip />} />
-            <Line type="monotone" dataKey="y" stroke="#6366f1" dot />
+            <Legend />
+            <Line type="monotone" dataKey="bruto" stroke="#6366f1" name="Bruto" dot />
+            <Line type="monotone" dataKey="neto" stroke="#34d399" name="Neto" dot />
           </LineChart>
         </ResponsiveContainer>
       </div>
