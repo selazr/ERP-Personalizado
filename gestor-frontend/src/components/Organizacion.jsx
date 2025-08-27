@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
-import { isActivo } from '@/components/Trabajador';
+import { isActivo, formatDate } from '@/components/Trabajador';
 
 export default function Organizacion() {
   const [stats, setStats] = useState(null);
@@ -11,9 +11,65 @@ export default function Organizacion() {
   const [openPaises, setOpenPaises] = useState({});
   const [openContratos, setOpenContratos] = useState({});
   const [openRoles, setOpenRoles] = useState({});
+  const [openWorkers, setOpenWorkers] = useState({});
 
   const toggle = (setter, key) => {
     setter(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const expiringContracts = ['Fijo discontinuo', 'Temporal', 'Prácticas'];
+
+  const renderWorker = (w, extra = null) => {
+    const content = (
+      <div className="flex justify-between text-sm items-center">
+        <span>{w.nombre}</span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              isActivo(w) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {isActivo(w) ? 'Activo' : 'Inactivo'}
+          </span>
+          {extra}
+        </div>
+      </div>
+    );
+
+    if (!expiringContracts.includes(w.tipo_trabajador)) {
+      return content;
+    }
+
+    return (
+      <>
+        <button
+          onClick={() => toggle(setOpenWorkers, w.id)}
+          className="w-full flex justify-between items-center text-sm"
+        >
+          <span>{w.nombre}</span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                isActivo(w) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {isActivo(w) ? 'Activo' : 'Inactivo'}
+            </span>
+            {extra}
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${
+                openWorkers[w.id] ? 'rotate-180' : ''
+              }`}
+            />
+          </div>
+        </button>
+        {openWorkers[w.id] && (
+          <div className="ml-4 mt-1 text-xs text-gray-600">
+            Caduca: {w.fecha_baja ? formatDate(w.fecha_baja) : 'Sin fecha'}
+          </div>
+        )}
+      </>
+    );
   };
 
   useEffect(() => {
@@ -79,18 +135,7 @@ export default function Organizacion() {
                         {openEmpresas[key] && (
                           <ul className="mt-2 ml-4 space-y-1">
                             {e.workers.map(w => (
-                              <li key={w.id} className="flex justify-between text-sm">
-                                <span>{w.nombre}</span>
-                                <span
-                                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                    isActivo(w)
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {isActivo(w) ? 'Activo' : 'Inactivo'}
-                                </span>
-                              </li>
+                              <li key={w.id}>{renderWorker(w)}</li>
                             ))}
                           </ul>
                         )}
@@ -124,18 +169,7 @@ export default function Organizacion() {
                         {openPaises[key] && (
                           <ul className="mt-2 ml-4 space-y-1">
                             {p.workers.map(w => (
-                              <li key={w.id} className="flex justify-between text-sm">
-                                <span>{w.nombre}</span>
-                                <span
-                                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                    isActivo(w)
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {isActivo(w) ? 'Activo' : 'Inactivo'}
-                                </span>
-                              </li>
+                              <li key={w.id}>{renderWorker(w)}</li>
                             ))}
                           </ul>
                         )}
@@ -150,20 +184,8 @@ export default function Organizacion() {
               <h2 className="text-lg font-semibold mb-4">Trabajadores con más antigüedad</h2>
               <ul className="space-y-2">
                 {stats.veteranos.map((v) => (
-                  <li key={v.id} className="flex justify-between items-center">
-                    <span>{v.nombre}</span>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          isActivo(v)
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {isActivo(v) ? 'Activo' : 'Inactivo'}
-                      </span>
-                      <span className="font-bold">{v.antiguedad} años</span>
-                    </div>
+                  <li key={v.id}>
+                    {renderWorker(v, <span className="font-bold">{v.antiguedad} años</span>)}
                   </li>
                 ))}
               </ul>
@@ -208,18 +230,7 @@ export default function Organizacion() {
                         {openContratos[key] && (
                           <ul className="mt-2 ml-4 space-y-1">
                             {c.workers.map(w => (
-                              <li key={w.id} className="flex justify-between text-sm">
-                                <span>{w.nombre}</span>
-                                <span
-                                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                    isActivo(w)
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {isActivo(w) ? 'Activo' : 'Inactivo'}
-                                </span>
-                              </li>
+                              <li key={w.id}>{renderWorker(w)}</li>
                             ))}
                           </ul>
                         )}
@@ -255,18 +266,7 @@ export default function Organizacion() {
                         {openRoles[key] && (
                           <ul className="mt-2 ml-4 space-y-1">
                             {r.workers.map(w => (
-                              <li key={w.id} className="flex justify-between text-sm">
-                                <span>{w.nombre}</span>
-                                <span
-                                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                    isActivo(w)
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {isActivo(w) ? 'Activo' : 'Inactivo'}
-                                </span>
-                              </li>
+                              <li key={w.id}>{renderWorker(w)}</li>
                             ))}
                           </ul>
                         )}

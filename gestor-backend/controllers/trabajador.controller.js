@@ -153,6 +153,7 @@ exports.getOrganizationInfo = async (req, res) => {
         groups[value].workers.push({
           id: w.id,
           nombre: w.nombre,
+          tipo_trabajador: w.tipo_trabajador,
           fecha_alta: w.fecha_alta,
           fecha_baja: w.fecha_baja
         });
@@ -169,6 +170,7 @@ exports.getOrganizationInfo = async (req, res) => {
       .map(v => ({
         id: v.id,
         nombre: v.nombre,
+        tipo_trabajador: v.tipo_trabajador,
         fecha_alta: v.fecha_alta,
         fecha_baja: v.fecha_baja,
         antiguedad: Math.floor((today - new Date(v.fecha_alta)) / (365.25 * 24 * 60 * 60 * 1000))
