@@ -51,11 +51,25 @@ export default function Proyecciones() {
     fetchData();
   }, []);
 
-  const chartData = stats ? [
-    { name: 'Mensual Bruto', value: stats.costeMensualBruto },
-    { name: 'Anual Bruto', value: stats.costeAnualBruto },
-    { name: 'Bruto Promedio', value: stats.salarioBrutoPromedio },
-  ] : [];
+  const chartData = stats
+    ? [
+        {
+          name: 'Mensual',
+          Bruto: stats.costeMensualBruto,
+          Neto: stats.costeMensualNeto,
+        },
+        {
+          name: 'Anual',
+          Bruto: stats.costeAnualBruto,
+          Neto: stats.costeAnualNeto,
+        },
+        {
+          name: 'Promedio',
+          Bruto: stats.salarioBrutoPromedio,
+          Neto: stats.salarioNetoPromedio,
+        },
+      ]
+    : [];
 
   return (
     <>
@@ -81,8 +95,11 @@ export default function Proyecciones() {
               <StatCard title="Activos" value={stats.trabajadoresActivos} />
               <StatCard title="Inactivos" value={stats.trabajadoresInactivos} />
               <StatCard title="Coste mensual bruto" value={`€ ${formatCurrency(stats.costeMensualBruto)}`} />
+              <StatCard title="Coste mensual neto" value={`€ ${formatCurrency(stats.costeMensualNeto)}`} />
               <StatCard title="Coste anual bruto" value={`€ ${formatCurrency(stats.costeAnualBruto)}`} />
+              <StatCard title="Coste anual neto" value={`€ ${formatCurrency(stats.costeAnualNeto)}`} />
               <StatCard title="Salario bruto promedio" value={`€ ${formatCurrency(stats.salarioBrutoPromedio)}`} />
+              <StatCard title="Salario neto promedio" value={`€ ${formatCurrency(stats.salarioNetoPromedio)}`} />
             </div>
 
             <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl">
@@ -94,7 +111,8 @@ export default function Proyecciones() {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="Bruto" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="Neto" fill="#34d399" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
