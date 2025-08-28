@@ -9,8 +9,8 @@ export default function SalaryTable({ workers = [] }) {
       <table className="w-full text-left border-collapse text-gray-900">
         <thead>
           <tr>
-            <th className="border px-2 py-1">TRABAJADOR</th>
-            <th className="border px-2 py-1">SALARIO</th>
+            <th className="border px-2 py-1">Nombre</th>
+            <th className="border px-2 py-1">Salario (€)</th>
           </tr>
         </thead>
         <tbody>
