@@ -25,6 +25,8 @@ export default function Proyecciones() {
   const [stats, setStats] = useState(null);
   const [workers, setWorkers] = useState([]);
   const [error, setError] = useState('');
+  const [selectedRange, setSelectedRange] = useState(null);
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,12 +124,41 @@ export default function Proyecciones() {
 
             <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
               <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Distribución de salarios</h2>
-              <SalaryLineChart workers={workers} />
+              <SalaryLineChart
+                workers={workers}
+                onRangeSelect={setSelectedRange}
+                resetKey={resetKey}
+              />
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-sm text-gray-600">
+                  Rango seleccionado:{' '}
+                  {selectedRange
+                    ? `${formatCurrency(selectedRange.from)}–${formatCurrency(selectedRange.to)} €`
+                    : 'Todos'}
+                </p>
+                {selectedRange && (
+                  <button
+                    className="text-sm text-blue-600 underline"
+                    onClick={() => {
+                      setSelectedRange(null);
+                      setResetKey((k) => k + 1);
+                    }}
+                  >
+                    Limpiar selección
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
               <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Salarios por trabajador</h2>
-              <SalaryTable workers={workers} />
+              <SalaryTable
+                workers={selectedRange
+                  ? workers.filter(
+                      (w) => w.neto >= selectedRange.from && w.neto < selectedRange.to
+                    )
+                  : workers}
+              />
             </div>
           </>
         ) : (

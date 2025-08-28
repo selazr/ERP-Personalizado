@@ -1,7 +1,17 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceArea,
+} from 'recharts';
+import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/utils/utils';
 
-export default function SalaryLineChart({ workers = [] }) {
+export default function SalaryLineChart({ workers = [], onRangeSelect, resetKey }) {
   let invalidCount = 0;
   const validWorkers = [];
 
@@ -44,6 +54,40 @@ export default function SalaryLineChart({ workers = [] }) {
   }
   if (!ticks.includes(maxRange)) ticks.push(maxRange);
 
+  const [selection, setSelection] = useState({ from: null, to: null });
+
+  useEffect(() => {
+    setSelection({ from: null, to: null });
+  }, [resetKey]);
+
+  const domain =
+    selection.from !== null && selection.to !== null
+      ? [selection.from, selection.to]
+      : [0, maxRange];
+
+  const handleClick = (e) => {
+    if (e?.activeLabel === undefined || e.activeLabel === null) return;
+    const value = Math.floor(Number(e.activeLabel) / 100) * 100;
+
+    if (selection.from !== null && selection.to !== null) {
+      setSelection({ from: value, to: null });
+      onRangeSelect?.(null);
+      return;
+    }
+
+    if (selection.from === null) {
+      setSelection({ from: value, to: null });
+    } else {
+      let from = selection.from;
+      let to = value;
+      if (to < from) [from, to] = [to, from];
+      if (from === to) to = from + 100;
+      const range = { from, to };
+      setSelection(range);
+      onRangeSelect?.(range);
+    }
+  };
+
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
     const { label, count, workers } = payload[0].payload;
@@ -77,18 +121,25 @@ export default function SalaryLineChart({ workers = [] }) {
     <div className="w-full">
       <div className="w-full h-80 mb-4">
         <ResponsiveContainer>
-          <LineChart data={bins} aria-label="Gráfica de distribución salarial">
+          <LineChart
+            data={bins}
+            aria-label="Gráfica de distribución salarial"
+            onClick={handleClick}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               type="number"
               dataKey="x"
-              domain={[0, maxRange]}
+              domain={domain}
               ticks={ticks}
               tickFormatter={(v) => `€${formatCurrency(v)}`}
             />
             <YAxis type="number" allowDecimals={false} domain={[0, 'dataMax + 1']} />
             <Tooltip content={<CustomTooltip />} />
             <Line type="monotone" dataKey="count" stroke="#6366f1" name="Salarios" dot />
+            {selection.from !== null && selection.to !== null && (
+              <ReferenceArea x1={selection.from} x2={selection.to} strokeOpacity={0.3} />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
