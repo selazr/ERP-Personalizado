@@ -75,7 +75,7 @@ export default function SalaryLineChart({ workers = [] }) {
 
   return (
     <div className="w-full">
-      <div className="w-full h-80">
+      <div className="w-full h-80 mb-4">
         <ResponsiveContainer>
           <LineChart data={bins} aria-label="Gráfica de distribución salarial">
             <CartesianGrid strokeDasharray="3 3" />
@@ -94,25 +94,6 @@ export default function SalaryLineChart({ workers = [] }) {
       </div>
       {invalidCount > 0 && (
         <p className="text-sm text-gray-500 mt-2">Registros sin salario: {invalidCount}</p>
-      )}
-
-      {validWorkers.length > 0 && (
-        <table className="mt-4 w-full text-left border-collapse">
-          <thead>
-            <tr>
-              <th className="border px-2 py-1">TRABAJADOR</th>
-              <th className="border px-2 py-1">SALARIO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {validWorkers.map((w) => (
-              <tr key={w.id}>
-                <td className="border px-2 py-1">{w.name}</td>
-                <td className="border px-2 py-1">€{formatCurrency(w.neto)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       )}
     </div>
   );

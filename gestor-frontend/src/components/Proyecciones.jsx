@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@/utils/utils';
 import SalaryLineChart from '@/components/SalaryLineChart';
+import SalaryTable from '@/components/SalaryTable';
 
 function isActivo(trabajador) {
   const today = new Date();
@@ -122,6 +123,11 @@ export default function Proyecciones() {
             <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
               <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Distribución de salarios</h2>
               <SalaryLineChart workers={workers} />
+            </div>
+
+            <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Salarios por trabajador</h2>
+              <SalaryTable workers={workers} />
             </div>
           </>
         ) : (
