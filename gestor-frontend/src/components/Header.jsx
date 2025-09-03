@@ -8,7 +8,8 @@ import {
   TrendingUp,
   Building2,
   Menu,
-  Bell
+  Bell,
+  UserCheck
 } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -130,6 +131,10 @@ export default function Header() {
                   <Building2 className="mr-2 h-5 w-5" />
                   Organización
                 </NavLink>
+                <NavLink to="/externos" className={navLinkClasses}>
+                  <UserCheck className="mr-2 h-5 w-5" />
+                  Externos
+                </NavLink>
               </div>
             </nav>
           </div>
@@ -240,6 +245,9 @@ export default function Header() {
               </NavLink>
               <NavLink to="/organizacion" className={navLinkClasses}>
                 <Building2 className="mr-2 h-5 w-5" /> Organización
+              </NavLink>
+              <NavLink to="/externos" className={navLinkClasses}>
+                <UserCheck className="mr-2 h-5 w-5" /> Externos
               </NavLink>
               <button
                 onClick={handleLogout}

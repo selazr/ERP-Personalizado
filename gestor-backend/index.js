@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const horarioRoutes = require('./routes/horario.routes');
 const authRoutes = require('./routes/auth.routes');
 const trabajadorRoutes = require('./routes/trabajador.routes');
+const externoRoutes = require('./routes/externo.routes');
 const db = require('./models');
 
 dotenv.config();
@@ -47,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/trabajadores', trabajadorRoutes);
 app.use('/api/horarios', horarioRoutes);
+app.use('/api/externos', externoRoutes);
 
 // Conexión y sincronización DB
 db.sequelize.authenticate()
