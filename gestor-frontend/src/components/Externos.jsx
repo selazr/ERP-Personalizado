@@ -14,6 +14,8 @@ export default function Externos() {
   const [startRange, setStartRange] = useState('');
   const [endRange, setEndRange] = useState('');
   const [average, setAverage] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [pricePerWorker, setPricePerWorker] = useState(null);
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
@@ -70,7 +72,11 @@ export default function Externos() {
     );
     const diff = differenceInCalendarDays(new Date(endRange), new Date(startRange)) + 1;
     const total = res.data.reduce((sum, item) => sum + item.cantidad, 0);
-    setAverage(total / diff);
+    const avg = total / diff;
+    setAverage(avg);
+    if (amount) {
+      setPricePerWorker(parseFloat(amount) / avg);
+    }
   };
 
   const renderCalendar = () => {
@@ -133,6 +139,13 @@ export default function Externos() {
               onChange={(e) => setEndRange(e.target.value)}
               className="border p-2 rounded text-black"
             />
+            <input
+              type="number"
+              placeholder="€"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="border p-2 rounded text-black w-24"
+            />
             <button
               onClick={handleCalcularMedia}
               className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -141,7 +154,12 @@ export default function Externos() {
             </button>
           </div>
           {average !== null && (
-            <p className="mt-2">Media: {average.toFixed(2)}</p>
+            <>
+              <p className="mt-2">Media: {average.toFixed(2)}</p>
+              {pricePerWorker !== null && (
+                <p className="mt-1">Precio por trabajador: {pricePerWorker.toFixed(2)} €</p>
+              )}
+            </>
           )}
         </div>
       </div>
