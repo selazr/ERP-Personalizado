@@ -20,6 +20,7 @@ db.sequelize = sequelize;
 // Modelos
 db.Trabajador = require('./trabajador.model')(sequelize, DataTypes);
 db.Horario = require('./horario.model')(sequelize, DataTypes);
+db.Externo = require('./externo.model')(sequelize, DataTypes);
 
 // Relaciones
 db.Trabajador.hasMany(db.Horario, { foreignKey: 'trabajador_id' });
