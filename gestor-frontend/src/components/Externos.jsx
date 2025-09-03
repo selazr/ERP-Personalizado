@@ -96,17 +96,18 @@ export default function Externos() {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = getFechaKey(day);
       const cantidad = groupedExternos[dateKey];
+      const isMarked = cantidad !== undefined;
       days.push(
         <div
           key={day}
-          className="cursor-pointer border rounded-lg h-24 w-full p-2 text-sm font-medium flex flex-col items-center justify-center relative hover:shadow-md transition-all duration-200"
+          className={`cursor-pointer border rounded-lg h-24 w-full p-2 text-sm font-medium flex flex-col items-center justify-center relative hover:shadow-md transition-all duration-200 ${isMarked ? 'bg-teal-100 border-teal-400' : 'bg-white'}`}
           onClick={() => handleDayClick(day)}
         >
           <span className="absolute top-1 left-1 text-xs font-semibold text-gray-500">
             {day}
           </span>
-          {cantidad !== undefined && (
-            <span className="text-sm mt-auto">{cantidad} ext</span>
+          {isMarked && (
+            <span className="text-xl font-bold text-teal-600 mt-auto">{cantidad}</span>
           )}
         </div>
       );
