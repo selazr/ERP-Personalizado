@@ -10,10 +10,10 @@ export default function ExternoModal({
   initialItems = [],
   companies = [],
 }) {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState([...initialItems, { nombre_empresa_externo: '', cantidad: 0 }]);
 
   useEffect(() => {
-    setItems(initialItems);
+    setItems([...initialItems, { nombre_empresa_externo: '', cantidad: 0 }]);
   }, [initialItems]);
 
   let formattedDate = 'Fecha inválida';
@@ -39,7 +39,10 @@ export default function ExternoModal({
   };
 
   const handleSave = () => {
-    onSave({ fecha, items });
+    const validItems = items.filter(
+      (i) => i.nombre_empresa_externo && Number(i.cantidad) > 0
+    );
+    onSave({ fecha, items: validItems });
     onClose();
   };
 

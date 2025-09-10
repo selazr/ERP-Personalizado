@@ -1,13 +1,16 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('externo', {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     fecha: {
       type: DataTypes.DATEONLY,
-      primaryKey: true,
       allowNull: false,
     },
     nombre_empresa_externo: {
       type: DataTypes.STRING,
-      primaryKey: true,
       allowNull: false,
     },
     cantidad: {
