@@ -138,8 +138,7 @@ export default function Externos() {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = getFechaKey(day);
       const data = groupedExternos[dateKey];
-      const total = data ? data.reduce((sum, i) => sum + i.cantidad, 0) : 0;
-      const isMarked = total > 0;
+      const isMarked = data && data.length > 0;
       days.push(
         <div
           key={day}
@@ -149,9 +148,6 @@ export default function Externos() {
           <span className="absolute top-1 left-1 text-xs font-semibold text-gray-500">
             {day}
           </span>
-          {isMarked && (
-            <span className="text-xl font-bold text-teal-600 mt-auto">{total}</span>
-          )}
         </div>
       );
     }

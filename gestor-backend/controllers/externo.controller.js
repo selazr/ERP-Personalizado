@@ -5,7 +5,15 @@ const { Op } = db.Sequelize;
 exports.createOrUpdate = async (req, res) => {
   const { fecha, cantidad, nombre_empresa_externo } = req.body;
   try {
-    await Externo.upsert({ fecha, cantidad, nombre_empresa_externo });
+    const existing = await Externo.findOne({
+      where: { fecha, nombre_empresa_externo }
+    });
+    if (existing) {
+      existing.cantidad = cantidad;
+      await existing.save();
+    } else {
+      await Externo.create({ fecha, cantidad, nombre_empresa_externo });
+    }
     res.json({ fecha, cantidad, nombre_empresa_externo });
   } catch (err) {
     res.status(500).json({ error: 'Error guardando externo' });
