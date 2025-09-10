@@ -28,3 +28,28 @@ exports.getExternos = async (req, res) => {
     res.status(500).json({ error: 'Error obteniendo externos' });
   }
 };
+
+exports.getEmpresas = async (req, res) => {
+  try {
+    const items = await Externo.findAll({
+      attributes: [
+        [db.Sequelize.fn('DISTINCT', db.Sequelize.col('nombre_empresa_externo')), 'nombre_empresa_externo'],
+      ],
+      order: [['nombre_empresa_externo', 'ASC']],
+    });
+    const empresas = items.map((i) => i.get('nombre_empresa_externo'));
+    res.json(empresas);
+  } catch (err) {
+    res.status(500).json({ error: 'Error obteniendo empresas' });
+  }
+};
+
+exports.deleteExterno = async (req, res) => {
+  const { fecha, nombre_empresa_externo } = req.body;
+  try {
+    await Externo.destroy({ where: { fecha, nombre_empresa_externo } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error eliminando externo' });
+  }
+};

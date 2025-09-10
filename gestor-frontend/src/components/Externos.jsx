@@ -24,6 +24,7 @@ export default function Externos() {
   const [amount, setAmount] = useState('');
   const [pricePerWorker, setPricePerWorker] = useState(null);
   const [companyName, setCompanyName] = useState('');
+  const [companies, setCompanies] = useState([]);
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
@@ -43,35 +44,68 @@ export default function Externos() {
       .then((res) => setExternos(res.data));
   }, [currentDate, firstDay, lastDay]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/externos/empresas`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setCompanies(res.data));
+  }, []);
+
   const groupedExternos = externos.reduce((acc, item) => {
-    acc[item.fecha] = {
+    if (!acc[item.fecha]) acc[item.fecha] = [];
+    acc[item.fecha].push({
       cantidad: item.cantidad,
       nombre_empresa_externo: item.nombre_empresa_externo,
-    };
+    });
     return acc;
   }, {});
 
   const handleDayClick = (day) => {
     const fecha = getFechaKey(day);
-    const data = groupedExternos[fecha] || { cantidad: 0, nombre_empresa_externo: '' };
-    setSelectedDay({ fecha, ...data });
+    const data = groupedExternos[fecha] || [];
+    setSelectedDay({ fecha, items: data });
     setIsModalOpen(true);
   };
 
-  const handleGuardar = ({ fecha, cantidad, nombre_empresa_externo }) => {
+  const handleGuardar = async ({ fecha, items }) => {
     const token = localStorage.getItem('token');
-    axios
-      .post(
-        `${import.meta.env.VITE_API_URL}/externos`,
-        { fecha, cantidad, nombre_empresa_externo },
-        { headers: { Authorization: `Bearer ${token}` } }
+    const prevItems = externos.filter((e) => e.fecha === fecha);
+    const prevNames = prevItems.map((i) => i.nombre_empresa_externo);
+    const newNames = items.map((i) => i.nombre_empresa_externo);
+
+    const toDelete = prevNames.filter((name) => !newNames.includes(name));
+    await Promise.all(
+      toDelete.map((name) =>
+        axios.delete(`${import.meta.env.VITE_API_URL}/externos`, {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { fecha, nombre_empresa_externo: name },
+        })
       )
-      .then(() => {
-        setExternos((prev) => {
-          const otros = prev.filter((e) => e.fecha !== fecha);
-          return [...otros, { fecha, cantidad, nombre_empresa_externo }];
-        });
-      });
+    );
+
+    await Promise.all(
+      items.map((item) =>
+        axios.post(
+          `${import.meta.env.VITE_API_URL}/externos`,
+          { fecha, cantidad: item.cantidad, nombre_empresa_externo: item.nombre_empresa_externo },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      )
+    );
+
+    setExternos((prev) => {
+      const otros = prev.filter((e) => e.fecha !== fecha);
+      return [
+        ...otros,
+        ...items.map((item) => ({
+          fecha,
+          cantidad: item.cantidad,
+          nombre_empresa_externo: item.nombre_empresa_externo,
+        })),
+      ];
+    });
   };
 
   const handleCalcularMedia = async () => {
@@ -104,8 +138,8 @@ export default function Externos() {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = getFechaKey(day);
       const data = groupedExternos[dateKey];
-      const cantidad = data?.cantidad;
-      const isMarked = cantidad !== undefined;
+      const total = data ? data.reduce((sum, i) => sum + i.cantidad, 0) : 0;
+      const isMarked = total > 0;
       days.push(
         <div
           key={day}
@@ -116,7 +150,7 @@ export default function Externos() {
             {day}
           </span>
           {isMarked && (
-            <span className="text-xl font-bold text-teal-600 mt-auto">{cantidad}</span>
+            <span className="text-xl font-bold text-teal-600 mt-auto">{total}</span>
           )}
         </div>
       );
@@ -188,13 +222,18 @@ export default function Externos() {
               onChange={(e) => setEndRange(e.target.value)}
               className="border p-2 rounded text-black"
             />
-            <input
-              type="text"
-              placeholder="Empresa"
+            <select
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               className="border p-2 rounded text-black"
-            />
+            >
+              <option value="">Empresa</option>
+              {companies.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
             <input
               type="number"
               placeholder="€"
@@ -224,9 +263,9 @@ export default function Externos() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           fecha={selectedDay.fecha}
-          initialCantidad={selectedDay.cantidad}
-          initialNombre={selectedDay.nombre_empresa_externo}
+          initialItems={selectedDay.items}
           onSave={handleGuardar}
+          companies={companies}
         />
       )}
     </>
