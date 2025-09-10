@@ -5,6 +5,11 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       allowNull: false,
     },
+    nombre_empresa_externo: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+    },
     cantidad: {
       type: DataTypes.INTEGER,
       allowNull: false,
