@@ -50,40 +50,44 @@ export default function ExternoModal({
           <Dialog.Title className="text-lg font-bold mb-2">Externos</Dialog.Title>
           <p className="text-sm mb-4">Fecha: {formattedDate}</p>
 
-          {items.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <select
-                value={item.nombre_empresa_externo}
-                onChange={(e) =>
-                  handleChange(index, 'nombre_empresa_externo', e.target.value)
-                }
-                className="border p-2 rounded text-black flex-1"
-              >
-                <option value="" disabled>
-                  Empresa
-                </option>
-                {companies.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min="0"
-                value={item.cantidad}
-                onChange={(e) => handleChange(index, 'cantidad', e.target.value)}
-                className="border p-2 rounded w-24 text-black"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemove(index)}
-                className="text-red-600 px-2"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+          {items.map((item, index) => {
+            const listId = `companies-${index}`;
+            return (
+              <div key={index} className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  list={listId}
+                  value={item.nombre_empresa_externo}
+                  onChange={(e) =>
+                    handleChange(index, 'nombre_empresa_externo', e.target.value)
+                  }
+                  className="border p-2 rounded text-black flex-1"
+                  placeholder="Empresa"
+                />
+                <datalist id={listId}>
+                  {companies.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
+                <input
+                  type="number"
+                  min="0"
+                  value={item.cantidad}
+                  onChange={(e) =>
+                    handleChange(index, 'cantidad', e.target.value)
+                  }
+                  className="border p-2 rounded w-24 text-black"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  className="text-red-600 px-2"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
 
           <button
             type="button"
