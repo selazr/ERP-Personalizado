@@ -2,12 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { format, isValid } from 'date-fns';
 
-export default function ExternoModal({ isOpen, onClose, fecha, onSave, initialCantidad = 0 }) {
+export default function ExternoModal({
+  isOpen,
+  onClose,
+  fecha,
+  onSave,
+  initialCantidad = 0,
+  initialNombre = '',
+}) {
   const [cantidad, setCantidad] = useState(initialCantidad);
+  const [nombre, setNombre] = useState(initialNombre);
 
   useEffect(() => {
     setCantidad(initialCantidad);
-  }, [initialCantidad]);
+    setNombre(initialNombre);
+  }, [initialCantidad, initialNombre]);
 
   let formattedDate = 'Fecha inválida';
   if (fecha && isValid(new Date(fecha))) {
@@ -15,7 +24,7 @@ export default function ExternoModal({ isOpen, onClose, fecha, onSave, initialCa
   }
 
   const handleSave = () => {
-    onSave({ fecha, cantidad: Number(cantidad) });
+    onSave({ fecha, cantidad: Number(cantidad), nombre_empresa_externo: nombre });
     onClose();
   };
 
@@ -25,6 +34,13 @@ export default function ExternoModal({ isOpen, onClose, fecha, onSave, initialCa
         <Dialog.Panel className="w-full max-w-md rounded-lg shadow-lg p-6 bg-white text-black">
           <Dialog.Title className="text-lg font-bold mb-2">Externos</Dialog.Title>
           <p className="text-sm mb-4">Fecha: {formattedDate}</p>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="border p-2 rounded w-full text-black mb-2"
+            placeholder="Nombre de la empresa"
+          />
           <input
             type="number"
             min="0"

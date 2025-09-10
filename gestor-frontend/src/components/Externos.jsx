@@ -23,6 +23,7 @@ export default function Externos() {
   const [average, setAverage] = useState(null);
   const [amount, setAmount] = useState('');
   const [pricePerWorker, setPricePerWorker] = useState(null);
+  const [companyName, setCompanyName] = useState('');
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
@@ -43,29 +44,32 @@ export default function Externos() {
   }, [currentDate, firstDay, lastDay]);
 
   const groupedExternos = externos.reduce((acc, item) => {
-    acc[item.fecha] = item.cantidad;
+    acc[item.fecha] = {
+      cantidad: item.cantidad,
+      nombre_empresa_externo: item.nombre_empresa_externo,
+    };
     return acc;
   }, {});
 
   const handleDayClick = (day) => {
     const fecha = getFechaKey(day);
-    const cantidad = groupedExternos[fecha] || 0;
-    setSelectedDay({ fecha, cantidad });
+    const data = groupedExternos[fecha] || { cantidad: 0, nombre_empresa_externo: '' };
+    setSelectedDay({ fecha, ...data });
     setIsModalOpen(true);
   };
 
-  const handleGuardar = ({ fecha, cantidad }) => {
+  const handleGuardar = ({ fecha, cantidad, nombre_empresa_externo }) => {
     const token = localStorage.getItem('token');
     axios
       .post(
         `${import.meta.env.VITE_API_URL}/externos`,
-        { fecha, cantidad },
+        { fecha, cantidad, nombre_empresa_externo },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then(() => {
         setExternos((prev) => {
           const otros = prev.filter((e) => e.fecha !== fecha);
-          return [...otros, { fecha, cantidad }];
+          return [...otros, { fecha, cantidad, nombre_empresa_externo }];
         });
       });
   };
@@ -73,10 +77,14 @@ export default function Externos() {
   const handleCalcularMedia = async () => {
     if (!startRange || !endRange) return;
     const token = localStorage.getItem('token');
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/externos?start=${startRange}&end=${endRange}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/externos`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        start: startRange,
+        end: endRange,
+        nombre_empresa_externo: companyName,
+      },
+    });
     const diff = differenceInCalendarDays(new Date(endRange), new Date(startRange)) + 1;
     const total = res.data.reduce((sum, item) => sum + item.cantidad, 0);
     const avg = total / diff;
@@ -95,7 +103,8 @@ export default function Externos() {
     }
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = getFechaKey(day);
-      const cantidad = groupedExternos[dateKey];
+      const data = groupedExternos[dateKey];
+      const cantidad = data?.cantidad;
       const isMarked = cantidad !== undefined;
       days.push(
         <div
@@ -180,6 +189,13 @@ export default function Externos() {
               className="border p-2 rounded text-black"
             />
             <input
+              type="text"
+              placeholder="Empresa"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              className="border p-2 rounded text-black"
+            />
+            <input
               type="number"
               placeholder="€"
               value={amount}
@@ -209,6 +225,7 @@ export default function Externos() {
           onClose={() => setIsModalOpen(false)}
           fecha={selectedDay.fecha}
           initialCantidad={selectedDay.cantidad}
+          initialNombre={selectedDay.nombre_empresa_externo}
           onSave={handleGuardar}
         />
       )}
