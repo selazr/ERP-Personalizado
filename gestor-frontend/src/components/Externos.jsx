@@ -28,21 +28,25 @@ export default function Externos() {
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
-  const lastDay = endOfMonth(currentDate);
   const firstDayIndex = (getDay(firstDay) + 6) % 7;
 
   const getFechaKey = (day) => format(new Date(currentDate.getFullYear(), currentDate.getMonth(), day), 'yyyy-MM-dd');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const start = format(firstDay, 'yyyy-MM-dd');
-    const end = format(lastDay, 'yyyy-MM-dd');
+    const start = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+    const end = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+
     axios
-      .get(`${import.meta.env.VITE_API_URL}/externos?start=${start}&end=${end}`, {
+      .get(`${import.meta.env.VITE_API_URL}/externos`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { start, end },
       })
-      .then((res) => setExternos(res.data));
-  }, [currentDate, firstDay, lastDay]);
+      .then((res) => setExternos(res.data))
+      .catch((err) => {
+        console.error('Error obteniendo externos:', err);
+      });
+  }, [currentDate]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -71,41 +75,66 @@ export default function Externos() {
 
   const handleGuardar = async ({ fecha, items }) => {
     const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const sanitizedItems = items
+      .map((item) => ({
+        nombre_empresa_externo: item.nombre_empresa_externo.trim(),
+        cantidad: Number(item.cantidad),
+      }))
+      .filter((item) => item.nombre_empresa_externo && item.cantidad > 0);
+
     const prevItems = externos.filter((e) => e.fecha === fecha);
-    const prevNames = prevItems.map((i) => i.nombre_empresa_externo);
-    const newNames = items.map((i) => i.nombre_empresa_externo);
+    const prevNames = new Set(prevItems.map((i) => i.nombre_empresa_externo));
+    const newNames = new Set(sanitizedItems.map((i) => i.nombre_empresa_externo));
 
-    const toDelete = prevNames.filter((name) => !newNames.includes(name));
-    await Promise.all(
-      toDelete.map((name) =>
-        axios.delete(`${import.meta.env.VITE_API_URL}/externos`, {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { fecha, nombre_empresa_externo: name },
-        })
-      )
-    );
-
-    await Promise.all(
-      items.map((item) =>
-        axios.post(
-          `${import.meta.env.VITE_API_URL}/externos`,
-          { fecha, cantidad: item.cantidad, nombre_empresa_externo: item.nombre_empresa_externo },
-          { headers: { Authorization: `Bearer ${token}` } }
+    try {
+      const toDelete = [...prevNames].filter((name) => !newNames.has(name));
+      await Promise.all(
+        toDelete.map((name) =>
+          axios.delete(`${import.meta.env.VITE_API_URL}/externos`, {
+            headers,
+            data: { fecha, nombre_empresa_externo: name },
+          })
         )
-      )
-    );
+      );
 
-    setExternos((prev) => {
-      const otros = prev.filter((e) => e.fecha !== fecha);
-      return [
-        ...otros,
-        ...items.map((item) => ({
-          fecha,
-          cantidad: item.cantidad,
-          nombre_empresa_externo: item.nombre_empresa_externo,
-        })),
-      ];
-    });
+      await Promise.all(
+        sanitizedItems.map((item) =>
+          axios.post(
+            `${import.meta.env.VITE_API_URL}/externos`,
+            { fecha, cantidad: item.cantidad, nombre_empresa_externo: item.nombre_empresa_externo },
+            { headers }
+          )
+        )
+      );
+
+      setExternos((prev) => {
+        const otros = prev.filter((e) => e.fecha !== fecha);
+        return [
+          ...otros,
+          ...sanitizedItems.map((item) => ({
+            fecha,
+            cantidad: item.cantidad,
+            nombre_empresa_externo: item.nombre_empresa_externo,
+          })),
+        ];
+      });
+
+      setSelectedDay({ fecha, items: sanitizedItems });
+
+      setCompanies((prev) => {
+        const updated = new Set(prev);
+        sanitizedItems.forEach((item) => {
+          if (item.nombre_empresa_externo) {
+            updated.add(item.nombre_empresa_externo);
+          }
+        });
+        return Array.from(updated).sort((a, b) => a.localeCompare(b));
+      });
+    } catch (err) {
+      console.error('Error guardando externos:', err);
+    }
   };
 
   const handleCalcularMedia = async () => {
