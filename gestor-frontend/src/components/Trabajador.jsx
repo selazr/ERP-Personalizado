@@ -11,11 +11,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
-import { exportWorkerToExcel } from '@/utils/exportWorkerExcel';
+import { exportWorkerToExcel, exportWorkersSelectionToExcel } from '@/utils/exportWorkerExcel';
 import { formatCurrency } from '@/utils/utils';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
+// eslint-disable-next-line react-refresh/only-export-components
 export function isActivo(trabajador) {
   const today = new Date();
   const fechaAlta = new Date(trabajador.fecha_alta);
@@ -23,6 +24,7 @@ export function isActivo(trabajador) {
   return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function formatDate(dateStr) {
   if (!dateStr) return '';
   const [year, month, day] = dateStr.split('-');
@@ -38,6 +40,44 @@ const filterOptions = [
   { value: 'correo_electronico', label: 'Correo' }
 ];
 
+const exportableFields = [
+  { key: 'nombre', label: 'Nombre' },
+  { key: 'dni', label: 'DNI' },
+  { key: 'correo_electronico', label: 'Correo electrónico' },
+  { key: 'telefono', label: 'Teléfono' },
+  { key: 'direccion', label: 'Dirección' },
+  { key: 'empresa', label: 'Empresa' },
+  { key: 'pais', label: 'País' },
+  { key: 'tipo_trabajador', label: 'Tipo de trabajador' },
+  { key: 'grupo', label: 'Grupo' },
+  { key: 'categoria', label: 'Categoría' },
+  { key: 'iban', label: 'IBAN' },
+  { key: 'nss', label: 'NSS' },
+  { key: 'fecha_alta', label: 'Fecha de alta' },
+  { key: 'fecha_baja', label: 'Fecha de baja' },
+  { key: 'horas_contratadas', label: 'Horas contratadas' },
+  { key: 'salario_neto', label: 'Salario neto' },
+  { key: 'salario_bruto', label: 'Salario bruto' },
+  { key: 'cliente', label: 'Cliente' },
+  { key: 'a1', label: 'A1' },
+  { key: 'fecha_a1', label: 'Fecha A1' },
+  { key: 'fechafin_a1', label: 'Fin A1' },
+  { key: 'limosa', label: 'Limosa' },
+  { key: 'fecha_limosa', label: 'Fecha Limosa' },
+  { key: 'fechafin_limosa', label: 'Fin Limosa' },
+  { key: 'desplazamiento', label: 'Desplazamiento' },
+  { key: 'fecha_desplazamiento', label: 'Fecha desplazamiento' },
+  { key: 'epis', label: 'EPIs' },
+  { key: 'fecha_epis', label: 'Fecha EPIs' },
+  { key: 'condiciones', label: 'Condiciones' }
+];
+
+const exportFieldOrder = exportableFields.map(field => field.key);
+const exportFieldLabels = exportableFields.reduce((acc, field) => {
+  acc[field.key] = field.label;
+  return acc;
+}, {});
+
 export default function Trabajador() {
   const [trabajadores, setTrabajadores] = useState([]);
   const [error, setError] = useState('');
@@ -48,6 +88,8 @@ export default function Trabajador() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedFields, setSelectedFields] = useState(['nombre', 'dni', 'epis']);
+  const [showFieldSelector, setShowFieldSelector] = useState(false);
   const workersPerPage = 9; // mostrar 9 trabajadores por página
 
   const filteredTrabajadores = trabajadores
@@ -68,9 +110,45 @@ export default function Trabajador() {
   const currentTrabajadores = filteredTrabajadores.slice(indexOfFirstWorker, indexOfLastWorker);
   const totalPages = Math.ceil(filteredTrabajadores.length / workersPerPage);
 
+  const toggleFieldSelection = (fieldKey) => {
+    setSelectedFields((prev) => {
+      if (prev.includes(fieldKey)) {
+        return prev.filter((field) => field !== fieldKey);
+      }
 
+      const updated = [...prev, fieldKey];
+      return exportFieldOrder.filter((key) => updated.includes(key));
+    });
+  };
 
+  const handleSelectAllFields = () => {
+    setSelectedFields((prev) => (prev.length === exportFieldOrder.length ? [] : [...exportFieldOrder]));
+  };
 
+  const handleClearSelectedFields = () => {
+    setSelectedFields([]);
+  };
+
+  const handleExportSelectedFields = () => {
+    if (selectedFields.length === 0) {
+      alert('Selecciona al menos un campo para exportar.');
+      return;
+    }
+
+    if (filteredTrabajadores.length === 0) {
+      alert('No hay trabajadores que coincidan con la búsqueda actual.');
+      return;
+    }
+
+    try {
+      exportWorkersSelectionToExcel(filteredTrabajadores, selectedFields, {
+        fieldLabels: exportFieldLabels
+      });
+    } catch (err) {
+      console.error('Error al exportar trabajadores:', err);
+      alert('No se pudo generar el archivo de Excel.');
+    }
+  };
 
   const navigate = useNavigate();
 
@@ -191,6 +269,91 @@ const handleBaja = async (id) => {
           Añadir Trabajador
         </button>
 
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-5 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">Exportar trabajadores</h2>
+            <p className="text-sm text-gray-500">Elige los campos que quieres incluir en el Excel.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFieldSelector((prev) => !prev)}
+              className="px-3 py-2 border border-blue-500 text-blue-600 rounded hover:bg-blue-50 transition"
+            >
+              {showFieldSelector ? 'Ocultar campos' : 'Seleccionar campos'}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportSelectedFields}
+              disabled={selectedFields.length === 0 || filteredTrabajadores.length === 0}
+              className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Exportar Excel
+            </button>
+          </div>
+        </div>
+
+        {showFieldSelector && (
+          <div className="mt-4 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAllFields}
+                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 transition"
+              >
+                {selectedFields.length === exportFieldOrder.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
+              </button>
+              <button
+                type="button"
+                onClick={handleClearSelectedFields}
+                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 transition"
+              >
+                Limpiar
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {exportableFields.map((field) => (
+                <label
+                  key={field.key}
+                  className={`flex items-center gap-2 rounded border px-3 py-2 text-sm transition ${
+                    selectedFields.includes(field.key)
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-700'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={selectedFields.includes(field.key)}
+                    onChange={() => toggleFieldSelection(field.key)}
+                  />
+                  {field.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!showFieldSelector && selectedFields.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedFields.map((key) => (
+              <span key={key} className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                {exportFieldLabels[key]}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-3 text-xs text-gray-500">
+          {filteredTrabajadores.length === 0
+            ? 'No hay trabajadores que coincidan con la búsqueda actual.'
+            : selectedFields.length === 0
+              ? 'Selecciona al menos un campo para habilitar la exportación.'
+              : `Se exportarán ${filteredTrabajadores.length} trabajador${filteredTrabajadores.length === 1 ? '' : 'es'} con ${selectedFields.length} campo${selectedFields.length === 1 ? '' : 's'} seleccionados.`}
+        </p>
       </div>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
