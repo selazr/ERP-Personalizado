@@ -54,7 +54,7 @@ app.use('/api/externos', externoRoutes);
 db.sequelize.authenticate()
   .then(() => {
     console.log('✅ Conectado a la base de datos');
-    return db.sequelize.sync();
+    return db.sequelize.sync({ alter: true });
   })
   .then(() => {
     console.log('🗄️ Base de datos sincronizada');

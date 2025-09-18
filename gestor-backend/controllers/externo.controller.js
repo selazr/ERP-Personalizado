@@ -4,17 +4,24 @@ const { Op } = db.Sequelize;
 
 exports.createOrUpdate = async (req, res) => {
   const { fecha, cantidad, nombre_empresa_externo } = req.body;
+  const trimmedName = (nombre_empresa_externo || '').trim();
+  const cantidadNumerica = Number.parseInt(cantidad, 10);
+
+  if (!fecha || !trimmedName) {
+    return res.status(400).json({ error: 'Fecha y empresa son obligatorias' });
+  }
+
+  if (Number.isNaN(cantidadNumerica) || cantidadNumerica < 0) {
+    return res.status(400).json({ error: 'La cantidad debe ser un número válido' });
+  }
+
   try {
-    const existing = await Externo.findOne({
-      where: { fecha, nombre_empresa_externo }
+    await Externo.upsert({
+      fecha,
+      cantidad: cantidadNumerica,
+      nombre_empresa_externo: trimmedName,
     });
-    if (existing) {
-      existing.cantidad = cantidad;
-      await existing.save();
-    } else {
-      await Externo.create({ fecha, cantidad, nombre_empresa_externo });
-    }
-    res.json({ fecha, cantidad, nombre_empresa_externo });
+    res.json({ fecha, cantidad: cantidadNumerica, nombre_empresa_externo: trimmedName });
   } catch (err) {
     res.status(500).json({ error: 'Error guardando externo' });
   }
@@ -27,10 +34,10 @@ exports.getExternos = async (req, res) => {
     where.fecha = { [Op.between]: [start, end] };
   }
   if (nombre_empresa_externo) {
-    where.nombre_empresa_externo = nombre_empresa_externo;
+    where.nombre_empresa_externo = nombre_empresa_externo.trim();
   }
   try {
-    const items = await Externo.findAll({ where });
+    const items = await Externo.findAll({ where, order: [['fecha', 'ASC'], ['nombre_empresa_externo', 'ASC']] });
     res.json(items);
   } catch (err) {
     res.status(500).json({ error: 'Error obteniendo externos' });
@@ -54,8 +61,14 @@ exports.getEmpresas = async (req, res) => {
 
 exports.deleteExterno = async (req, res) => {
   const { fecha, nombre_empresa_externo } = req.body;
+  const trimmedName = (nombre_empresa_externo || '').trim();
+
+  if (!fecha || !trimmedName) {
+    return res.status(400).json({ error: 'Fecha y empresa son obligatorias' });
+  }
+
   try {
-    await Externo.destroy({ where: { fecha, nombre_empresa_externo } });
+    await Externo.destroy({ where: { fecha, nombre_empresa_externo: trimmedName } });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Error eliminando externo' });
