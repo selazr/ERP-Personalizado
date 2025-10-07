@@ -204,9 +204,17 @@ exports.getOrganizationInfo = async (req, res) => {
       raw: true
     });
 
+    const horasExtrasPagadas = await db.Horario.findAll({
+      attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('CASE WHEN pagada = 1 THEN horas_pagadas ELSE 0 END')), 'pagadas']],
+      include: [{ model: Trabajador, attributes: [], where: activeCondition }],
+      raw: true
+    });
+
     const promedioHorasSemana = parseFloat(horasSemana[0].horas || 0) / 4;
     const promedioHorasMes = parseFloat(horasMes[0].horas || 0);
-    const horasExtrasAcumuladas = parseFloat(horasExtras[0].extras || 0);
+    const horasExtrasAcumuladasRaw = parseFloat(horasExtras[0].extras || 0);
+    const horasExtrasPagadasTotal = parseFloat(horasExtrasPagadas[0].pagadas || 0);
+    const horasExtrasAcumuladas = Math.max(horasExtrasAcumuladasRaw - horasExtrasPagadasTotal, 0);
 
     // Promedio de antigüedad como proxy de edad
     const edadPromedioRow = await Trabajador.findOne({
@@ -227,6 +235,7 @@ exports.getOrganizationInfo = async (req, res) => {
       promedioHorasSemana,
       promedioHorasMes,
       horasExtrasAcumuladas,
+      horasExtrasPagadas: horasExtrasPagadasTotal,
       edadPromedio
     });
   } catch (err) {

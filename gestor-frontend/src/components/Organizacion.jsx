@@ -295,6 +295,10 @@ export default function Organizacion() {
                     <span>Horas extras acumuladas</span>
                     <span className="font-bold">{stats.horasExtrasAcumuladas?.toFixed(1)}</span>
                   </li>
+                  <li className="flex justify-between">
+                    <span>Horas extras pagadas</span>
+                    <span className="font-bold">{stats.horasExtrasPagadas?.toFixed(1)}</span>
+                  </li>
                 </ul>
               </div>
             </div>

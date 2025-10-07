@@ -105,10 +105,20 @@ export async function addScheduleWorksheet(
 
   const dayData = {};
   sorted.forEach((h) => {
-    const { fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica, horanegativa, dianegativo } = h;
+    const { fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica, horanegativa, dianegativo, pagada, horas_pagadas } = h;
     const dur = calcDuration(hora_inicio, hora_fin);
     if (!dayData[fecha]) {
-      dayData[fecha] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [], horanegativa: 0, dianegativo: false };
+      dayData[fecha] = {
+        total: 0,
+        festivo: false,
+        vacaciones: false,
+        baja: false,
+        intervals: [],
+        horanegativa: 0,
+        dianegativo: false,
+        pagada: false,
+        horas_pagadas: 0
+      };
     }
     dayData[fecha].total += dur;
     dayData[fecha].festivo = dayData[fecha].festivo || festivo;
@@ -117,6 +127,8 @@ export async function addScheduleWorksheet(
     dayData[fecha].intervals.push({ start: hora_inicio, end: hora_fin });
     if (horanegativa) dayData[fecha].horanegativa = horanegativa;
     if (dianegativo) dayData[fecha].dianegativo = true;
+    if (pagada) dayData[fecha].pagada = true;
+    if (pagada && horas_pagadas) dayData[fecha].horas_pagadas = horas_pagadas;
   });
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -124,7 +136,17 @@ export async function addScheduleWorksheet(
     const date = new Date(year, month, d);
     const iso = format(date, 'yyyy-MM-dd');
     if (!dayData[iso]) {
-      dayData[iso] = { total: 0, festivo: false, vacaciones: false, baja: false, intervals: [], horanegativa: 0, dianegativo: false };
+      dayData[iso] = {
+        total: 0,
+        festivo: false,
+        vacaciones: false,
+        baja: false,
+        intervals: [],
+        horanegativa: 0,
+        dianegativo: false,
+        pagada: false,
+        horas_pagadas: 0
+      };
     }
   }
 
@@ -135,6 +157,7 @@ export async function addScheduleWorksheet(
   let totalAdeber = 0;
   let totalNocturnas = 0;
   let totalFestivas = 0;
+  let totalPagadas = 0;
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
     const date = parseISO(fecha);
@@ -186,11 +209,16 @@ export async function addScheduleWorksheet(
       }
     }
 
+    const horasPagadas = entry.pagada ? parseFloat(entry.horas_pagadas || 0) : 0;
+    const pagadasAplicadas = horasPagadas > 0 ? Math.min(extrasFinal, horasPagadas) : 0;
+    extrasFinal = horasPagadas > 0 ? Math.max(extrasFinal - horasPagadas, 0) : extrasFinal;
+
     totalNormales += normales;
     totalExtras += extrasFinal;
     totalAdeber += adeber;
     totalNocturnas += nocturnas;
     totalFestivas += festivas;
+    totalPagadas += pagadasAplicadas;
 
     rows.push({
       'Día de la Semana': dayName,
@@ -203,7 +231,9 @@ export async function addScheduleWorksheet(
       'Extras': toHM(extrasFinal),
       'A Deber': entry.dianegativo ? 'Día negativo' : adeber > 0 ? `-${toHM(adeber)}` : '',
       'Nocturnas': toHM(nocturnas),
-      'Festivas': toHM(festivas)
+      'Festivas': toHM(festivas),
+      'Pagada': entry.pagada ? 'Sí' : '',
+      'Horas Pagadas': horasPagadas > 0 ? toHM(pagadasAplicadas) : ''
     });
     rowFlags.push({ isWeekend, isHoliday: entry.festivo, isVacation: entry.vacaciones, isBaja: entry.baja });
   });
@@ -219,7 +249,9 @@ export async function addScheduleWorksheet(
     'Extras': toHM(totalExtras),
     'A Deber': totalAdeber > 0 ? `-${toHM(totalAdeber)}` : '',
     'Nocturnas': toHM(totalNocturnas),
-    'Festivas': toHM(totalFestivas)
+    'Festivas': toHM(totalFestivas),
+    'Pagada': '',
+    'Horas Pagadas': toHM(totalPagadas)
   };
 
   const header = [
@@ -233,7 +265,9 @@ export async function addScheduleWorksheet(
     'Extras',
     'A Deber',
     'Nocturnas',
-    'Festivas'
+    'Festivas',
+    'Pagada',
+    'Horas Pagadas'
   ];
 
   const baseName = trabajador.nombre || 'Horas';

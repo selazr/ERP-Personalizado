@@ -29,16 +29,42 @@ export default function ScheduleManager() {
 
   const agruparHorarios = (horarios) => {
     const result = {};
-    horarios.forEach(({ fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica, proyecto_nombre, horanegativa, dianegativo }) => {
+    horarios.forEach(({
+      fecha,
+      hora_inicio,
+      hora_fin,
+      festivo,
+      vacaciones,
+      bajamedica,
+      proyecto_nombre,
+      horanegativa,
+      dianegativo,
+      pagada,
+      horas_pagadas
+    }) => {
       if (!result[fecha]) {
-        result[fecha] = { intervals: [], isHoliday: false, isVacation: false, isBaja: false, horaNegativa: 0, diaNegativo: false };
+        result[fecha] = {
+          intervals: [],
+          isHoliday: false,
+          isVacation: false,
+          isBaja: false,
+          horaNegativa: 0,
+          diaNegativo: false,
+          pagada: false,
+          horasPagadas: 0
+        };
       }
-      result[fecha].intervals.push({ hora_inicio, hora_fin, proyecto_nombre });
+      const horasPagadasValue = horas_pagadas ? parseFloat(horas_pagadas) : 0;
+      result[fecha].intervals.push({ hora_inicio, hora_fin, proyecto_nombre, pagada: !!pagada, horas_pagadas: horasPagadasValue });
       if (festivo) result[fecha].isHoliday = true;
       if (vacaciones) result[fecha].isVacation = true;
       if (bajamedica) result[fecha].isBaja = true;
       if (horanegativa) result[fecha].horaNegativa = horanegativa;
       if (dianegativo) result[fecha].diaNegativo = true;
+      if (pagada) result[fecha].pagada = true;
+      if (typeof horasPagadasValue === 'number' && !Number.isNaN(horasPagadasValue)) {
+        result[fecha].horasPagadas = Math.max(result[fecha].horasPagadas, horasPagadasValue);
+      }
     });
     return result;
   };
@@ -54,8 +80,10 @@ export default function ScheduleManager() {
     const isBaja = grouped.isBaja || false;
     const horaNegativa = grouped.horaNegativa || 0;
     const diaNegativo = grouped.diaNegativo || false;
+    const pagada = grouped.pagada || false;
+    const horasPagadas = grouped.horasPagadas || 0;
 
-    setSelectedDay({ fecha, eventos, isHoliday, isVacation, isBaja, horaNegativa, diaNegativo });
+    setSelectedDay({ fecha, eventos, isHoliday, isVacation, isBaja, horaNegativa, diaNegativo, pagada, horasPagadas });
     setIsModalOpen(true);
   };
 
@@ -68,6 +96,8 @@ export default function ScheduleManager() {
     proyecto_nombre,
     horaNegativa = 0,
     diaNegativo = false,
+    pagada = false,
+    horasPagadas = 0,
     trabajadoresExtra = [],
     fechasExtra = []
   }) => {
@@ -90,7 +120,9 @@ export default function ScheduleManager() {
               bajamedica,
               proyecto_nombre,
               horanegativa: horaNegativa,
-              dianegativo: diaNegativo
+              dianegativo: diaNegativo,
+              pagada,
+              horas_pagadas: horasPagadas
             },
             { headers: { Authorization: `Bearer ${token}` } }
           )
@@ -199,6 +231,8 @@ export default function ScheduleManager() {
       const bajamedica = grouped?.isBaja || false;
       const horaNegativa = grouped?.horaNegativa || 0;
       const diaNegativo = grouped?.diaNegativo || false;
+      const pagada = grouped?.pagada || false;
+      const horasPagadas = grouped?.horasPagadas || 0;
       const weekend = date.getDay() === 6 || date.getDay() === 0;
 
       const totalHoras = eventos.reduce((sum, ev) => {
@@ -218,6 +252,7 @@ export default function ScheduleManager() {
             ${festivo ? 'bg-purple-100 text-purple-700' : ''}
             ${vacaciones ? 'bg-green-100 text-green-700' : ''}
             ${diaNegativo || horaNegativa > 0 ? 'bg-red-200 text-red-700' : ''}
+            ${pagada ? 'border-2 border-emerald-400' : ''}
             ${totalHoras > 0 && !festivo && !vacaciones && !bajamedica && horaNegativa <= 0 && !diaNegativo ? 'bg-blue-100 text-blue-700' : ''}
             ${weekend && !festivo && !vacaciones && !bajamedica && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
             hover:shadow-md
@@ -235,7 +270,7 @@ export default function ScheduleManager() {
             <span className="text-xs font-semibold mt-2">Vacaciones</span>
           )}
 
-          {(totalHoras > 0 || horaNegativa > 0 || diaNegativo) && !festivo && !vacaciones && !bajamedica && (
+          {(totalHoras > 0 || horaNegativa > 0 || diaNegativo || pagada) && !festivo && !vacaciones && !bajamedica && (
             <div className="flex flex-col items-center">
               {totalHoras > 0 && (
                 <span className="text-base font-bold">
@@ -245,6 +280,11 @@ export default function ScheduleManager() {
               {(horaNegativa > 0 || diaNegativo) && (
                 <span className="text-base font-bold text-red-700 mt-1">
                   {horaNegativa > 0 ? `-${formatHoursToHM(horaNegativa)}` : 'Día negativo'}
+                </span>
+              )}
+              {pagada && (
+                <span className="text-xs font-semibold text-emerald-600 mt-1">
+                  {`Pagada${horasPagadas ? ` (${formatHoursToHM(horasPagadas)})` : ''}`}
                 </span>
               )}
               {eventos[0]?.proyecto_nombre && (
@@ -367,6 +407,8 @@ export default function ScheduleManager() {
         initialBaja={selectedDay?.isBaja || false}
         initialHoraNegativa={selectedDay?.horaNegativa || 0}
         initialDiaNegativo={selectedDay?.diaNegativo || false}
+        initialPagada={selectedDay?.pagada || false}
+        initialHorasPagadas={selectedDay?.horasPagadas || 0}
         workers={trabajadores}
       />
     </>

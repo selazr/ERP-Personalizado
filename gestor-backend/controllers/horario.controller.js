@@ -14,7 +14,19 @@ exports.getHorariosByTrabajador = async (req, res) => {
 };
 exports.createOrUpdateHorarios = async (req, res) => {
   try {
-    const { trabajador_id, fecha, horarios, festivo, vacaciones, bajamedica, proyecto_nombre, horanegativa = 0, dianegativo = false } = req.body;
+    const {
+      trabajador_id,
+      fecha,
+      horarios,
+      festivo,
+      vacaciones,
+      bajamedica,
+      proyecto_nombre,
+      horanegativa = 0,
+      dianegativo = false,
+      pagada = false,
+      horas_pagadas = 0
+    } = req.body;
 
     // Borrar los horarios anteriores del mismo día
     await Horario.destroy({
@@ -35,7 +47,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
           bajamedica: bajamedica || false,
           proyecto_nombre: proyecto_nombre || null,
           horanegativa,
-          dianegativo
+          dianegativo,
+          pagada: pagada || false,
+          horas_pagadas: pagada ? horas_pagadas || 0 : 0
         });
       });
     } else if (festivo) {
@@ -50,7 +64,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         bajamedica: false,
         proyecto_nombre: proyecto_nombre || null,
         horanegativa,
-        dianegativo
+        dianegativo,
+        pagada: pagada || false,
+        horas_pagadas: pagada ? horas_pagadas || 0 : 0
       });
     } else if (vacaciones) {
       // Registrar el día como vacaciones sin horas
@@ -64,7 +80,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         bajamedica: false,
         proyecto_nombre: proyecto_nombre || null,
         horanegativa,
-        dianegativo
+        dianegativo,
+        pagada: pagada || false,
+        horas_pagadas: pagada ? horas_pagadas || 0 : 0
       });
     } else if (bajamedica) {
       nuevos.push({
@@ -77,7 +95,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         bajamedica: true,
         proyecto_nombre: proyecto_nombre || null,
         horanegativa,
-        dianegativo
+        dianegativo,
+        pagada: pagada || false,
+        horas_pagadas: pagada ? horas_pagadas || 0 : 0
       });
     }
     // Permitir asignar un proyecto sin intervalos
@@ -92,7 +112,9 @@ exports.createOrUpdateHorarios = async (req, res) => {
         bajamedica: false,
         proyecto_nombre,
         horanegativa,
-        dianegativo
+        dianegativo,
+        pagada: pagada || false,
+        horas_pagadas: pagada ? horas_pagadas || 0 : 0
       });
     } else if (horanegativa > 0 || dianegativo) {
       // Registrar horas o día negativo sin intervalos
@@ -107,6 +129,8 @@ exports.createOrUpdateHorarios = async (req, res) => {
         proyecto_nombre: proyecto_nombre || null,
         horanegativa,
         dianegativo,
+        pagada: pagada || false,
+        horas_pagadas: pagada ? horas_pagadas || 0 : 0
       });
     }
 
