@@ -15,6 +15,8 @@ export default function HorarioModal({
   initialBaja = false,
   initialHoraNegativa = 0,
   initialDiaNegativo = false,
+  initialPagada = false,
+  initialHorasPagadas = 0,
   workers = []
 }) {
   const [intervals, setIntervals] = useState([]);
@@ -27,6 +29,8 @@ export default function HorarioModal({
   const [extraDates, setExtraDates] = useState([]);
   const [useNegative, setUseNegative] = useState(false);
   const [negativeHours, setNegativeHours] = useState('');
+  const [isPaid, setIsPaid] = useState(false);
+  const [paidHours, setPaidHours] = useState('');
 
   const parseHoursInput = (val) => {
     if (!val) return 0;
@@ -60,6 +64,8 @@ export default function HorarioModal({
     setIsBaja(initialBaja);
     setUseNegative(initialHoraNegativa > 0 || initialDiaNegativo);
     setNegativeHours(initialHoraNegativa ? formatHoursInput(initialHoraNegativa) : '');
+    setIsPaid(initialPagada);
+    setPaidHours(initialPagada && initialHorasPagadas ? formatHoursInput(initialHorasPagadas) : '');
 
   // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
   if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
@@ -69,7 +75,7 @@ export default function HorarioModal({
     setProyectoNombre('');
     setEditarProyecto(false);
   }
-  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha, initialHoraNegativa, initialDiaNegativo]);
+  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha, initialHoraNegativa, initialDiaNegativo, initialPagada, initialHorasPagadas]);
 
 
   const handleAddInterval = () => {
@@ -110,6 +116,7 @@ export default function HorarioModal({
 
   const handleSave = () => {
     const parsedNegative = useNegative ? parseHoursInput(negativeHours) : 0;
+    const parsedPaid = isPaid ? Math.max(parseHoursInput(paidHours), 0) : 0;
     onSave({
       fecha,
       intervals,
@@ -119,6 +126,8 @@ export default function HorarioModal({
       proyecto_nombre: proyectoNombre?.trim() || null,
       horaNegativa: parsedNegative,
       diaNegativo: useNegative && parsedNegative === 0,
+      pagada: isPaid,
+      horasPagadas: parsedPaid,
       trabajadoresExtra: extraWorkers.filter(Boolean),
       fechasExtra: extraDates.filter(Boolean)
     });
@@ -136,6 +145,8 @@ export default function HorarioModal({
     setExtraDates([]);
     setUseNegative(false);
     setNegativeHours('');
+    setIsPaid(false);
+    setPaidHours('');
   };
 
   const totalHoras = intervals.reduce((sum, intv) => {
@@ -240,6 +251,25 @@ export default function HorarioModal({
               />
               Marcar como Baja Médica
             </label>
+
+            <label className="flex items-center gap-2 mt-3">
+              <input
+                type="checkbox"
+                checked={isPaid}
+                onChange={(e) => setIsPaid(e.target.checked)}
+              />
+              Marcar horas como pagadas
+            </label>
+
+            {isPaid && (
+              <input
+                type="text"
+                value={paidHours}
+                onChange={(e) => setPaidHours(e.target.value)}
+                placeholder="Horas pagadas (HH,MM)"
+                className="p-2 border border-gray-300 rounded w-full mt-1"
+              />
+            )}
 
             <label className="flex flex-col gap-2 mt-3">
               <div className="flex items-center gap-2">

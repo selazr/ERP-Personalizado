@@ -42,6 +42,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    pagada: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    horas_pagadas: {
+      type: DataTypes.DECIMAL(6, 2),
+      defaultValue: 0,
+    },
     proyecto_nombre: {
       type: DataTypes.STRING,
       allowNull: true,
