@@ -197,6 +197,7 @@ export async function addScheduleWorksheet(
       entry.baja
     );
 
+    let normalesFinal = normales;
     let extrasFinal = extras;
     let adeber = 0;
     const neg = entry.horanegativa || 0;
@@ -210,10 +211,24 @@ export async function addScheduleWorksheet(
     }
 
     const horasPagadas = entry.pagada ? parseFloat(entry.horas_pagadas || 0) : 0;
-    const pagadasAplicadas = horasPagadas > 0 ? Math.min(extrasFinal, horasPagadas) : 0;
-    extrasFinal = horasPagadas > 0 ? Math.max(extrasFinal - horasPagadas, 0) : extrasFinal;
+    let pagadasAplicadas = 0;
+    if (horasPagadas > 0) {
+      let restante = horasPagadas;
 
-    totalNormales += normales;
+      const pagadasNormales = Math.min(normalesFinal, restante);
+      normalesFinal -= pagadasNormales;
+      pagadasAplicadas += pagadasNormales;
+      restante -= pagadasNormales;
+
+      if (restante > 0) {
+        const pagadasExtras = Math.min(extrasFinal, restante);
+        extrasFinal -= pagadasExtras;
+        pagadasAplicadas += pagadasExtras;
+        restante -= pagadasExtras;
+      }
+    }
+
+    totalNormales += normalesFinal;
     totalExtras += extrasFinal;
     totalAdeber += adeber;
     totalNocturnas += nocturnas;
@@ -227,7 +242,7 @@ export async function addScheduleWorksheet(
       'Salida 1': salida1,
       'Entrada 2': entrada2,
       'Salida 2': salida2,
-      'Normales': toHM(normales),
+      'Normales': toHM(normalesFinal),
       'Extras': toHM(extrasFinal),
       'A Deber': entry.dianegativo ? 'Día negativo' : adeber > 0 ? `-${toHM(adeber)}` : '',
       'Nocturnas': toHM(nocturnas),

@@ -81,6 +81,7 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         entry.isVacation,
         entry.isBaja
       );
+      let normalesDia = tipo.normales;
       let extrasDia = tipo.extras;
       const neg = entry.horaNegativa || 0;
       let adeberDia = 0;
@@ -93,9 +94,24 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         }
       }
       const pagadasDia = entry.pagada ? parseFloat(entry.horasPagadas || entry.horas_pagadas || 0) : 0;
-      const pagadasAplicadas = pagadasDia > 0 ? Math.min(extrasDia, pagadasDia) : 0;
-      extrasDia = pagadasDia > 0 ? Math.max(extrasDia - pagadasDia, 0) : extrasDia;
-      resumen.normales += tipo.normales;
+      let pagadasAplicadas = 0;
+      if (pagadasDia > 0) {
+        let restante = pagadasDia;
+
+        const pagadasNormales = Math.min(normalesDia, restante);
+        normalesDia -= pagadasNormales;
+        pagadasAplicadas += pagadasNormales;
+        restante -= pagadasNormales;
+
+        if (restante > 0) {
+          const pagadasExtras = Math.min(extrasDia, restante);
+          extrasDia -= pagadasExtras;
+          pagadasAplicadas += pagadasExtras;
+          restante -= pagadasExtras;
+        }
+      }
+
+      resumen.normales += normalesDia;
       resumen.extras += extrasDia;
       resumen.nocturnas += tipo.nocturnas;
       resumen.festivas += tipo.festivas;
