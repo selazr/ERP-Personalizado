@@ -408,7 +408,6 @@ export default function ScheduleManager() {
         initialHoraNegativa={selectedDay?.horaNegativa || 0}
         initialDiaNegativo={selectedDay?.diaNegativo || false}
         initialPagada={selectedDay?.pagada || false}
-        initialHorasPagadas={selectedDay?.horasPagadas || 0}
         workers={trabajadores}
       />
     </>

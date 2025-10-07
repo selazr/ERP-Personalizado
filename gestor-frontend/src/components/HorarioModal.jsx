@@ -16,7 +16,6 @@ export default function HorarioModal({
   initialHoraNegativa = 0,
   initialDiaNegativo = false,
   initialPagada = false,
-  initialHorasPagadas = 0,
   workers = []
 }) {
   const [intervals, setIntervals] = useState([]);
@@ -30,7 +29,6 @@ export default function HorarioModal({
   const [useNegative, setUseNegative] = useState(false);
   const [negativeHours, setNegativeHours] = useState('');
   const [isPaid, setIsPaid] = useState(false);
-  const [paidHours, setPaidHours] = useState('');
 
   const parseHoursInput = (val) => {
     if (!val) return 0;
@@ -65,17 +63,16 @@ export default function HorarioModal({
     setUseNegative(initialHoraNegativa > 0 || initialDiaNegativo);
     setNegativeHours(initialHoraNegativa ? formatHoursInput(initialHoraNegativa) : '');
     setIsPaid(initialPagada);
-    setPaidHours(initialPagada && initialHorasPagadas ? formatHoursInput(initialHorasPagadas) : '');
 
-  // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
-  if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
-    setProyectoNombre(initialData[0].proyecto_nombre || '');
-    setEditarProyecto(!!initialData[0].proyecto_nombre); // si hay nombre, activar checkbox
-  } else {
-    setProyectoNombre('');
-    setEditarProyecto(false);
-  }
-  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha, initialHoraNegativa, initialDiaNegativo, initialPagada, initialHorasPagadas]);
+    // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
+    if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
+      setProyectoNombre(initialData[0].proyecto_nombre || '');
+      setEditarProyecto(!!initialData[0].proyecto_nombre); // si hay nombre, activar checkbox
+    } else {
+      setProyectoNombre('');
+      setEditarProyecto(false);
+    }
+  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha, initialHoraNegativa, initialDiaNegativo, initialPagada]);
 
 
   const handleAddInterval = () => {
@@ -116,7 +113,7 @@ export default function HorarioModal({
 
   const handleSave = () => {
     const parsedNegative = useNegative ? parseHoursInput(negativeHours) : 0;
-    const parsedPaid = isPaid ? Math.max(parseHoursInput(paidHours), 0) : 0;
+    const parsedPaid = isPaid ? Math.max(totalHoras, 0) : 0;
     onSave({
       fecha,
       intervals,
@@ -146,7 +143,6 @@ export default function HorarioModal({
     setUseNegative(false);
     setNegativeHours('');
     setIsPaid(false);
-    setPaidHours('');
   };
 
   const totalHoras = intervals.reduce((sum, intv) => {
@@ -157,6 +153,12 @@ export default function HorarioModal({
     }
     return sum;
   }, 0);
+
+  const formattedPaidHours = formatHoursInput(Math.max(totalHoras, 0));
+
+  const handleTogglePaid = () => {
+    setIsPaid(prev => !prev);
+  };
 
   let formattedDate = 'Fecha inválida';
   if (fecha && isValid(new Date(fecha))) {
@@ -252,24 +254,24 @@ export default function HorarioModal({
               Marcar como Baja Médica
             </label>
 
-            <label className="flex items-center gap-2 mt-3">
-              <input
-                type="checkbox"
-                checked={isPaid}
-                onChange={(e) => setIsPaid(e.target.checked)}
-              />
-              Marcar horas como pagadas
-            </label>
-
-            {isPaid && (
-              <input
-                type="text"
-                value={paidHours}
-                onChange={(e) => setPaidHours(e.target.value)}
-                placeholder="Horas pagadas (HH,MM)"
-                className="p-2 border border-gray-300 rounded w-full mt-1"
-              />
-            )}
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={handleTogglePaid}
+                className={`w-full px-3 py-2 rounded border transition-colors ${
+                  isPaid
+                    ? 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600'
+                    : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'
+                }`}
+              >
+                {isPaid ? 'Quitar marca de horas pagadas' : 'Marcar horas del día como pagadas'}
+              </button>
+              {isPaid && (
+                <p className="mt-2 text-sm text-emerald-600">
+                  Se marcarán como pagadas {formattedPaidHours} horas.
+                </p>
+              )}
+            </div>
 
             <label className="flex flex-col gap-2 mt-3">
               <div className="flex items-center gap-2">

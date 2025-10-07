@@ -1,6 +1,29 @@
 const db = require('../models');
 const Horario = db.Horario;
 
+const calculateTotalHours = (entries = []) => {
+  return entries.reduce((total, entry) => {
+    const { hora_inicio: inicio, hora_fin: fin } = entry;
+    if (!inicio || !fin) return total;
+
+    const [h1, m1] = inicio.split(':').map(Number);
+    const [h2, m2] = fin.split(':').map(Number);
+
+    if (Number.isNaN(h1) || Number.isNaN(m1) || Number.isNaN(h2) || Number.isNaN(m2)) {
+      return total;
+    }
+
+    let startMinutes = h1 * 60 + m1;
+    let endMinutes = h2 * 60 + m2;
+
+    if (endMinutes <= startMinutes) {
+      endMinutes += 24 * 60;
+    }
+
+    return total + (endMinutes - startMinutes) / 60;
+  }, 0);
+};
+
 
 exports.getHorariosByTrabajador = async (req, res) => {
   try {
@@ -28,6 +51,8 @@ exports.createOrUpdateHorarios = async (req, res) => {
       horas_pagadas = 0
     } = req.body;
 
+    const horasPagadasCalculadas = pagada ? calculateTotalHours(horarios) : 0;
+
     // Borrar los horarios anteriores del mismo día
     await Horario.destroy({
       where: { trabajador_id, fecha }
@@ -49,7 +74,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
           horanegativa,
           dianegativo,
           pagada: pagada || false,
-          horas_pagadas: pagada ? horas_pagadas || 0 : 0
+          horas_pagadas: pagada ? horasPagadasCalculadas : 0
         });
       });
     } else if (festivo) {
@@ -66,7 +91,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         horanegativa,
         dianegativo,
         pagada: pagada || false,
-        horas_pagadas: pagada ? horas_pagadas || 0 : 0
+        horas_pagadas: pagada ? horasPagadasCalculadas : 0
       });
     } else if (vacaciones) {
       // Registrar el día como vacaciones sin horas
@@ -82,7 +107,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         horanegativa,
         dianegativo,
         pagada: pagada || false,
-        horas_pagadas: pagada ? horas_pagadas || 0 : 0
+        horas_pagadas: pagada ? horasPagadasCalculadas : 0
       });
     } else if (bajamedica) {
       nuevos.push({
@@ -97,7 +122,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         horanegativa,
         dianegativo,
         pagada: pagada || false,
-        horas_pagadas: pagada ? horas_pagadas || 0 : 0
+        horas_pagadas: pagada ? horasPagadasCalculadas : 0
       });
     }
     // Permitir asignar un proyecto sin intervalos
@@ -114,7 +139,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         horanegativa,
         dianegativo,
         pagada: pagada || false,
-        horas_pagadas: pagada ? horas_pagadas || 0 : 0
+        horas_pagadas: pagada ? horasPagadasCalculadas : 0
       });
     } else if (horanegativa > 0 || dianegativo) {
       // Registrar horas o día negativo sin intervalos
@@ -130,7 +155,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         horanegativa,
         dianegativo,
         pagada: pagada || false,
-        horas_pagadas: pagada ? horas_pagadas || 0 : 0
+        horas_pagadas: pagada ? horasPagadasCalculadas : 0
       });
     }
 
