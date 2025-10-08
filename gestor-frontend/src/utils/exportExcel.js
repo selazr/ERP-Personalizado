@@ -208,6 +208,8 @@ export async function addScheduleWorksheet(
           applied = Math.min(nocturnasFinal, safeAmount);
           nocturnasFinal -= applied;
           break;
+        case 'festivo':
+        case 'festiva':
         case 'festivas':
           applied = Math.min(festivasFinal, safeAmount);
           festivasFinal -= applied;
@@ -234,6 +236,20 @@ export async function addScheduleWorksheet(
           extrasFinal -= pagadasExtras;
           pagadasAplicadas += pagadasExtras;
           restante -= pagadasExtras;
+        }
+
+        if (restante > 0) {
+          const pagadasNocturnas = Math.min(nocturnasFinal, restante);
+          nocturnasFinal -= pagadasNocturnas;
+          pagadasAplicadas += pagadasNocturnas;
+          restante -= pagadasNocturnas;
+        }
+
+        if (restante > 0) {
+          const pagadasFestivas = Math.min(festivasFinal, restante);
+          festivasFinal -= pagadasFestivas;
+          pagadasAplicadas += pagadasFestivas;
+          restante -= pagadasFestivas;
         }
       }
     }
