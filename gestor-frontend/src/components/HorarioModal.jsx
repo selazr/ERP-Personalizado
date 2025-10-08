@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog } from '@headlessui/react';
 import { format, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import WorkerAutocomplete from '@/components/WorkerAutocomplete';
+import { calculateHourBreakdown, formatHoursToHM, PAYMENT_TYPE_LABELS } from '@/utils/utils';
 
 export default function HorarioModal({
   isOpen,
@@ -16,6 +17,7 @@ export default function HorarioModal({
   initialHoraNegativa = 0,
   initialDiaNegativo = false,
   initialPagada = false,
+  initialPaidType = null,
   workers = []
 }) {
   const [intervals, setIntervals] = useState([]);
@@ -29,6 +31,7 @@ export default function HorarioModal({
   const [useNegative, setUseNegative] = useState(false);
   const [negativeHours, setNegativeHours] = useState('');
   const [isPaid, setIsPaid] = useState(false);
+  const [paidType, setPaidType] = useState(null);
 
   const parseHoursInput = (val) => {
     if (!val) return 0;
@@ -63,6 +66,8 @@ export default function HorarioModal({
     setUseNegative(initialHoraNegativa > 0 || initialDiaNegativo);
     setNegativeHours(initialHoraNegativa ? formatHoursInput(initialHoraNegativa) : '');
     setIsPaid(initialPagada);
+    const normalizedInitialPaidType = initialPaidType ? String(initialPaidType).toLowerCase() : null;
+    setPaidType(initialPagada ? normalizedInitialPaidType : null);
 
     // ✅ Detectar el proyecto si todos los intervalos tienen el mismo nombre
     if (initialData.length > 0 && initialData.every(i => i.proyecto_nombre === initialData[0].proyecto_nombre)) {
@@ -72,7 +77,17 @@ export default function HorarioModal({
       setProyectoNombre('');
       setEditarProyecto(false);
     }
-  }, [initialData, initialFestivo, initialVacaciones, initialBaja, fecha, initialHoraNegativa, initialDiaNegativo, initialPagada]);
+  }, [
+    initialData,
+    initialFestivo,
+    initialVacaciones,
+    initialBaja,
+    fecha,
+    initialHoraNegativa,
+    initialDiaNegativo,
+    initialPagada,
+    initialPaidType
+  ]);
 
 
   const handleAddInterval = () => {
@@ -111,9 +126,75 @@ export default function HorarioModal({
     setExtraDates(prev => prev.filter((_, i) => i !== index));
   };
 
+  const totalHoras = useMemo(() => {
+    return intervals.reduce((sum, intv) => {
+      if (intv.hora_inicio && intv.hora_fin) {
+        const [h1, m1] = intv.hora_inicio.split(':').map(Number);
+        const [h2, m2] = intv.hora_fin.split(':').map(Number);
+        return sum + ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+      }
+      return sum;
+    }, 0);
+  }, [intervals]);
+
+  const hoursByType = useMemo(() => {
+    if (!fecha) {
+      return { normales: 0, extras: 0, nocturnas: 0, festivas: 0 };
+    }
+    const breakdown = calculateHourBreakdown(intervals, fecha, {
+      isHoliday,
+      isVacation,
+      isBaja,
+    });
+    const negativeForExtras = useNegative ? Math.max(parseHoursInput(negativeHours), 0) : 0;
+    return {
+      normales: breakdown.normales,
+      extras: Math.max(breakdown.extras - negativeForExtras, 0),
+      nocturnas: breakdown.nocturnas,
+      festivas: breakdown.festivas,
+    };
+  }, [intervals, fecha, isHoliday, isVacation, isBaja, useNegative, negativeHours]);
+
+  const paymentOptions = useMemo(
+    () => Object.entries(hoursByType).filter(([, value]) => value > 0),
+    [hoursByType]
+  );
+
+  const canMarkPaid = paymentOptions.length > 0;
+  const selectedPaidHours = paidType ? Math.max(hoursByType[paidType] || 0, 0) : 0;
+  const formattedPaidHours = formatHoursToHM(selectedPaidHours);
+  const selectedPaidLabel = paidType ? PAYMENT_TYPE_LABELS[paidType] || paidType : null;
+
+  useEffect(() => {
+    if (isPaid) {
+      if (!canMarkPaid) {
+        setIsPaid(false);
+        setPaidType(null);
+      } else if (!paidType || (hoursByType[paidType] || 0) <= 0) {
+        const defaultType = paymentOptions[0]?.[0] || null;
+        setPaidType(defaultType);
+      }
+    }
+  }, [isPaid, paidType, paymentOptions, canMarkPaid, hoursByType]);
+
+  const handlePaidChange = (event) => {
+    const checked = event.target.checked;
+    if (checked) {
+      if (!canMarkPaid) {
+        return;
+      }
+      const defaultType = paidType && (hoursByType[paidType] || 0) > 0 ? paidType : paymentOptions[0]?.[0] || null;
+      setPaidType(defaultType);
+      setIsPaid(true);
+    } else {
+      setIsPaid(false);
+      setPaidType(null);
+    }
+  };
+
   const handleSave = () => {
     const parsedNegative = useNegative ? parseHoursInput(negativeHours) : 0;
-    const parsedPaid = isPaid ? Math.max(totalHoras, 0) : 0;
+    const shouldMarkPaid = isPaid && paidType && selectedPaidHours > 0;
     onSave({
       fecha,
       intervals,
@@ -123,8 +204,9 @@ export default function HorarioModal({
       proyecto_nombre: proyectoNombre?.trim() || null,
       horaNegativa: parsedNegative,
       diaNegativo: useNegative && parsedNegative === 0,
-      pagada: isPaid,
-      horasPagadas: parsedPaid,
+      pagada: shouldMarkPaid,
+      horasPagadas: shouldMarkPaid ? selectedPaidHours : 0,
+      tipoPagadas: shouldMarkPaid ? paidType : null,
       trabajadoresExtra: extraWorkers.filter(Boolean),
       fechasExtra: extraDates.filter(Boolean)
     });
@@ -143,21 +225,7 @@ export default function HorarioModal({
     setUseNegative(false);
     setNegativeHours('');
     setIsPaid(false);
-  };
-
-  const totalHoras = intervals.reduce((sum, intv) => {
-    if (intv.hora_inicio && intv.hora_fin) {
-      const [h1, m1] = intv.hora_inicio.split(':').map(Number);
-      const [h2, m2] = intv.hora_fin.split(':').map(Number);
-      return sum + ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
-    }
-    return sum;
-  }, 0);
-
-  const formattedPaidHours = formatHoursInput(Math.max(totalHoras, 0));
-
-  const handleTogglePaid = () => {
-    setIsPaid(prev => !prev);
+    setPaidType(null);
   };
 
   let formattedDate = 'Fecha inválida';
@@ -254,22 +322,44 @@ export default function HorarioModal({
               Marcar como Baja Médica
             </label>
 
-            <div className="mt-3">
-              <button
-                type="button"
-                onClick={handleTogglePaid}
-                className={`w-full px-3 py-2 rounded border transition-colors ${
-                  isPaid
-                    ? 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600'
-                    : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'
-                }`}
-              >
-                {isPaid ? 'Quitar marca de horas pagadas' : 'Marcar horas del día como pagadas'}
-              </button>
-              {isPaid && (
-                <p className="mt-2 text-sm text-emerald-600">
-                  Se marcarán como pagadas {formattedPaidHours} horas.
+            <div className="mt-3 border border-emerald-200 rounded-lg p-3 bg-emerald-50/30">
+              <label className="flex items-center gap-2 text-emerald-700 font-medium">
+                <input
+                  type="checkbox"
+                  checked={isPaid}
+                  onChange={handlePaidChange}
+                  disabled={!canMarkPaid}
+                />
+                Marcar horas como pagadas
+              </label>
+              {!canMarkPaid && (
+                <p className="mt-2 text-xs text-gray-500">
+                  No hay horas disponibles que cumplan las condiciones para realizar el pago.
                 </p>
+              )}
+              {isPaid && (
+                <div className="mt-3 space-y-2">
+                  <select
+                    value={paidType || ''}
+                    onChange={(e) => setPaidType(e.target.value)}
+                    className="w-full border border-emerald-300 rounded px-2 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  >
+                    {paymentOptions.map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {`${PAYMENT_TYPE_LABELS[key] || key} (${formatHoursToHM(value)})`}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedPaidLabel && selectedPaidHours > 0 ? (
+                    <p className="text-sm text-emerald-600">
+                      Se pagarán {formattedPaidHours} de horas {selectedPaidLabel.toLowerCase()}.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-emerald-600">
+                      Selecciona un tipo de horas para realizar el pago.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 

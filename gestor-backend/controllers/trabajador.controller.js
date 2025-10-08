@@ -205,7 +205,15 @@ exports.getOrganizationInfo = async (req, res) => {
     });
 
     const horasExtrasPagadas = await db.Horario.findAll({
-      attributes: [[db.Sequelize.fn('SUM', db.Sequelize.literal('CASE WHEN pagada = 1 THEN horas_pagadas ELSE 0 END')), 'pagadas']],
+      attributes: [
+        [
+          db.Sequelize.fn(
+            'SUM',
+            db.Sequelize.literal("CASE WHEN pagada = 1 AND tipo_horas_pagadas = 'extras' THEN horas_pagadas ELSE 0 END")
+          ),
+          'pagadas'
+        ]
+      ],
       include: [{ model: Trabajador, attributes: [], where: activeCondition }],
       raw: true
     });

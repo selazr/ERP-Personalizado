@@ -1,69 +1,10 @@
 // src/components/HorasResumen.jsx
 import React from 'react';
-import { Clock, Calendar, Download } from 'lucide-react';
+import { Clock, Download } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
-import { getYear, getMonth, getDay, parseISO, format } from 'date-fns';
+import { getYear, getMonth, parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatHoursToHM } from '../utils/utils';
-
-
-function calcularTipoHoras(intervals, dateKey, isFestivo, isVacaciones, isBaja) {
-  let totalDiario = 0;
-  let normales = 0,
-    extras = 0,
-    nocturnas = 0,
-    festivas = 0;
-
-  intervals.forEach(({ hora_inicio, hora_fin }) => {
-    if (!hora_inicio || !hora_fin) return;
-    const [h1, m1] = hora_inicio.split(':').map(Number);
-    const [h2, m2] = hora_fin.split(':').map(Number);
-    let start = h1 * 60 + m1;
-    let end = h2 * 60 + m2;
-    if (start === end) return; // zero length interval
-    if (end <= start) {
-      end += 24 * 60; // Interval crosses midnight
-    }
-    let total = (end - start) / 60;
-
-    const dia = getDay(parseISO(dateKey));
-
-    if (isVacaciones) {
-      extras += total;
-      return;
-    }
-
-    if (dia === 0 || dia === 6 || isFestivo || isBaja) {
-      festivas += total;
-      return; // Todo el intervalo es festivo
-    }
-
-    // 360 minutos = 06:00
-    if (start < 360) {
-      const nocturnaFin = Math.min(end, 360); // límite superior hasta las 6:00
-      nocturnas += (nocturnaFin - start) / 60;
-      total -= (nocturnaFin - start) / 60;
-    }
-
-    // 1320 minutos = 22:00
-    if (end > 1320) {
-      const nocturnaInicio = Math.max(start, 1320); // límite inferior desde las 22:00
-      nocturnas += (end - nocturnaInicio) / 60;
-      total -= (end - nocturnaInicio) / 60;
-    }
-
-    totalDiario += total;
-  });
-
-  if (totalDiario > 8) {
-    normales = 8;
-    extras = totalDiario - 8;
-  } else {
-    normales = totalDiario;
-  }
-
-  return { normales, extras, nocturnas, festivas };
-}
+import { calculateHourBreakdown, formatHoursToHM } from '../utils/utils';
 
 export function HoursSummary({ currentDate, scheduleData, onDownload }) {
   const year = getYear(currentDate);
@@ -74,15 +15,15 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
   Object.entries(scheduleData).forEach(([dateKey, entry]) => {
     const d = parseISO(dateKey);
     if (getYear(d) === year && getMonth(d) === month) {
-      const tipo = calcularTipoHoras(
-        entry.intervals || [],
-        dateKey,
-        entry.isHoliday,
-        entry.isVacation,
-        entry.isBaja
-      );
+      const tipo = calculateHourBreakdown(entry.intervals || [], dateKey, {
+        isHoliday: entry.isHoliday,
+        isVacation: entry.isVacation,
+        isBaja: entry.isBaja,
+      });
       let normalesDia = tipo.normales;
       let extrasDia = tipo.extras;
+      let nocturnasDia = tipo.nocturnas;
+      let festivasDia = tipo.festivas;
       const neg = entry.horaNegativa || 0;
       let adeberDia = 0;
       if (neg > 0) {
@@ -94,27 +35,61 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         }
       }
       const pagadasDia = entry.pagada ? parseFloat(entry.horasPagadas || entry.horas_pagadas || 0) : 0;
+      const tipoPagadas = entry.tipoPagadas || entry.tipo_horas_pagadas || null;
       let pagadasAplicadas = 0;
+      const aplicarPagoPorTipo = (type, cantidad) => {
+        const safeAmount = Math.max(cantidad, 0);
+        if (!type || safeAmount <= 0) {
+          return safeAmount === 0 && !!type;
+        }
+        const normalized = type.toLowerCase();
+        let applied = 0;
+        switch (normalized) {
+          case 'normales':
+            applied = Math.min(normalesDia, safeAmount);
+            normalesDia -= applied;
+            break;
+          case 'extras':
+            applied = Math.min(extrasDia, safeAmount);
+            extrasDia -= applied;
+            break;
+          case 'nocturnas':
+            applied = Math.min(nocturnasDia, safeAmount);
+            nocturnasDia -= applied;
+            break;
+          case 'festivas':
+            applied = Math.min(festivasDia, safeAmount);
+            festivasDia -= applied;
+            break;
+          default:
+            return false;
+        }
+        pagadasAplicadas += applied;
+        return true;
+      };
+
       if (pagadasDia > 0) {
-        let restante = pagadasDia;
+        const handled = aplicarPagoPorTipo(tipoPagadas, pagadasDia);
+        if (!handled) {
+          let restante = pagadasDia;
+          const pagadasNormales = Math.min(normalesDia, restante);
+          normalesDia -= pagadasNormales;
+          pagadasAplicadas += pagadasNormales;
+          restante -= pagadasNormales;
 
-        const pagadasNormales = Math.min(normalesDia, restante);
-        normalesDia -= pagadasNormales;
-        pagadasAplicadas += pagadasNormales;
-        restante -= pagadasNormales;
-
-        if (restante > 0) {
-          const pagadasExtras = Math.min(extrasDia, restante);
-          extrasDia -= pagadasExtras;
-          pagadasAplicadas += pagadasExtras;
-          restante -= pagadasExtras;
+          if (restante > 0) {
+            const pagadasExtras = Math.min(extrasDia, restante);
+            extrasDia -= pagadasExtras;
+            pagadasAplicadas += pagadasExtras;
+            restante -= pagadasExtras;
+          }
         }
       }
 
       resumen.normales += normalesDia;
       resumen.extras += extrasDia;
-      resumen.nocturnas += tipo.nocturnas;
-      resumen.festivas += tipo.festivas;
+      resumen.nocturnas += nocturnasDia;
+      resumen.festivas += festivasDia;
       resumen.adeber += adeberDia;
       resumen.pagadas += pagadasAplicadas;
     }

@@ -50,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(6, 2),
       defaultValue: 0,
     },
+    tipo_horas_pagadas: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     proyecto_nombre: {
       type: DataTypes.STRING,
       allowNull: true,

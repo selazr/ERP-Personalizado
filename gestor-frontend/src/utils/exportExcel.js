@@ -1,67 +1,12 @@
 import ExcelJS from 'exceljs';
 import { format, parseISO, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { calcDuration } from './utils';
-
-
-function classifyIntervals(intervals, date, isHoliday, isVacation, isBaja) {
-  const day = getDay(parseISO(date));
-  const isWeekend = day === 0 || day === 6;
-  if (isVacation) {
-    const extras = intervals.reduce(
-      (sum, { start, end }) => sum + calcDuration(start, end),
-      0
-    );
-    return { normales: 0, extras, nocturnas: 0, festivas: 0 };
-  }
-  if (isWeekend || isHoliday || isBaja) {
-    const festivas = intervals.reduce(
-      (sum, { start, end }) => sum + calcDuration(start, end),
-      0
-    );
-    return { normales: 0, extras: 0, nocturnas: 0, festivas };
-  }
-
-  let nocturnas = 0;
-  let diurnas = 0;
-
-  intervals.forEach(({ start, end }) => {
-    const [h1, m1] = start.split(':').map(Number);
-    const [h2, m2] = end.split(':').map(Number);
-    let startMin = h1 * 60 + m1;
-    let endMin = h2 * 60 + m2;
-    if (startMin === endMin) {
-      return; // zero length interval
-    }
-    if (endMin <= startMin) {
-      endMin += 24 * 60; // crosses midnight
-    }
-    if (startMin < 360) {
-      const noctEnd = Math.min(endMin, 360);
-      nocturnas += (noctEnd - startMin) / 60;
-      startMin = noctEnd;
-    }
-    if (endMin > 1320) {
-      const noctStart = Math.max(startMin, 1320);
-      nocturnas += (endMin - noctStart) / 60;
-      endMin = Math.min(endMin, 1320);
-    }
-    if (endMin > startMin) {
-      diurnas += (endMin - startMin) / 60;
-    }
-  });
-
-  let normales = 0;
-  let extras = 0;
-  if (diurnas > 8) {
-    normales = 8;
-    extras = diurnas - 8;
-  } else {
-    normales = diurnas;
-  }
-
-  return { normales, extras, nocturnas, festivas: 0 };
-}
+import {
+  calcDuration,
+  calculateHourBreakdown,
+  PAYMENT_TYPE_LABELS,
+  PAYMENT_TYPE_MESSAGE_LABELS
+} from './utils';
 
 function toHM(num) {
   // If the value is zero or undefined return an empty string so that
@@ -79,6 +24,16 @@ function toHM(num) {
   }
   return `${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
+
+const getPaidLabel = (type) => {
+  if (!type) return 'Pagada';
+  const normalized = String(type).toLowerCase();
+  const label =
+    PAYMENT_TYPE_MESSAGE_LABELS[normalized] ||
+    PAYMENT_TYPE_LABELS[normalized] ||
+    normalized;
+  return `Pagada ${label}`;
+};
 
 export async function addScheduleWorksheet(
   workbook,
@@ -105,7 +60,19 @@ export async function addScheduleWorksheet(
 
   const dayData = {};
   sorted.forEach((h) => {
-    const { fecha, hora_inicio, hora_fin, festivo, vacaciones, bajamedica, horanegativa, dianegativo, pagada, horas_pagadas } = h;
+    const {
+      fecha,
+      hora_inicio,
+      hora_fin,
+      festivo,
+      vacaciones,
+      bajamedica,
+      horanegativa,
+      dianegativo,
+      pagada,
+      horas_pagadas,
+      tipo_horas_pagadas
+    } = h;
     const dur = calcDuration(hora_inicio, hora_fin);
     if (!dayData[fecha]) {
       dayData[fecha] = {
@@ -117,7 +84,8 @@ export async function addScheduleWorksheet(
         horanegativa: 0,
         dianegativo: false,
         pagada: false,
-        horas_pagadas: 0
+        horas_pagadas: 0,
+        tipo_pagadas: null
       };
     }
     dayData[fecha].total += dur;
@@ -129,6 +97,7 @@ export async function addScheduleWorksheet(
     if (dianegativo) dayData[fecha].dianegativo = true;
     if (pagada) dayData[fecha].pagada = true;
     if (pagada && horas_pagadas) dayData[fecha].horas_pagadas = horas_pagadas;
+    if (pagada && tipo_horas_pagadas) dayData[fecha].tipo_pagadas = String(tipo_horas_pagadas).toLowerCase();
   });
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -145,7 +114,8 @@ export async function addScheduleWorksheet(
         horanegativa: 0,
         dianegativo: false,
         pagada: false,
-        horas_pagadas: 0
+        horas_pagadas: 0,
+        tipo_pagadas: null
       };
     }
   }
@@ -189,16 +159,20 @@ export async function addScheduleWorksheet(
       salida2 = entry.intervals[1].end || '';
     }
     const isWeekend = getDay(date) === 0 || getDay(date) === 6;
-    const { normales, extras, nocturnas, festivas } = classifyIntervals(
-      entry.intervals,
-      fecha,
-      entry.festivo,
-      entry.vacaciones,
-      entry.baja
-    );
+    const mappedIntervals = entry.intervals.map(({ start, end }) => ({
+      hora_inicio: start,
+      hora_fin: end,
+    }));
+    const breakdown = calculateHourBreakdown(mappedIntervals, fecha, {
+      isHoliday: entry.festivo,
+      isVacation: entry.vacaciones,
+      isBaja: entry.baja,
+    });
 
-    let normalesFinal = normales;
-    let extrasFinal = extras;
+    let normalesFinal = breakdown.normales;
+    let extrasFinal = breakdown.extras;
+    let nocturnasFinal = breakdown.nocturnas;
+    let festivasFinal = breakdown.festivas;
     let adeber = 0;
     const neg = entry.horanegativa || 0;
     if (neg > 0) {
@@ -212,27 +186,63 @@ export async function addScheduleWorksheet(
 
     const horasPagadas = entry.pagada ? parseFloat(entry.horas_pagadas || 0) : 0;
     let pagadasAplicadas = 0;
+    const tipoPagadas = entry.pagada
+      ? (entry.tipo_pagadas ? String(entry.tipo_pagadas).toLowerCase() : null)
+      : null;
+    const aplicarPagoPorTipo = (type, cantidad) => {
+      const safeAmount = Math.max(cantidad, 0);
+      if (!type || safeAmount <= 0) {
+        return safeAmount === 0 && !!type;
+      }
+      let applied = 0;
+      switch (type) {
+        case 'normales':
+          applied = Math.min(normalesFinal, safeAmount);
+          normalesFinal -= applied;
+          break;
+        case 'extras':
+          applied = Math.min(extrasFinal, safeAmount);
+          extrasFinal -= applied;
+          break;
+        case 'nocturnas':
+          applied = Math.min(nocturnasFinal, safeAmount);
+          nocturnasFinal -= applied;
+          break;
+        case 'festivas':
+          applied = Math.min(festivasFinal, safeAmount);
+          festivasFinal -= applied;
+          break;
+        default:
+          return false;
+      }
+      pagadasAplicadas += applied;
+      return true;
+    };
+
     if (horasPagadas > 0) {
-      let restante = horasPagadas;
+      const handled = aplicarPagoPorTipo(tipoPagadas, horasPagadas);
+      if (!handled) {
+        let restante = horasPagadas;
 
-      const pagadasNormales = Math.min(normalesFinal, restante);
-      normalesFinal -= pagadasNormales;
-      pagadasAplicadas += pagadasNormales;
-      restante -= pagadasNormales;
+        const pagadasNormales = Math.min(normalesFinal, restante);
+        normalesFinal -= pagadasNormales;
+        pagadasAplicadas += pagadasNormales;
+        restante -= pagadasNormales;
 
-      if (restante > 0) {
-        const pagadasExtras = Math.min(extrasFinal, restante);
-        extrasFinal -= pagadasExtras;
-        pagadasAplicadas += pagadasExtras;
-        restante -= pagadasExtras;
+        if (restante > 0) {
+          const pagadasExtras = Math.min(extrasFinal, restante);
+          extrasFinal -= pagadasExtras;
+          pagadasAplicadas += pagadasExtras;
+          restante -= pagadasExtras;
+        }
       }
     }
 
     totalNormales += normalesFinal;
     totalExtras += extrasFinal;
     totalAdeber += adeber;
-    totalNocturnas += nocturnas;
-    totalFestivas += festivas;
+    totalNocturnas += nocturnasFinal;
+    totalFestivas += festivasFinal;
     totalPagadas += pagadasAplicadas;
 
     rows.push({
@@ -245,9 +255,9 @@ export async function addScheduleWorksheet(
       'Normales': toHM(normalesFinal),
       'Extras': toHM(extrasFinal),
       'A Deber': entry.dianegativo ? 'Día negativo' : adeber > 0 ? `-${toHM(adeber)}` : '',
-      'Nocturnas': toHM(nocturnas),
-      'Festivas': toHM(festivas),
-      'Pagada': entry.pagada ? 'Sí' : '',
+      'Nocturnas': toHM(nocturnasFinal),
+      'Festivas': toHM(festivasFinal),
+      'Pagada': entry.pagada ? getPaidLabel(tipoPagadas) : '',
       'Horas Pagadas': horasPagadas > 0 ? toHM(pagadasAplicadas) : ''
     });
     rowFlags.push({ isWeekend, isHoliday: entry.festivo, isVacation: entry.vacaciones, isBaja: entry.baja });
