@@ -55,6 +55,8 @@ export function YearHoursSummary({ currentDate, scheduleData, onDownload }) {
             applied = Math.min(nocturnasDia, safeAmount);
             nocturnasDia -= applied;
             break;
+          case 'festivo':
+          case 'festiva':
           case 'festivas':
             applied = Math.min(festivasDia, safeAmount);
             festivasDia -= applied;
@@ -81,6 +83,20 @@ export function YearHoursSummary({ currentDate, scheduleData, onDownload }) {
             extrasDia -= pagadasExtras;
             pagadasAplicadas += pagadasExtras;
             restante -= pagadasExtras;
+          }
+
+          if (restante > 0) {
+            const pagadasNocturnas = Math.min(nocturnasDia, restante);
+            nocturnasDia -= pagadasNocturnas;
+            pagadasAplicadas += pagadasNocturnas;
+            restante -= pagadasNocturnas;
+          }
+
+          if (restante > 0) {
+            const pagadasFestivas = Math.min(festivasDia, restante);
+            festivasDia -= pagadasFestivas;
+            pagadasAplicadas += pagadasFestivas;
+            restante -= pagadasFestivas;
           }
         }
       }
