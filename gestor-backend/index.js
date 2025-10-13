@@ -1,11 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const horarioRoutes = require('./routes/horario.routes');
 const authRoutes = require('./routes/auth.routes');
 const trabajadorRoutes = require('./routes/trabajador.routes');
 const externoRoutes = require('./routes/externo.routes');
+const ocrRoutes = require('./routes/ocr.routes');
 const db = require('./models');
+const { scheduleCleanup } = require('./services/ocr.service');
 
 dotenv.config();
 
@@ -49,6 +52,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/trabajadores', trabajadorRoutes);
 app.use('/api/horarios', horarioRoutes);
 app.use('/api/externos', externoRoutes);
+app.use('/api/ocr', ocrRoutes);
+
+// Archivos subidos para previsualización
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Limpieza programada de archivos OCR (mantener 1 semana)
+scheduleCleanup();
 
 // Conexión y sincronización DB
 db.sequelize.authenticate()

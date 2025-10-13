@@ -69,6 +69,12 @@ GET /api/trabajadores/estadisticas
 
 La respuesta incluye el número total de trabajadores, cuántos están activos o inactivos y el coste salarial tanto mensual como anual.
 
+## OCR de documentos
+
+El backend incorpora un endpoint para digitalizar documentos mediante OCR. Envía una petición `POST` a `/api/ocr/procesar` con un campo de formulario `imagen` (tipo `multipart/form-data`). El servicio aplica mejoras de nitidez y contraste antes de ejecutar el reconocimiento (`spa+eng`) y devuelve el texto procesado, junto con los enlaces a la imagen original y a la versión optimizada.
+
+Las imágenes se conservan durante 7 días en `/uploads/ocr` para facilitar la previsualización y se eliminan automáticamente después de ese plazo.
+
 ## Documentación ISO 27001
 
 En `docs/iso27001` se incluyen documentos básicos relacionados con la gestión de la seguridad de la información:
