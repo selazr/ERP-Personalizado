@@ -11,4 +11,6 @@ db/*.sql
 # Generated templates
 docs/templates/plantilla_trabajador.xlsx
 
+gestor-backend/uploads/
+
 contabilidad
