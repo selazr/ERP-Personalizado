@@ -96,6 +96,8 @@ exports.getOrganizationInfo = async (req, res) => {
   try {
     const today = new Date();
     const { Op } = db.Sequelize;
+    const rawEmpresa = req.query.empresa;
+    const empresa = rawEmpresa === 'null' ? null : rawEmpresa;
 
     // Nuevas incorporaciones
     const lastMonth = new Date();
@@ -110,6 +112,10 @@ exports.getOrganizationInfo = async (req, res) => {
         { fecha_baja: { [Op.gte]: today } }
       ]
     };
+
+    if (rawEmpresa) {
+      activeCondition.empresa = empresa;
+    }
 
     const incorporacionesMes = await Trabajador.count({
       where: {
@@ -153,6 +159,9 @@ exports.getOrganizationInfo = async (req, res) => {
         groups[value].workers.push({
           id: w.id,
           nombre: w.nombre,
+          empresa: w.empresa,
+          pais: w.pais,
+          categoria: w.categoria,
           tipo_trabajador: w.tipo_trabajador,
           fecha_alta: w.fecha_alta,
           fecha_baja: w.fecha_baja
@@ -170,6 +179,7 @@ exports.getOrganizationInfo = async (req, res) => {
       .map(v => ({
         id: v.id,
         nombre: v.nombre,
+        empresa: v.empresa,
         tipo_trabajador: v.tipo_trabajador,
         fecha_alta: v.fecha_alta,
         fecha_baja: v.fecha_baja,
@@ -233,6 +243,7 @@ exports.getOrganizationInfo = async (req, res) => {
     const edadPromedio = parseFloat(edadPromedioRow.promedio || 0);
 
     res.json({
+      totalTrabajadores: activeWorkers.length,
       porEmpresa,
       porPais,
       veteranos,
@@ -244,7 +255,8 @@ exports.getOrganizationInfo = async (req, res) => {
       promedioHorasMes,
       horasExtrasAcumuladas,
       horasExtrasPagadas: horasExtrasPagadasTotal,
-      edadPromedio
+      edadPromedio,
+      empresaSeleccionada: rawEmpresa || null
     });
   } catch (err) {
     console.error('Error en getOrganizationInfo:', err);
