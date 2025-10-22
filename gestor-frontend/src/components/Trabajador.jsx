@@ -302,14 +302,14 @@ const handleBaja = async (id) => {
               <button
                 type="button"
                 onClick={handleSelectAllFields}
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 transition"
+                className="px-3 py-1 text-sm text-black border border-gray-300 rounded hover:bg-gray-100 transition"
               >
                 {selectedFields.length === exportFieldOrder.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
               </button>
               <button
                 type="button"
                 onClick={handleClearSelectedFields}
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 transition"
+                className="px-3 py-1 text-sm text-black border border-gray-300 rounded hover:bg-gray-100 transition"
               >
                 Limpiar
               </button>
