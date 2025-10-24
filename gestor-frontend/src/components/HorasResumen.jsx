@@ -11,10 +11,15 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
   const month = getMonth(currentDate);
   const monthLabel = format(currentDate, 'MMMM', { locale: es });
   let resumen = { normales: 0, extras: 0, nocturnas: 0, festivas: 0, adeber: 0, pagadas: 0 };
+  let extraBalance = 0;
 
-  Object.entries(scheduleData).forEach(([dateKey, entry]) => {
-    const d = parseISO(dateKey);
-    if (getYear(d) === year && getMonth(d) === month) {
+  Object.entries(scheduleData)
+    .filter(([dateKey]) => {
+      const d = parseISO(dateKey);
+      return getYear(d) === year && getMonth(d) === month;
+    })
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([dateKey, entry]) => {
       const tipo = calculateHourBreakdown(entry.intervals || [], dateKey, {
         isHoliday: entry.isHoliday,
         isVacation: entry.isVacation,
@@ -27,12 +32,18 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
       const neg = entry.horaNegativa || 0;
       let adeberDia = 0;
       if (neg > 0) {
-        if (extrasDia >= neg) {
-          extrasDia -= neg;
-        } else {
-          adeberDia = neg - extrasDia;
-          extrasDia = 0;
+        let remainingNeg = neg;
+        const fromExtrasDia = Math.min(extrasDia, remainingNeg);
+        extrasDia -= fromExtrasDia;
+        remainingNeg -= fromExtrasDia;
+
+        if (remainingNeg > 0 && extraBalance > 0) {
+          const fromBalance = Math.min(extraBalance, remainingNeg);
+          extraBalance -= fromBalance;
+          remainingNeg -= fromBalance;
         }
+
+        adeberDia = remainingNeg;
       }
       const pagadasDia = entry.pagada ? parseFloat(entry.horasPagadas || entry.horas_pagadas || 0) : 0;
       const tipoPagadas = entry.tipoPagadas || entry.tipo_horas_pagadas || null;
@@ -103,13 +114,14 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
       }
 
       resumen.normales += normalesDia;
-      resumen.extras += extrasDia;
       resumen.nocturnas += nocturnasDia;
       resumen.festivas += festivasDia;
       resumen.adeber += adeberDia;
       resumen.pagadas += pagadasAplicadas;
-    }
-  });
+      extraBalance += extrasDia;
+      extraBalance = Math.max(extraBalance, 0);
+      resumen.extras = extraBalance;
+    });
 
   const total = resumen.normales + resumen.extras + resumen.nocturnas + resumen.festivas;
 

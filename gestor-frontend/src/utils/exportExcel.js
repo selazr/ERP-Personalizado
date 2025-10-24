@@ -128,6 +128,7 @@ export async function addScheduleWorksheet(
   let totalNocturnas = 0;
   let totalFestivas = 0;
   let totalPagadas = 0;
+  let extraBalance = 0;
   Object.keys(dayData).sort().forEach((fecha) => {
     const entry = dayData[fecha];
     const date = parseISO(fecha);
@@ -176,12 +177,18 @@ export async function addScheduleWorksheet(
     let adeber = 0;
     const neg = entry.horanegativa || 0;
     if (neg > 0) {
-      if (extrasFinal >= neg) {
-        extrasFinal -= neg;
-      } else {
-        adeber = neg - extrasFinal;
-        extrasFinal = 0;
+      let remainingNeg = neg;
+      const fromExtrasDia = Math.min(extrasFinal, remainingNeg);
+      extrasFinal -= fromExtrasDia;
+      remainingNeg -= fromExtrasDia;
+
+      if (remainingNeg > 0 && extraBalance > 0) {
+        const fromBalance = Math.min(extraBalance, remainingNeg);
+        extraBalance -= fromBalance;
+        remainingNeg -= fromBalance;
       }
+
+      adeber = remainingNeg;
     }
 
     const horasPagadas = entry.pagada ? parseFloat(entry.horas_pagadas || 0) : 0;
@@ -255,11 +262,13 @@ export async function addScheduleWorksheet(
     }
 
     totalNormales += normalesFinal;
-    totalExtras += extrasFinal;
     totalAdeber += adeber;
     totalNocturnas += nocturnasFinal;
     totalFestivas += festivasFinal;
     totalPagadas += pagadasAplicadas;
+    extraBalance += extrasFinal;
+    extraBalance = Math.max(extraBalance, 0);
+    totalExtras = extraBalance;
 
     rows.push({
       'Día de la Semana': dayName,
