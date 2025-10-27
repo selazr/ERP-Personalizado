@@ -12,6 +12,7 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
   const monthLabel = format(currentDate, 'MMMM', { locale: es });
   let resumen = { normales: 0, extras: 0, nocturnas: 0, festivas: 0, adeber: 0, pagadas: 0 };
   let extraBalance = 0;
+  let adeberBalance = 0;
 
   Object.entries(scheduleData)
     .filter(([dateKey]) => {
@@ -113,14 +114,25 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         }
       }
 
+      if (adeberDia > 0) {
+        adeberBalance += adeberDia;
+      }
+
       resumen.normales += normalesDia;
       resumen.nocturnas += nocturnasDia;
       resumen.festivas += festivasDia;
-      resumen.adeber += adeberDia;
       resumen.pagadas += pagadasAplicadas;
+
+      if (extrasDia > 0 && adeberBalance > 0) {
+        const compensation = Math.min(extrasDia, adeberBalance);
+        extrasDia -= compensation;
+        adeberBalance -= compensation;
+      }
+
       extraBalance += extrasDia;
       extraBalance = Math.max(extraBalance, 0);
       resumen.extras = extraBalance;
+      resumen.adeber = adeberBalance;
     });
 
   const total = resumen.normales + resumen.extras + resumen.nocturnas + resumen.festivas;
