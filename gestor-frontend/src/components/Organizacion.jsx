@@ -95,16 +95,20 @@ export default function Organizacion() {
 
   const fetchStats = async (companyCode = COMPANY_ALL) => {
     const token = localStorage.getItem('token');
-    const url = new URL(`${import.meta.env.VITE_API_URL}/trabajadores/organizacion`);
+    const params = {};
 
     if (companyCode !== COMPANY_ALL) {
       const paramValue = companyCode === COMPANY_NULL ? 'null' : companyCode;
-      url.searchParams.set('empresa', paramValue);
+      params.empresa = paramValue;
     }
 
-    const res = await axios.get(url.toString(), {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/trabajadores/organizacion`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      }
+    );
 
     return res.data;
   };
