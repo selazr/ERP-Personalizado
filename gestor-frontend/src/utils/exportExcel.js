@@ -285,7 +285,14 @@ export async function addScheduleWorksheet(
       'Pagada': entry.pagada ? getPaidLabel(tipoPagadas) : '',
       'Horas Pagadas': horasPagadas > 0 ? toHM(pagadasAplicadas) : ''
     });
-    rowFlags.push({ isWeekend, isHoliday: entry.festivo, isVacation: entry.vacaciones, isBaja: entry.baja });
+    rowFlags.push({
+      isWeekend,
+      isHoliday: entry.festivo,
+      isVacation: entry.vacaciones,
+      isBaja: entry.baja,
+      isPaid: entry.pagada,
+      hasPaidHours: horasPagadas > 0
+    });
   });
 
   const totalsRow = {
@@ -319,6 +326,9 @@ export async function addScheduleWorksheet(
     'Pagada',
     'Horas Pagadas'
   ];
+
+  const pagadaColumnIndex = header.indexOf('Pagada') + 1;
+  const horasPagadasColumnIndex = header.indexOf('Horas Pagadas') + 1;
 
   const baseName = trabajador.nombre || 'Horas';
   const worksheetName = (sheetName || baseName).substring(0, 31);
@@ -405,6 +415,8 @@ export async function addScheduleWorksheet(
     }
   });
 
+  const paidBorderColor = 'FF00B050';
+
   rows.forEach((r, idx) => {
     const row = worksheet.addRow(header.map(h => r[h]));
     row.font = { name: fontName };
@@ -426,9 +438,23 @@ export async function addScheduleWorksheet(
           fgColor: { argb: color }
         };
       }
-      cell.border = { ...borderStyle };
-      if (colNumber === 6) {
-        cell.border = { ...borderStyle, right: { style: 'medium' } };
+      const hasPaidHighlight = flags.isPaid || flags.hasPaidHours;
+      const shouldHighlightCell =
+        hasPaidHighlight &&
+        (colNumber === pagadaColumnIndex || colNumber === horasPagadasColumnIndex);
+
+      if (shouldHighlightCell) {
+        cell.border = {
+          top: { style: 'medium', color: { argb: paidBorderColor } },
+          bottom: { style: 'medium', color: { argb: paidBorderColor } },
+          left: { style: 'medium', color: { argb: paidBorderColor } },
+          right: { style: 'medium', color: { argb: paidBorderColor } }
+        };
+      } else {
+        cell.border = { ...borderStyle };
+        if (colNumber === 6) {
+          cell.border = { ...borderStyle, right: { style: 'medium' } };
+        }
       }
     });
   });
