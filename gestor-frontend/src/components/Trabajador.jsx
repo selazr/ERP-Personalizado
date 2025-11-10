@@ -263,7 +263,7 @@ export default function Trabajador() {
                     id="searchInput"
                     type="text"
                     placeholder={`Buscar por ${filterOptions.find(o => o.value === filterBy)?.label.toLowerCase()}...`}
-                    className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-3 text-base text-slate-900 placeholder:text-slate-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -277,7 +277,7 @@ export default function Trabajador() {
                   <Filter className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <select
                     id="filterSelect"
-                    className="w-full appearance-none pl-10 pr-8 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full appearance-none pl-10 pr-8 py-3 text-base text-slate-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={filterBy}
                     onChange={(e) => setFilterBy(e.target.value)}
                   >
