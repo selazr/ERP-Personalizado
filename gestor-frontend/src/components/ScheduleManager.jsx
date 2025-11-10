@@ -18,6 +18,7 @@ import {
   PAYMENT_TYPE_LABELS,
   PAYMENT_TYPE_MESSAGE_LABELS
 } from '@/utils/utils';
+import { apiUrl } from '@/utils/api';
 
 export default function ScheduleManager() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -152,7 +153,7 @@ export default function ScheduleManager() {
       fechas.forEach(f => {
         requests.push(
           axios.post(
-            `${import.meta.env.VITE_API_URL}/horarios`,
+            apiUrl('horarios'),
             {
               trabajador_id: wid,
               fecha: f,
@@ -175,7 +176,7 @@ export default function ScheduleManager() {
 
     Promise.all(requests).then(() => {
       axios
-        .get(`${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`, {
+        .get(apiUrl(`horarios/${selectedTrabajadorId}`), {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then(res => {
@@ -188,7 +189,7 @@ export default function ScheduleManager() {
     // Descarga el horario completo del trabajador seleccionado en formato Excel
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`, {
+      const res = await axios.get(apiUrl(`horarios/${selectedTrabajadorId}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       const trabajador = trabajadores.find(t => t.id === Number(selectedTrabajadorId));
@@ -205,7 +206,7 @@ export default function ScheduleManager() {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`,
+        apiUrl(`horarios/${selectedTrabajadorId}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const trabajador = trabajadores.find(
@@ -224,7 +225,7 @@ export default function ScheduleManager() {
     try {
       const token = localStorage.getItem('token');
       const requests = trabajadores.map(t =>
-        axios.get(`${import.meta.env.VITE_API_URL}/horarios/${t.id}`,
+        axios.get(apiUrl(`horarios/${t.id}`),
           { headers: { Authorization: `Bearer ${token}` } })
       );
       const responses = await Promise.all(requests);
@@ -238,7 +239,7 @@ export default function ScheduleManager() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get(`${import.meta.env.VITE_API_URL}/trabajadores`, {
+    axios.get(apiUrl('trabajadores'), {
       headers: { Authorization: `Bearer ${token}` }
     }).then(res => {
       setTrabajadores(res.data);
@@ -249,7 +250,7 @@ export default function ScheduleManager() {
   useEffect(() => {
     if (!selectedTrabajadorId) return;
     const token = localStorage.getItem('token');
-    axios.get(`${import.meta.env.VITE_API_URL}/horarios/${selectedTrabajadorId}`, {
+    axios.get(apiUrl(`horarios/${selectedTrabajadorId}`), {
       headers: { Authorization: `Bearer ${token}` }
     }).then(res => {
       setScheduleData(res.data);

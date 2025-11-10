@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../styles/Auth.css"; // ✅ Asegúrate de que esta ruta sea correcta
+import { apiUrl } from '@/utils/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -22,7 +23,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      const res = await axios.post(apiUrl('auth/login'), {
         email,
         contraseña,
       });

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { BarChart3, Building2, ChevronDown, MapPin } from 'lucide-react';
 import Header from '@/components/Header';
 import { isActivo, formatDate } from '@/components/Trabajador';
+import { apiUrl } from '@/utils/api';
 
 const COMPANY_ALL = '__ALL__';
 const COMPANY_NULL = '__NULL__';
@@ -103,7 +104,7 @@ export default function Organizacion() {
     }
 
     const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/trabajadores/organizacion`,
+      apiUrl('trabajadores/organizacion'),
       {
         headers: { Authorization: `Bearer ${token}` },
         params

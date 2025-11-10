@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { apiUrl } from '@/utils/api';
 import Header from '@/components/Header';
 import {
   BarChart,
@@ -34,8 +35,8 @@ export default function Proyecciones() {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
         const [statsRes, workersRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/trabajadores/estadisticas`, { headers }),
-          axios.get(`${import.meta.env.VITE_API_URL}/trabajadores`, { headers })
+          axios.get(apiUrl('trabajadores/estadisticas'), { headers }),
+          axios.get(apiUrl('trabajadores'), { headers })
         ]);
         setStats(statsRes.data);
         const mappedWorkers = workersRes.data.map((w) => ({
