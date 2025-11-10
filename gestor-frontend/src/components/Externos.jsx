@@ -12,6 +12,7 @@ import { es } from 'date-fns/locale';
 import Header from '@/components/Header';
 import ExternoModal from '@/components/ExternoModal';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { apiUrl } from '@/utils/api';
 
 export default function Externos() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -38,7 +39,7 @@ export default function Externos() {
     const end = format(endOfMonth(currentDate), 'yyyy-MM-dd');
 
     axios
-      .get(`${import.meta.env.VITE_API_URL}/externos`, {
+      .get(apiUrl('externos'), {
         headers: { Authorization: `Bearer ${token}` },
         params: { start, end },
       })
@@ -51,7 +52,7 @@ export default function Externos() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     axios
-      .get(`${import.meta.env.VITE_API_URL}/externos/empresas`, {
+      .get(apiUrl('externos/empresas'), {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setCompanies(res.data));
@@ -92,7 +93,7 @@ export default function Externos() {
       const toDelete = [...prevNames].filter((name) => !newNames.has(name));
       await Promise.all(
         toDelete.map((name) =>
-          axios.delete(`${import.meta.env.VITE_API_URL}/externos`, {
+          axios.delete(apiUrl('externos'), {
             headers,
             data: { fecha, nombre_empresa_externo: name },
           })
@@ -102,7 +103,7 @@ export default function Externos() {
       await Promise.all(
         sanitizedItems.map((item) =>
           axios.post(
-            `${import.meta.env.VITE_API_URL}/externos`,
+            apiUrl('externos'),
             { fecha, cantidad: item.cantidad, nombre_empresa_externo: item.nombre_empresa_externo },
             { headers }
           )
@@ -140,7 +141,7 @@ export default function Externos() {
   const handleCalcularMedia = async () => {
     if (!startRange || !endRange) return;
     const token = localStorage.getItem('token');
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/externos`, {
+    const res = await axios.get(apiUrl('externos'), {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         start: startRange,

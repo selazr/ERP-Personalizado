@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
+import { apiUrl } from '@/utils/api';
 
 export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initialData }) {
   const [form, setForm] = useState({});
@@ -75,7 +76,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         })
       );
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/trabajadores/${form.id}`, {
+      const response = await fetch(apiUrl(`trabajadores/${form.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

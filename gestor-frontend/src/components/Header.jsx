@@ -14,6 +14,7 @@ import {
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { apiUrl } from '@/utils/api';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function Header() {
       try {
         const token = localStorage.getItem('token');
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/trabajadores`,
+          apiUrl('trabajadores'),
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const today = new Date();

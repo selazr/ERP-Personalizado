@@ -28,6 +28,7 @@ import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import { exportWorkerToExcel, exportWorkersSelectionToExcel } from '@/utils/exportWorkerExcel';
 import { formatCurrency } from '@/utils/utils';
+import { apiUrl } from '@/utils/api';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
@@ -173,7 +174,7 @@ export default function Trabajador() {
 
   const fetchWorkers = () => {
     const token = localStorage.getItem('token');
-    axios.get(`${import.meta.env.VITE_API_URL}/trabajadores`, {
+    axios.get(apiUrl('trabajadores'), {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => setTrabajadores(res.data))
@@ -198,7 +199,7 @@ export default function Trabajador() {
     if (!window.confirm('¿Deseas volver a dar de alta a este trabajador?')) return;
 
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/trabajadores/${id}`, {
+      await axios.put(apiUrl(`trabajadores/${id}`), {
         fecha_baja: null
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -217,7 +218,7 @@ export default function Trabajador() {
 
     try {
       const fechaHoy = new Date().toISOString().split('T')[0];
-      await axios.put(`${import.meta.env.VITE_API_URL}/trabajadores/${id}`, {
+      await axios.put(apiUrl(`trabajadores/${id}`), {
         fecha_baja: fechaHoy
       }, {
         headers: { Authorization: `Bearer ${token}` }

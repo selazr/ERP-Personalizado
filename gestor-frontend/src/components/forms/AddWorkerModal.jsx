@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
+import { apiUrl } from '@/utils/api';
 
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [form, setForm] = useState({
@@ -96,7 +97,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         })
       );
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/trabajadores`, {
+      const response = await fetch(apiUrl('trabajadores'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
