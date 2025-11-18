@@ -40,49 +40,82 @@ export default function Login() {
 
   return (
     <div className="auth-wrapper">
-      {/* Fondo de video */}
-      <video className="bg-video" autoPlay loop muted>
-        <source src="/video.mp4" type="video/mp4" />
-        Tu navegador no soporta videos HTML5.
-      </video>
+      <div className="auth-card">
+        <section className="hero-panel">
+          <video className="hero-video" autoPlay loop muted>
+            <source src="/video.mp4" type="video/mp4" />
+            Tu navegador no soporta videos HTML5.
+          </video>
+          <div className="hero-overlay">
+            <img src="/logo.png" alt="LXH" className="hero-logo" />
+            <p className="hero-kicker">LXH Operations</p>
+            <h1>
+              Hola, equipo LXH <span role="img" aria-label="saludo">👋</span>
+            </h1>
+            <p className="hero-description">
+              Automatiza, coordina y gestiona tus operaciones desde un solo lugar.
+              Mantén la visibilidad de tus turnos y toma decisiones en segundos.
+            </p>
+          </div>
+        </section>
 
-      <div className="auth-container">
-        <img src="/logo.png" alt="Logo" className="logo-lxh" />
+        <section className="form-panel">
+          <header>
+            <p className="app-name">LXH ERP</p>
+            <h2>¡Bienvenido de vuelta!</h2>
+            <p className="subtitle">
+              Ingresa tus credenciales para continuar con la administración diaria.
+            </p>
+          </header>
 
-        {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message">{error}</p>}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            ref={emailRef}
-            required
-          />
-          <div className="password-container">
+          <form onSubmit={handleSubmit} className="login-form">
+            <label className="input-label" htmlFor="email">
+              Correo electrónico
+            </label>
             <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Contraseña"
-              value={contraseña}
-              onChange={(e) => setContraseña(e.target.value)}
+              id="email"
+              type="email"
+              name="email"
+              placeholder="nombre@lxh.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              ref={emailRef}
               required
             />
-            <button
-              type="button"
-              className="toggle-password"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
+            <label className="input-label" htmlFor="password">
+              Contraseña
+            </label>
+            <div className="password-container">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="••••••••"
+                value={contraseña}
+                onChange={(e) => setContraseña(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Ingresando..." : "Ingresar"}
-          </button>
-        </form>
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? "Ingresando..." : "Ingresar"}
+            </button>
+          </form>
+
+          <div className="form-footer">
+            <p>¿Olvidaste tu contraseña? Ponte en contacto con soporte LXH.</p>
+          </div>
+        </section>
       </div>
     </div>
   );
