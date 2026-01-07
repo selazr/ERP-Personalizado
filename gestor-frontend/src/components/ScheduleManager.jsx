@@ -323,7 +323,7 @@ export default function ScheduleManager() {
             <span className="text-xs font-semibold mt-2">Vacaciones</span>
           )}
 
-          {(totalHoras > 0 || horaNegativa > 0 || diaNegativo || pagada) && !festivo && !vacaciones && !bajamedica && (
+          {(totalHoras > 0 || horaNegativa > 0 || diaNegativo || pagada) && !vacaciones && !bajamedica && (
             <div className="flex flex-col items-center">
               {totalHoras > 0 && (
                 <span className="text-base font-bold">
