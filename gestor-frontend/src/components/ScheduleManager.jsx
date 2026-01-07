@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { format, startOfMonth, getDaysInMonth, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -25,6 +25,7 @@ export default function ScheduleManager() {
   const [selectedTrabajadorId, setSelectedTrabajadorId] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [scheduleData, setScheduleData] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState('__ALL__');
   const [selectedDay, setSelectedDay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -100,6 +101,34 @@ export default function ScheduleManager() {
   };
 
   const getFechaKey = (day) => format(new Date(currentDate.getFullYear(), currentDate.getMonth(), day), 'yyyy-MM-dd');
+
+  const companyOptions = useMemo(() => {
+    const unique = new Map();
+    trabajadores.forEach((t) => {
+      const key = t.empresa ?? '__NULL__';
+      if (!unique.has(key)) {
+        unique.set(key, {
+          label: t.empresa ?? 'Sin especificar',
+          value: t.empresa ?? '__NULL__'
+        });
+      }
+    });
+    return Array.from(unique.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [trabajadores]);
+
+  const filteredTrabajadores = useMemo(() => {
+    if (selectedCompany === '__ALL__') return trabajadores;
+    const selectedValue = selectedCompany === '__NULL__' ? null : selectedCompany;
+    return trabajadores.filter((t) => (t.empresa ?? null) === selectedValue);
+  }, [selectedCompany, trabajadores]);
+
+  const getEmpresaParam = (worker = null) => {
+    if (selectedCompany === '__ALL__') {
+      const resolved = worker?.empresa ?? trabajadores.find(t => t.id === Number(selectedTrabajadorId))?.empresa;
+      return resolved ?? 'null';
+    }
+    return selectedCompany === '__NULL__' ? 'null' : selectedCompany;
+  };
 
   const handleDayClick = (day) => {
     const fecha = getFechaKey(day);
@@ -189,8 +218,10 @@ export default function ScheduleManager() {
     // Descarga el horario completo del trabajador seleccionado en formato Excel
     try {
       const token = localStorage.getItem('token');
+      const empresaParam = getEmpresaParam();
       const res = await axios.get(apiUrl(`horarios/${selectedTrabajadorId}`), {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: empresaParam ? { empresa: empresaParam } : undefined
       });
       const trabajador = trabajadores.find(t => t.id === Number(selectedTrabajadorId));
       if (trabajador) {
@@ -205,9 +236,13 @@ export default function ScheduleManager() {
   const handleDescargarPlantillaAnual = async () => {
     try {
       const token = localStorage.getItem('token');
+      const empresaParam = getEmpresaParam();
       const res = await axios.get(
         apiUrl(`horarios/${selectedTrabajadorId}`),
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: empresaParam ? { empresa: empresaParam } : undefined
+        }
       );
       const trabajador = trabajadores.find(
         t => t.id === Number(selectedTrabajadorId)
@@ -224,12 +259,17 @@ export default function ScheduleManager() {
   const handleDescargarTodasPlantillas = async () => {
     try {
       const token = localStorage.getItem('token');
-      const requests = trabajadores.map(t =>
-        axios.get(apiUrl(`horarios/${t.id}`),
-          { headers: { Authorization: `Bearer ${token}` } })
+      const requests = filteredTrabajadores.map(t => {
+        const empresaParam = getEmpresaParam(t);
+        return axios.get(apiUrl(`horarios/${t.id}`),
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: empresaParam ? { empresa: empresaParam } : undefined
+          });
+      }
       );
       const responses = await Promise.all(requests);
-      const items = trabajadores.map((t, idx) => ({ trabajador: t, horarios: responses[idx].data }));
+      const items = filteredTrabajadores.map((t, idx) => ({ trabajador: t, horarios: responses[idx].data }));
       exportAllSchedulesToExcel(items, currentDate);
     } catch (err) {
       console.error('Error al generar Excel:', err);
@@ -243,19 +283,32 @@ export default function ScheduleManager() {
       headers: { Authorization: `Bearer ${token}` }
     }).then(res => {
       setTrabajadores(res.data);
-      if (res.data.length > 0) setSelectedTrabajadorId(res.data[0].id);
     });
   }, []);
 
   useEffect(() => {
+    if (!filteredTrabajadores.length) {
+      setSelectedTrabajadorId('');
+      return;
+    }
+
+    const exists = filteredTrabajadores.some(t => t.id === Number(selectedTrabajadorId));
+    if (!exists) {
+      setSelectedTrabajadorId(filteredTrabajadores[0].id);
+    }
+  }, [filteredTrabajadores, selectedTrabajadorId]);
+
+  useEffect(() => {
     if (!selectedTrabajadorId) return;
     const token = localStorage.getItem('token');
+    const empresaParam = getEmpresaParam();
     axios.get(apiUrl(`horarios/${selectedTrabajadorId}`), {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      params: empresaParam ? { empresa: empresaParam } : undefined
     }).then(res => {
       setScheduleData(res.data);
     });
-  }, [selectedTrabajadorId, currentDate]);
+  }, [selectedTrabajadorId, currentDate, selectedCompany, trabajadores]);
 
   const groupedData = agruparHorarios(scheduleData);
 
@@ -381,9 +434,24 @@ export default function ScheduleManager() {
 
         <div className="w-full max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
           <div className="w-full sm:w-auto">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Empresa:</label>
+            <select
+              value={selectedCompany}
+              onChange={(event) => setSelectedCompany(event.target.value)}
+              className="w-full sm:w-64 p-3 text-base border border-gray-300 rounded bg-white shadow-sm text-black"
+            >
+              <option value="__ALL__">Todas las empresas</option>
+              {companyOptions.map((company) => (
+                <option key={company.value} value={company.value}>
+                  {company.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Trabajador:</label>
             <WorkerAutocomplete
-              workers={trabajadores}
+              workers={filteredTrabajadores}
               selectedId={selectedTrabajadorId}
               onChange={setSelectedTrabajadorId}
             />
@@ -462,7 +530,7 @@ export default function ScheduleManager() {
         initialDiaNegativo={selectedDay?.diaNegativo || false}
         initialPagada={selectedDay?.pagada || false}
         initialPaidType={selectedDay?.tipoPagadas || null}
-        workers={trabajadores}
+        workers={filteredTrabajadores}
       />
     </>
   );

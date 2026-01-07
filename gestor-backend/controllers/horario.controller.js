@@ -1,5 +1,6 @@
 const db = require('../models');
 const Horario = db.Horario;
+const Trabajador = db.Trabajador;
 
 const durationBetween = (inicio, fin) => {
   if (!inicio || !fin) return 0;
@@ -116,8 +117,20 @@ const roundHours = (value) => Math.round(value * 100) / 100;
 
 exports.getHorariosByTrabajador = async (req, res) => {
   try {
+    const trabajador = await Trabajador.findByPk(req.params.id);
+    if (!trabajador) {
+      return res.status(404).json({ error: 'Trabajador no encontrado' });
+    }
+
+    const rawEmpresa = req.query.empresa;
+    const empresa = rawEmpresa === undefined
+      ? trabajador.empresa ?? null
+      : rawEmpresa === 'null'
+        ? null
+        : rawEmpresa;
+
     const horarios = await Horario.findAll({
-      where: { trabajador_id: req.params.id }
+      where: { trabajador_id: req.params.id, empresa }
     });
     res.json(horarios);
   } catch (error) {
@@ -140,6 +153,12 @@ exports.createOrUpdateHorarios = async (req, res) => {
       tipo_horas_pagadas = null
     } = req.body;
 
+    const trabajador = await Trabajador.findByPk(trabajador_id);
+    if (!trabajador) {
+      return res.status(404).json({ error: 'Trabajador no encontrado' });
+    }
+    const empresa = trabajador.empresa ?? null;
+
     const breakdown = calculateHourBreakdown(horarios, fecha, {
       festivo,
       vacaciones,
@@ -161,7 +180,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
 
     // Borrar los horarios anteriores del mismo día
     await Horario.destroy({
-      where: { trabajador_id, fecha }
+      where: { trabajador_id, fecha, empresa }
     });
 
     const nuevos = [];
@@ -171,6 +190,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
         nuevos.push({
           trabajador_id,
           fecha,
+          empresa,
           hora_inicio: h.hora_inicio,
           hora_fin: h.hora_fin,
           festivo: festivo || false,
@@ -189,6 +209,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
       nuevos.push({
         trabajador_id,
         fecha,
+        empresa,
         hora_inicio: '00:00:00',
         hora_fin: '00:00:00',
         festivo: true,
@@ -206,6 +227,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
       nuevos.push({
         trabajador_id,
         fecha,
+        empresa,
         hora_inicio: '00:00:00',
         hora_fin: '00:00:00',
         festivo: false,
@@ -222,6 +244,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
       nuevos.push({
         trabajador_id,
         fecha,
+        empresa,
         hora_inicio: '00:00:00',
         hora_fin: '00:00:00',
         festivo: false,
@@ -240,6 +263,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
       nuevos.push({
         trabajador_id,
         fecha,
+        empresa,
         hora_inicio: '00:00:00',
         hora_fin: '00:00:00',
         festivo: false,
@@ -257,6 +281,7 @@ exports.createOrUpdateHorarios = async (req, res) => {
       nuevos.push({
         trabajador_id,
         fecha,
+        empresa,
         hora_inicio: '00:00:00',
         hora_fin: '00:00:00',
         festivo: false,
