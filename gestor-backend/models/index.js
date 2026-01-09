@@ -25,7 +25,7 @@ db.Empresa = require('./empresa.model')(sequelize, DataTypes);
 
 // Relaciones
 db.Empresa.hasMany(db.Trabajador, { foreignKey: 'empresa_id' });
-db.Trabajador.belongsTo(db.Empresa, { foreignKey: 'empresa_id' });
+db.Trabajador.belongsTo(db.Empresa, { foreignKey: 'empresa_id', as: 'empresaRelacion' });
 db.Trabajador.hasMany(db.Horario, { foreignKey: 'trabajador_id' });
 db.Horario.belongsTo(db.Trabajador, { foreignKey: 'trabajador_id' });
 db.Empresa.hasMany(db.Horario, { foreignKey: 'empresa_id' });
