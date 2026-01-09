@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LogOut,
@@ -10,8 +10,11 @@ import {
   Menu,
   Bell,
   UserCheck,
-  Palette
+  Palette,
+  SlidersHorizontal,
+  ChevronDown
 } from 'lucide-react';
+import { Menu as HeadlessMenu, Transition } from '@headlessui/react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiUrl } from '@/utils/api';
@@ -95,7 +98,7 @@ export default function Header() {
   };
 
   const navLinkClasses = ({ isActive }) =>
-    `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out ${
+    `flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors duration-150 ease-in-out ${
       isActive
         ? 'bg-[var(--theme-accent-soft)] text-white shadow-md'
         : 'text-slate-200 hover:bg-[var(--theme-chip)] hover:text-white'
@@ -124,75 +127,97 @@ export default function Header() {
             <nav className="hidden md:block ml-10">
               <div className="flex items-baseline space-x-4">
                 <NavLink to="/dashboard" className={navLinkClasses}>
-                  <CalendarClock className="mr-2 h-5 w-5" />
-                  Gestor de Horarios
+                  <CalendarClock className="h-4 w-4" />
+                  <span className="hidden lg:inline">Horarios</span>
                 </NavLink>
                 <NavLink to="/trabajador" className={navLinkClasses}>
-                  <Users className="mr-2 h-5 w-5" />
-                  Gestionar Trabajadores
+                  <Users className="h-4 w-4" />
+                  <span className="hidden lg:inline">Trabajadores</span>
                 </NavLink>
                 <NavLink to="/proyecciones" className={navLinkClasses}>
-                  <TrendingUp className="mr-2 h-5 w-5" />
-                  Proyecciones
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="hidden lg:inline">Proyecciones</span>
                 </NavLink>
                 <NavLink to="/organizacion" className={navLinkClasses}>
-                  <Building2 className="mr-2 h-5 w-5" />
-                  Organización
+                  <Building2 className="h-4 w-4" />
+                  <span className="hidden lg:inline">Organización</span>
                 </NavLink>
                 <NavLink to="/externos" className={navLinkClasses}>
-                  <UserCheck className="mr-2 h-5 w-5" />
-                  Externos
+                  <UserCheck className="h-4 w-4" />
+                  <span className="hidden lg:inline">Externos</span>
                 </NavLink>
               </div>
             </nav>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-slate-200">
-              <span className="hidden lg:inline">Empresa:</span>
-              <select
-                value={empresaId}
-                onChange={(event) => {
-                  const next = empresas.find((e) => String(e.id) === event.target.value);
-                  if (next) {
-                    setEmpresa(next);
-                  }
-                }}
-                className="bg-slate-900/70 border text-white text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2"
-                style={{ borderColor: 'var(--theme-card-border)', boxShadow: '0 0 0 1px var(--theme-ring)' }}
+            <HeadlessMenu as="div" className="relative">
+              <HeadlessMenu.Button className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-100 transition hover:bg-slate-900/80">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden xl:inline">Ajustes</span>
+                <ChevronDown className="h-4 w-4 text-slate-300" />
+              </HeadlessMenu.Button>
+              <Transition
+                as={Fragment}
+                enter="transition ease-out duration-200"
+                enterFrom="opacity-0 translate-y-2 scale-95"
+                enterTo="opacity-100 translate-y-0 scale-100"
+                leave="transition ease-in duration-150"
+                leaveFrom="opacity-100 translate-y-0 scale-100"
+                leaveTo="opacity-0 translate-y-2 scale-95"
               >
-                <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
-                {empresas
-                  .filter((e) => String(e.id) !== String(empresaId))
-                  .map((empresa) => (
-                    <option key={empresa.id} value={empresa.id}>
-                      {empresa.nombre}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-200">
-              <Palette className="h-4 w-4 text-slate-300" />
-              <select
-                value={themeName}
-                onChange={(event) => {
-                  if (empresaId) {
-                    setEmpresaTheme(empresaId, event.target.value);
-                  }
-                }}
-                className="bg-slate-900/70 border text-white text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2"
-                style={{ borderColor: 'var(--theme-card-border)', boxShadow: '0 0 0 1px var(--theme-ring)' }}
-              >
-                <option value="aurora">Aurora</option>
-                <option value="sapphire">Sapphire</option>
-                <option value="emerald">Emerald</option>
-                <option value="sunset">Sunset</option>
-              </select>
-            </div>
+                <HeadlessMenu.Items className="absolute right-0 mt-3 w-72 origin-top-right rounded-2xl border border-slate-200 bg-white p-3 shadow-xl focus:outline-none">
+                  <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Empresa activa
+                  </div>
+                  <div className="mt-2">
+                    <select
+                      value={empresaId}
+                      onChange={(event) => {
+                        const next = empresas.find((e) => String(e.id) === event.target.value);
+                        if (next) {
+                          setEmpresa(next);
+                        }
+                      }}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
+                    >
+                      <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
+                      {empresas
+                        .filter((e) => String(e.id) !== String(empresaId))
+                        .map((empresa) => (
+                          <option key={empresa.id} value={empresa.id}>
+                            {empresa.nombre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Tema visual
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Palette className="h-4 w-4 text-slate-400" />
+                    <select
+                      value={themeName}
+                      onChange={(event) => {
+                        if (empresaId) {
+                          setEmpresaTheme(empresaId, event.target.value);
+                        }
+                      }}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
+                    >
+                      <option value="aurora">Aurora</option>
+                      <option value="sapphire">Sapphire</option>
+                      <option value="emerald">Emerald</option>
+                      <option value="sunset">Sunset</option>
+                    </select>
+                  </div>
+                </HeadlessMenu.Items>
+              </Transition>
+            </HeadlessMenu>
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="text-white relative focus:outline-none"
+                className="relative rounded-full border border-white/10 bg-slate-900/60 p-2 text-white shadow-sm transition hover:bg-slate-900/80 focus:outline-none"
               >
                 <Bell className="h-5 w-5" />
                 {notifications.length > 0 && (
@@ -223,10 +248,11 @@ export default function Header() {
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm transition"
+              className="rounded-full bg-red-600/90 p-2 text-white shadow-sm transition hover:bg-red-600"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
             >
               <LogOut className="h-5 w-5" />
-              Cerrar Sesión
             </button>
           </div>
 
@@ -241,7 +267,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="text-white relative focus:outline-none"
+                className="relative rounded-full border border-white/10 bg-slate-900/60 p-2 text-white shadow-sm transition hover:bg-slate-900/80 focus:outline-none"
               >
                 <Bell className="h-5 w-5" />
                 {notifications.length > 0 && (
@@ -344,10 +370,10 @@ export default function Header() {
               </NavLink>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm transition w-full justify-center"
+                className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 w-full justify-center"
               >
                 <LogOut className="h-5 w-5" />
-                Cerrar Sesión
+                Salir
               </button>
             </div>
           </motion.div>
