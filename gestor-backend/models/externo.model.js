@@ -16,6 +16,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      empresa_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
     {
       freezeTableName: true,
@@ -23,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ['fecha', 'nombre_empresa_externo'],
+          fields: ['fecha', 'nombre_empresa_externo', 'empresa_id'],
         },
       ],
     }

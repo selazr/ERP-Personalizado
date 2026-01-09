@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { apiUrl } from '@/utils/api';
 import Header from '@/components/Header';
 import {
@@ -14,6 +13,8 @@ import {
 import { formatCurrency } from '@/utils/utils';
 import SalaryLineChart from '@/components/SalaryLineChart';
 import SalaryTable from '@/components/SalaryTable';
+import apiClient from '@/utils/apiClient';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 function isActivo(trabajador) {
   const today = new Date();
@@ -28,15 +29,14 @@ export default function Proyecciones() {
   const [error, setError] = useState('');
   const [selectedRange, setSelectedRange] = useState(null);
   const [resetKey, setResetKey] = useState(0);
+  const { empresaId } = useEmpresa();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
         const [statsRes, workersRes] = await Promise.all([
-          axios.get(apiUrl('trabajadores/estadisticas'), { headers }),
-          axios.get(apiUrl('trabajadores'), { headers })
+          apiClient.get(apiUrl('trabajadores/estadisticas')),
+          apiClient.get(apiUrl('trabajadores'))
         ]);
         setStats(statsRes.data);
         const mappedWorkers = workersRes.data.map((w) => ({
@@ -53,8 +53,15 @@ export default function Proyecciones() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (empresaId) {
+      fetchData();
+    }
+  }, [empresaId]);
+
+  useEffect(() => {
+    setSelectedRange(null);
+    setResetKey((k) => k + 1);
+  }, [empresaId]);
 
   const chartData = stats
     ? [

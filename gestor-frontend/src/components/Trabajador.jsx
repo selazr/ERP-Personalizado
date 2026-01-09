@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   User,
@@ -29,6 +28,8 @@ import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import { exportWorkerToExcel, exportWorkersSelectionToExcel } from '@/utils/exportWorkerExcel';
 import { formatCurrency } from '@/utils/utils';
 import { apiUrl } from '@/utils/api';
+import apiClient from '@/utils/apiClient';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 // Determina si un trabajador está activo: la fecha de alta debe ser anterior o
 // igual a hoy y la fecha de baja debe ser nula o futura.
@@ -107,6 +108,7 @@ export default function Trabajador() {
   const [selectedFields, setSelectedFields] = useState(['nombre', 'dni', 'epis']);
   const [showFieldSelector, setShowFieldSelector] = useState(false);
   const workersPerPage = 9;
+  const { empresaId } = useEmpresa();
 
   const filteredTrabajadores = trabajadores
     .filter((t) => {
@@ -173,10 +175,7 @@ export default function Trabajador() {
   const navigate = useNavigate();
 
   const fetchWorkers = () => {
-    const token = localStorage.getItem('token');
-    axios.get(apiUrl('trabajadores'), {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    apiClient.get(apiUrl('trabajadores'))
       .then((res) => setTrabajadores(res.data))
       .catch((err) => {
         console.error(err);
@@ -187,22 +186,30 @@ export default function Trabajador() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/');
-    fetchWorkers();
-  }, [navigate]);
+    if (empresaId) {
+      fetchWorkers();
+    }
+  }, [navigate, empresaId]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterBy]);
 
+  useEffect(() => {
+    setSearchTerm('');
+    setFilterBy('nombre');
+    setCurrentPage(1);
+    setTrabajadorSeleccionado(null);
+    setShowAddModal(false);
+    setShowEditModal(false);
+  }, [empresaId]);
+
   const handleAlta = async (id) => {
-    const token = localStorage.getItem('token');
     if (!window.confirm('¿Deseas volver a dar de alta a este trabajador?')) return;
 
     try {
-      await axios.put(apiUrl(`trabajadores/${id}`), {
+      await apiClient.put(apiUrl(`trabajadores/${id}`), {
         fecha_baja: null
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       fetchWorkers();
@@ -213,15 +220,12 @@ export default function Trabajador() {
   };
 
   const handleBaja = async (id) => {
-    const token = localStorage.getItem('token');
     if (!window.confirm('¿Deseas dar de baja a este trabajador?')) return;
 
     try {
       const fechaHoy = new Date().toISOString().split('T')[0];
-      await axios.put(apiUrl(`trabajadores/${id}`), {
+      await apiClient.put(apiUrl(`trabajadores/${id}`), {
         fecha_baja: fechaHoy
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       fetchWorkers();

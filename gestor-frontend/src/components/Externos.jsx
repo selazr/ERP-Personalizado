@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
   format,
   startOfMonth,
@@ -13,6 +12,8 @@ import Header from '@/components/Header';
 import ExternoModal from '@/components/ExternoModal';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiUrl } from '@/utils/api';
+import apiClient from '@/utils/apiClient';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function Externos() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -26,6 +27,7 @@ export default function Externos() {
   const [pricePerWorker, setPricePerWorker] = useState(null);
   const [companyName, setCompanyName] = useState('');
   const [companies, setCompanies] = useState([]);
+  const { empresaId } = useEmpresa();
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
@@ -34,29 +36,27 @@ export default function Externos() {
   const getFechaKey = (day) => format(new Date(currentDate.getFullYear(), currentDate.getMonth(), day), 'yyyy-MM-dd');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const start = format(startOfMonth(currentDate), 'yyyy-MM-dd');
     const end = format(endOfMonth(currentDate), 'yyyy-MM-dd');
 
-    axios
+    if (!empresaId) return;
+
+    apiClient
       .get(apiUrl('externos'), {
-        headers: { Authorization: `Bearer ${token}` },
         params: { start, end },
       })
       .then((res) => setExternos(res.data))
       .catch((err) => {
         console.error('Error obteniendo externos:', err);
       });
-  }, [currentDate]);
+  }, [currentDate, empresaId]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    axios
-      .get(apiUrl('externos/empresas'), {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    if (!empresaId) return;
+    apiClient
+      .get(apiUrl('externos/empresas'))
       .then((res) => setCompanies(res.data));
-  }, []);
+  }, [empresaId]);
 
   const groupedExternos = externos.reduce((acc, item) => {
     if (!acc[item.fecha]) acc[item.fecha] = [];
@@ -75,9 +75,6 @@ export default function Externos() {
   };
 
   const handleGuardar = async ({ fecha, items }) => {
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
-
     const sanitizedItems = items
       .map((item) => ({
         nombre_empresa_externo: item.nombre_empresa_externo.trim(),
@@ -93,8 +90,7 @@ export default function Externos() {
       const toDelete = [...prevNames].filter((name) => !newNames.has(name));
       await Promise.all(
         toDelete.map((name) =>
-          axios.delete(apiUrl('externos'), {
-            headers,
+          apiClient.delete(apiUrl('externos'), {
             data: { fecha, nombre_empresa_externo: name },
           })
         )
@@ -102,10 +98,9 @@ export default function Externos() {
 
       await Promise.all(
         sanitizedItems.map((item) =>
-          axios.post(
+          apiClient.post(
             apiUrl('externos'),
-            { fecha, cantidad: item.cantidad, nombre_empresa_externo: item.nombre_empresa_externo },
-            { headers }
+            { fecha, cantidad: item.cantidad, nombre_empresa_externo: item.nombre_empresa_externo }
           )
         )
       );
@@ -140,9 +135,7 @@ export default function Externos() {
 
   const handleCalcularMedia = async () => {
     if (!startRange || !endRange) return;
-    const token = localStorage.getItem('token');
-    const res = await axios.get(apiUrl('externos'), {
-      headers: { Authorization: `Bearer ${token}` },
+    const res = await apiClient.get(apiUrl('externos'), {
       params: {
         start: startRange,
         end: endRange,
@@ -157,6 +150,15 @@ export default function Externos() {
       setPricePerWorker(parseFloat(amount) / avg);
     }
   };
+
+  useEffect(() => {
+    setStartRange('');
+    setEndRange('');
+    setAverage(null);
+    setAmount('');
+    setPricePerWorker(null);
+    setCompanyName('');
+  }, [empresaId]);
 
   const renderCalendar = () => {
     const days = [];

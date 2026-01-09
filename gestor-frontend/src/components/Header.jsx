@@ -13,14 +13,16 @@ import {
 } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import { apiUrl } from '@/utils/api';
+import apiClient from '@/utils/apiClient';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const { empresaId, empresaNombre, empresas, setEmpresa } = useEmpresa();
 
   const isActivo = (trabajador) => {
     const today = new Date();
@@ -33,11 +35,7 @@ export default function Header() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(
-          apiUrl('trabajadores'),
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await apiClient.get(apiUrl('trabajadores'));
         const today = new Date();
         const upcoming = [];
         res.data.filter(isActivo).forEach((w) => {
@@ -87,10 +85,11 @@ export default function Header() {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [empresaId]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    setEmpresa(null);
     navigate('/');
   };
 
@@ -141,6 +140,28 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-200">
+              <span className="hidden lg:inline">Empresa:</span>
+              <select
+                value={empresaId}
+                onChange={(event) => {
+                  const next = empresas.find((e) => String(e.id) === event.target.value);
+                  if (next) {
+                    setEmpresa(next);
+                  }
+                }}
+                className="bg-slate-800 border border-slate-700 text-gray-100 text-sm rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
+                {empresas
+                  .filter((e) => String(e.id) !== String(empresaId))
+                  .map((empresa) => (
+                    <option key={empresa.id} value={empresa.id}>
+                      {empresa.nombre}
+                    </option>
+                  ))}
+              </select>
+            </div>
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -183,6 +204,13 @@ export default function Header() {
           </div>
 
           <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-white focus:outline-none"
+              aria-label="Abrir menú"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -215,12 +243,6 @@ export default function Header() {
                 )}
               </AnimatePresence>
             </div>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="text-white focus:outline-none"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
           </div>
         </div>
       </div>
@@ -235,6 +257,30 @@ export default function Header() {
             className="md:hidden bg-slate-800"
           >
             <div className="px-4 pt-2 pb-4 space-y-1">
+              <div className="px-2 py-2">
+                <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">
+                  Empresa activa
+                </label>
+                <select
+                  value={empresaId}
+                  onChange={(event) => {
+                    const next = empresas.find((e) => String(e.id) === event.target.value);
+                    if (next) {
+                      setEmpresa(next);
+                    }
+                  }}
+                  className="w-full bg-slate-900 border border-slate-700 text-gray-100 text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
+                  {empresas
+                    .filter((e) => String(e.id) !== String(empresaId))
+                    .map((empresa) => (
+                      <option key={empresa.id} value={empresa.id}>
+                        {empresa.nombre}
+                      </option>
+                    ))}
+                </select>
+              </div>
               <NavLink to="/dashboard" className={navLinkClasses}>
                 <CalendarClock className="mr-2 h-5 w-5" /> Horarios
               </NavLink>
