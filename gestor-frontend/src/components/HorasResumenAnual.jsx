@@ -142,17 +142,23 @@ export function YearHoursSummary({ currentDate, scheduleData, onDownload }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-xl p-6 mt-6"
+      className="rounded-xl shadow-xl p-6 mt-6 border"
+      style={{ background: 'var(--theme-card)', borderColor: 'var(--theme-card-border)', boxShadow: 'var(--theme-shadow)' }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold flex items-center text-gray-800 dark:text-gray-200">
-          <Clock className="mr-2 h-6 w-6 text-blue-500" />
+        <h3 className="text-xl font-semibold flex items-center" style={{ color: 'var(--theme-text)' }}>
+          <Clock className="mr-2 h-6 w-6" style={{ color: 'var(--theme-accent)' }} />
           Resumen de Horas del Año
         </h3>
         {onDownload && (
           <button
             onClick={onDownload}
-            className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-gray-700 bg-white border rounded shadow hover:bg-gray-50"
+            className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium border rounded shadow"
+            style={{
+              color: 'var(--theme-text)',
+              background: 'var(--theme-chip)',
+              borderColor: 'var(--theme-card-border)'
+            }}
           >
             <Download className="w-4 h-4" />
             {`Descargar Plantilla Anual (${yearLabel})`}
@@ -161,56 +167,91 @@ export function YearHoursSummary({ currentDate, scheduleData, onDownload }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-md">
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Total:</p>
-          <p className="text-2xl font-bold text-gray-800 dark:text-white">
+        <div
+          className="rounded-lg p-4 shadow-md border"
+          style={{ background: 'var(--theme-chip)', borderColor: 'var(--theme-card-border)' }}
+        >
+          <p className="text-sm mb-1" style={{ color: 'var(--theme-text-muted)' }}>
+            Total:
+          </p>
+          <p className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>
             {formatHoursToHM(total)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg space-y-3">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Resumen de horas</h3>
+        <div
+          className="rounded-2xl p-6 shadow-lg space-y-3 border"
+          style={{ background: 'var(--theme-chip)', borderColor: 'var(--theme-card-border)' }}
+        >
+          <h3 className="text-sm font-medium" style={{ color: 'var(--theme-text-muted)' }}>
+            Resumen de horas
+          </h3>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-gray-600 dark:text-gray-200">Horas normales</span>
-            <span className="text-lg font-bold text-blue-600 dark:text-blue-300">
+          <div
+            className="flex justify-between items-center border-b pb-2"
+            style={{ borderColor: 'var(--theme-card-border)' }}
+          >
+            <span style={{ color: 'var(--theme-text)' }}>Horas normales</span>
+            <span className="text-lg font-bold" style={{ color: 'var(--theme-accent)' }}>
               {formatHoursToHM(resumen.normales)}
             </span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-purple-600 font-medium">Horas Extra laborable</span>
-            <span className="text-md font-semibold text-purple-500">
+          <div
+            className="flex justify-between items-center border-b pb-2"
+            style={{ borderColor: 'var(--theme-card-border)' }}
+          >
+            <span className="font-medium" style={{ color: 'var(--theme-accent-strong)' }}>
+              Horas Extra laborable
+            </span>
+            <span className="text-md font-semibold" style={{ color: 'var(--theme-accent)' }}>
               {formatHoursToHM(resumen.extras)}
             </span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-emerald-600 font-medium">Horas pagadas</span>
-            <span className="text-md font-semibold text-emerald-500">
+          <div
+            className="flex justify-between items-center border-b pb-2"
+            style={{ borderColor: 'var(--theme-card-border)' }}
+          >
+            <span className="font-medium" style={{ color: 'var(--theme-accent-strong)' }}>
+              Horas pagadas
+            </span>
+            <span className="text-md font-semibold" style={{ color: 'var(--theme-accent)' }}>
               {formatHoursToHM(resumen.pagadas)}
             </span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-rose-600 font-medium">Horas a deber</span>
-            <span className="text-md font-semibold text-rose-500">
+          <div
+            className="flex justify-between items-center border-b pb-2"
+            style={{ borderColor: 'var(--theme-card-border)' }}
+          >
+            <span className="font-medium" style={{ color: 'var(--theme-accent-strong)' }}>
+              Horas a deber
+            </span>
+            <span className="text-md font-semibold" style={{ color: 'var(--theme-accent)' }}>
               {resumen.adeber > 0
                 ? `-${formatHoursToHM(resumen.adeber)}`
                 : formatHoursToHM(resumen.adeber)}
             </span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-yellow-600 font-medium">Horas nocturnas</span>
-            <span className="text-md font-semibold text-yellow-500">
+          <div
+            className="flex justify-between items-center border-b pb-2"
+            style={{ borderColor: 'var(--theme-card-border)' }}
+          >
+            <span className="font-medium" style={{ color: 'var(--theme-accent-strong)' }}>
+              Horas nocturnas
+            </span>
+            <span className="text-md font-semibold" style={{ color: 'var(--theme-accent)' }}>
               {formatHoursToHM(resumen.nocturnas)}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-red-600 font-medium">Horas festivas</span>
-            <span className="text-md font-semibold text-red-500">
+            <span className="font-medium" style={{ color: 'var(--theme-accent-strong)' }}>
+              Horas festivas
+            </span>
+            <span className="text-md font-semibold" style={{ color: 'var(--theme-accent)' }}>
               {formatHoursToHM(resumen.festivas)}
             </span>
           </div>

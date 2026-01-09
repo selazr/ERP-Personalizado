@@ -86,12 +86,12 @@ export default function Proyecciones() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
+      <div className="min-h-screen p-4 sm:p-6" style={{ background: 'var(--theme-bg)' }}>
         <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold theme-title-gradient">
             Proyecciones y Estadísticas
           </h1>
-          <p className="text-gray-600 mt-2">Visualiza el estado económico de tu plantilla.</p>
+          <p className="theme-muted mt-2">Visualiza el estado económico de tu plantilla.</p>
         </div>
 
         {error && (
@@ -114,8 +114,13 @@ export default function Proyecciones() {
               <StatCard title="Salario neto promedio" value={`€ ${formatCurrency(stats.salarioNetoPromedio)}`} />
             </div>
 
-            <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Gráfico comparativo</h2>
+            <div
+              className="w-full max-w-5xl mx-auto p-4 sm:p-6 rounded-xl shadow-xl border"
+              style={{ background: 'var(--theme-card)', borderColor: 'var(--theme-card-border)' }}
+            >
+              <h2 className="text-lg sm:text-xl font-semibold mb-4" style={{ color: 'var(--theme-text)' }}>
+                Gráfico comparativo
+              </h2>
               <div className="w-full h-80">
                 <ResponsiveContainer>
                   <BarChart data={chartData}>
@@ -123,22 +128,27 @@ export default function Proyecciones() {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="Bruto" fill="#6366f1" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="Neto" fill="#34d399" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="Bruto" fill="var(--theme-accent)" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="Neto" fill="var(--theme-accent-strong)" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Distribución de salarios</h2>
+            <div
+              className="w-full max-w-5xl mx-auto p-4 sm:p-6 rounded-xl shadow-xl mt-6 border"
+              style={{ background: 'var(--theme-card)', borderColor: 'var(--theme-card-border)' }}
+            >
+              <h2 className="text-lg sm:text-xl font-semibold mb-4" style={{ color: 'var(--theme-text)' }}>
+                Distribución de salarios
+              </h2>
               <SalaryLineChart
                 workers={workers}
                 onRangeSelect={setSelectedRange}
                 resetKey={resetKey}
               />
               <div className="flex items-center justify-between mt-2">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
                   Rango seleccionado:{' '}
                   {selectedRange
                     ? `${formatCurrency(selectedRange.from)}–${formatCurrency(selectedRange.to)} €`
@@ -146,7 +156,8 @@ export default function Proyecciones() {
                 </p>
                 {selectedRange && (
                   <button
-                    className="text-sm text-blue-600 underline"
+                    className="text-sm underline"
+                    style={{ color: 'var(--theme-accent)' }}
                     onClick={() => {
                       setSelectedRange(null);
                       setResetKey((k) => k + 1);
@@ -158,8 +169,13 @@ export default function Proyecciones() {
               </div>
             </div>
 
-            <div className="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-xl mt-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Salarios por trabajador</h2>
+            <div
+              className="w-full max-w-5xl mx-auto p-4 sm:p-6 rounded-xl shadow-xl mt-6 border"
+              style={{ background: 'var(--theme-card)', borderColor: 'var(--theme-card-border)' }}
+            >
+              <h2 className="text-lg sm:text-xl font-semibold mb-4" style={{ color: 'var(--theme-text)' }}>
+                Salarios por trabajador
+              </h2>
               <SalaryTable
                 workers={selectedRange
                   ? workers.filter(
@@ -170,7 +186,9 @@ export default function Proyecciones() {
             </div>
           </>
         ) : (
-          <p className="text-center text-gray-600 mt-12">Cargando estadísticas...</p>
+          <p className="text-center mt-12" style={{ color: 'var(--theme-text-muted)' }}>
+            Cargando estadísticas...
+          </p>
         )}
       </div>
     </>
@@ -179,9 +197,16 @@ export default function Proyecciones() {
 
 function StatCard({ title, value }) {
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow hover:shadow-md transition text-center">
-      <p className="text-gray-500 text-sm">{title}</p>
-      <p className="text-2xl font-bold text-blue-700 mt-2">{value}</p>
+    <div
+      className="p-4 sm:p-6 rounded-xl shadow hover:shadow-md transition text-center border"
+      style={{ background: 'var(--theme-card)', borderColor: 'var(--theme-card-border)' }}
+    >
+      <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+        {title}
+      </p>
+      <p className="text-2xl font-bold mt-2" style={{ color: 'var(--theme-accent)' }}>
+        {value}
+      </p>
     </div>
   );
 }
