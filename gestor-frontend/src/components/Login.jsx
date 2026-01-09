@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import apiClient from '@/utils/apiClient';
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../styles/Auth.css"; // ✅ Asegúrate de que esta ruta sea correcta
 import { apiUrl } from '@/utils/api';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const emailRef = useRef(null);
+  const { refreshEmpresas } = useEmpresa();
 
   useEffect(() => {
     emailRef.current?.focus();
@@ -23,14 +25,16 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post(apiUrl('auth/login'), {
+      const res = await apiClient.post(apiUrl('auth/login'), {
         email,
         contraseña,
       });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('rol', res.data.rol);
       localStorage.setItem('username', res.data.nombre);
-      navigate('/dashboard');
+      await refreshEmpresas();
+      const empresaId = localStorage.getItem('empresaId');
+      navigate(empresaId ? '/dashboard' : '/seleccionar-empresa');
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas. Inténtalo de nuevo.');
     } finally {

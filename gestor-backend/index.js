@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth.routes');
 const trabajadorRoutes = require('./routes/trabajador.routes');
 const externoRoutes = require('./routes/externo.routes');
 const ocrRoutes = require('./routes/ocr.routes');
+const empresaRoutes = require('./routes/empresa.routes');
 const db = require('./models');
 const { scheduleCleanup } = require('./services/ocr.service');
 
@@ -53,6 +54,7 @@ app.use('/api/trabajadores', trabajadorRoutes);
 app.use('/api/horarios', horarioRoutes);
 app.use('/api/externos', externoRoutes);
 app.use('/api/ocr', ocrRoutes);
+app.use('/api/empresas', empresaRoutes);
 
 // Archivos subidos para previsualización
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

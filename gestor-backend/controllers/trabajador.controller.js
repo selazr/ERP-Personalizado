@@ -2,18 +2,35 @@ const db = require('../models');
 const Trabajador = db.Trabajador;
 
 exports.getAll = async (req, res) => {
-  const trabajadores = await Trabajador.findAll();
+  const trabajadores = await Trabajador.findAll({
+    where: { empresa_id: req.empresaId }
+  });
   res.json(trabajadores);
 };
 
 exports.getById = async (req, res) => {
   const trabajador = await Trabajador.findByPk(req.params.id);
-  trabajador ? res.json(trabajador) : res.status(404).json({ error: 'No encontrado' });
+  if (!trabajador) {
+    return res.status(404).json({ error: 'No encontrado' });
+  }
+
+  if (trabajador.empresa_id !== req.empresaId) {
+    return res.status(403).json({ error: 'Acceso no autorizado' });
+  }
+
+  res.json(trabajador);
 };
 
 exports.create = async (req, res) => {
   try {
-    const nuevo = await Trabajador.create(req.body);
+    if (req.body.empresa_id && Number(req.body.empresa_id) !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+
+    const nuevo = await Trabajador.create({
+      ...req.body,
+      empresa_id: req.empresaId
+    });
     res.status(201).json(nuevo);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -24,7 +41,14 @@ exports.update = async (req, res) => {
   try {
     const trabajador = await Trabajador.findByPk(req.params.id);
     if (!trabajador) return res.status(404).json({ error: 'No encontrado' });
-    await trabajador.update(req.body);
+    if (trabajador.empresa_id !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+    if (req.body.empresa_id && Number(req.body.empresa_id) !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+
+    await trabajador.update({ ...req.body, empresa_id: req.empresaId });
     res.json(trabajador);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -34,6 +58,9 @@ exports.update = async (req, res) => {
 exports.remove = async (req, res) => {
   const trabajador = await Trabajador.findByPk(req.params.id);
   if (!trabajador) return res.status(404).json({ error: 'No encontrado' });
+  if (trabajador.empresa_id !== req.empresaId) {
+    return res.status(403).json({ error: 'Acceso no autorizado' });
+  }
   await trabajador.destroy();
   res.status(204).send();
 };
@@ -44,10 +71,13 @@ exports.getStats = async (req, res) => {
     const { Op } = db.Sequelize;
     const today = new Date();
 
-    const totalTrabajadores = await Trabajador.count();
+    const totalTrabajadores = await Trabajador.count({
+      where: { empresa_id: req.empresaId }
+    });
 
     const trabajadoresActivos = await Trabajador.count({
       where: {
+        empresa_id: req.empresaId,
         fecha_alta: { [Op.lte]: today },
         [Op.or]: [
           { fecha_baja: null },
@@ -58,14 +88,20 @@ exports.getStats = async (req, res) => {
 
     const trabajadoresInactivos = totalTrabajadores - trabajadoresActivos;
 
-    const totalSalarioNeto = await Trabajador.sum('salario_neto') || 0;
-    const totalSalarioBruto = await Trabajador.sum('salario_bruto') || 0;
+    const totalSalarioNeto = await Trabajador.sum('salario_neto', {
+      where: { empresa_id: req.empresaId }
+    }) || 0;
+    const totalSalarioBruto = await Trabajador.sum('salario_bruto', {
+      where: { empresa_id: req.empresaId }
+    }) || 0;
 
     const salarioNetoPromedio = await Trabajador.findOne({
-      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.col('salario_neto')), 'promedio']]
+      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.col('salario_neto')), 'promedio']],
+      where: { empresa_id: req.empresaId }
     });
     const salarioBrutoPromedio = await Trabajador.findOne({
-      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.col('salario_bruto')), 'promedio']]
+      attributes: [[db.Sequelize.fn('AVG', db.Sequelize.col('salario_bruto')), 'promedio']],
+      where: { empresa_id: req.empresaId }
     });
 
     const promedioNeto = parseFloat(salarioNetoPromedio.get('promedio')) || 0;
@@ -96,9 +132,6 @@ exports.getOrganizationInfo = async (req, res) => {
   try {
     const today = new Date();
     const { Op } = db.Sequelize;
-    const rawEmpresa = req.query.empresa;
-    const empresa = rawEmpresa === 'null' ? null : rawEmpresa;
-
     // Nuevas incorporaciones
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
@@ -106,16 +139,13 @@ exports.getOrganizationInfo = async (req, res) => {
     lastQuarter.setMonth(lastQuarter.getMonth() - 3);
 
     const activeCondition = {
+      empresa_id: req.empresaId,
       fecha_alta: { [Op.lte]: today },
       [Op.or]: [
         { fecha_baja: null },
         { fecha_baja: { [Op.gte]: today } }
       ]
     };
-
-    if (rawEmpresa) {
-      activeCondition.empresa = empresa;
-    }
 
     const incorporacionesMes = await Trabajador.count({
       where: {
@@ -256,7 +286,7 @@ exports.getOrganizationInfo = async (req, res) => {
       horasExtrasAcumuladas,
       horasExtrasPagadas: horasExtrasPagadasTotal,
       edadPromedio,
-      empresaSeleccionada: rawEmpresa || null
+      empresaSeleccionada: req.empresaId
     });
   } catch (err) {
     console.error('Error en getOrganizationInfo:', err);
