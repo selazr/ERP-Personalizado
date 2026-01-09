@@ -9,7 +9,8 @@ import {
   Building2,
   Menu,
   Bell,
-  UserCheck
+  UserCheck,
+  Palette
 } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,7 +23,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { empresaId, empresaNombre, empresas, setEmpresa } = useEmpresa();
+  const { empresaId, empresaNombre, empresas, setEmpresa, themeName, setEmpresaTheme } = useEmpresa();
 
   const isActivo = (trabajador) => {
     const today = new Date();
@@ -96,8 +97,8 @@ export default function Header() {
   const navLinkClasses = ({ isActive }) =>
     `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out ${
       isActive
-        ? 'bg-primary text-primary-foreground shadow-md'
-        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+        ? 'bg-[var(--theme-accent-soft)] text-white shadow-md'
+        : 'text-slate-200 hover:bg-[var(--theme-chip)] hover:text-white'
     }`;
 
   return (
@@ -105,13 +106,20 @@ export default function Header() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-      className="bg-gradient-to-r from-slate-800 via-slate-900 to-black shadow-lg sticky top-0 z-50 w-full"
+      className="sticky top-0 z-50 w-full border-b shadow-lg backdrop-blur-xl"
+      style={{ background: 'var(--theme-header)', borderColor: 'var(--theme-card-border)' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <img className="h-8 w-auto" alt="Logo" src="/logo.png" />
+            <div className="flex-shrink-0 flex items-center gap-3">
+              <div
+                className="grid h-10 w-10 place-items-center rounded-xl"
+                style={{ background: 'var(--theme-accent-soft)', color: 'var(--theme-accent)' }}
+              >
+                <Building2 className="h-5 w-5" />
+              </div>
+              <img className="h-7 w-auto" alt="Logo" src="/logo.png" />
             </div>
             <nav className="hidden md:block ml-10">
               <div className="flex items-baseline space-x-4">
@@ -140,7 +148,7 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-200">
+            <div className="flex items-center gap-2 text-sm text-slate-200">
               <span className="hidden lg:inline">Empresa:</span>
               <select
                 value={empresaId}
@@ -150,7 +158,8 @@ export default function Header() {
                     setEmpresa(next);
                   }
                 }}
-                className="bg-slate-800 border border-slate-700 text-gray-100 text-sm rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-slate-900/70 border text-white text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2"
+                style={{ borderColor: 'var(--theme-card-border)', boxShadow: '0 0 0 1px var(--theme-ring)' }}
               >
                 <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
                 {empresas
@@ -160,6 +169,24 @@ export default function Header() {
                       {empresa.nombre}
                     </option>
                   ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-200">
+              <Palette className="h-4 w-4 text-slate-300" />
+              <select
+                value={themeName}
+                onChange={(event) => {
+                  if (empresaId) {
+                    setEmpresaTheme(empresaId, event.target.value);
+                  }
+                }}
+                className="bg-slate-900/70 border text-white text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2"
+                style={{ borderColor: 'var(--theme-card-border)', boxShadow: '0 0 0 1px var(--theme-ring)' }}
+              >
+                <option value="aurora">Aurora</option>
+                <option value="sapphire">Sapphire</option>
+                <option value="emerald">Emerald</option>
+                <option value="sunset">Sunset</option>
               </select>
             </div>
             <div className="relative">
@@ -279,6 +306,25 @@ export default function Header() {
                         {empresa.nombre}
                       </option>
                     ))}
+                </select>
+              </div>
+              <div className="px-2 py-2">
+                <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">
+                  Tema visual
+                </label>
+                <select
+                  value={themeName}
+                  onChange={(event) => {
+                    if (empresaId) {
+                      setEmpresaTheme(empresaId, event.target.value);
+                    }
+                  }}
+                  className="w-full bg-slate-900 border border-slate-700 text-gray-100 text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="aurora">Aurora</option>
+                  <option value="sapphire">Sapphire</option>
+                  <option value="emerald">Emerald</option>
+                  <option value="sunset">Sunset</option>
                 </select>
               </div>
               <NavLink to="/dashboard" className={navLinkClasses}>
