@@ -123,15 +123,12 @@ exports.getHorariosByTrabajador = async (req, res) => {
     }
 
     const rawEmpresa = req.query.empresa;
-    const empresa = rawEmpresa === undefined
-      ? trabajador.empresa ?? null
-      : rawEmpresa === 'null'
-        ? null
-        : rawEmpresa;
+    const where = { trabajador_id: req.params.id };
+    if (rawEmpresa !== undefined) {
+      where.empresa = rawEmpresa === 'null' ? null : rawEmpresa;
+    }
 
-    const horarios = await Horario.findAll({
-      where: { trabajador_id: req.params.id, empresa }
-    });
+    const horarios = await Horario.findAll({ where });
     res.json(horarios);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener horarios' });
