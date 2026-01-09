@@ -29,6 +29,6 @@ db.Trabajador.belongsTo(db.Empresa, { foreignKey: 'empresa_id', as: 'empresaRela
 db.Trabajador.hasMany(db.Horario, { foreignKey: 'trabajador_id' });
 db.Horario.belongsTo(db.Trabajador, { foreignKey: 'trabajador_id' });
 db.Empresa.hasMany(db.Horario, { foreignKey: 'empresa_id' });
-db.Horario.belongsTo(db.Empresa, { foreignKey: 'empresa_id' });
+db.Horario.belongsTo(db.Empresa, { foreignKey: 'empresa_id', as: 'empresaRelacion' });
 
 module.exports = db;
