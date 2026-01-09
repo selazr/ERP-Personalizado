@@ -180,7 +180,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.98, opacity: 0, y: 12 }}
             transition={{ type: 'spring', stiffness: 180, damping: 18 }}
-            className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl"
+            className="relative flex w-full max-w-5xl max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl"
           >
             <div className="flex items-start justify-between border-b border-slate-200/80 bg-white/90 px-5 py-4 backdrop-blur">
               <div>
@@ -196,7 +196,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
               </button>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:space-y-5">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:space-y-5">
               <SectionCard
                 title="Datos personales"
                 description="Información básica de contacto y documentación."
