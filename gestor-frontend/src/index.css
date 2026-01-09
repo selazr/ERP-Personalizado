@@ -1,3 +1,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --theme-bg: radial-gradient(circle at top, rgba(99, 102, 241, 0.25), transparent 45%),
+    linear-gradient(135deg, #0f172a, #020617 55%);
+  --theme-header: linear-gradient(120deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+  --theme-card: rgba(15, 23, 42, 0.75);
+  --theme-card-border: rgba(148, 163, 184, 0.18);
+  --theme-accent: #6366f1;
+  --theme-accent-strong: #4f46e5;
+  --theme-accent-soft: rgba(99, 102, 241, 0.15);
+  --theme-text: #f8fafc;
+  --theme-text-muted: #94a3b8;
+  --theme-chip: rgba(30, 41, 59, 0.7);
+  --theme-chip-border: rgba(148, 163, 184, 0.2);
+  --theme-ring: rgba(99, 102, 241, 0.45);
+  --theme-shadow: 0 30px 80px rgba(2, 6, 23, 0.55);
+}
+
+[data-theme='sapphire'] {
+  --theme-bg: radial-gradient(circle at top, rgba(14, 165, 233, 0.28), transparent 50%),
+    linear-gradient(140deg, #0b1324, #0a0f1f 55%);
+  --theme-header: linear-gradient(120deg, rgba(2, 6, 23, 0.88), rgba(15, 23, 42, 0.98));
+  --theme-card: rgba(15, 23, 42, 0.72);
+  --theme-card-border: rgba(125, 211, 252, 0.2);
+  --theme-accent: #38bdf8;
+  --theme-accent-strong: #0284c7;
+  --theme-accent-soft: rgba(56, 189, 248, 0.18);
+  --theme-ring: rgba(56, 189, 248, 0.5);
+}
+
+[data-theme='emerald'] {
+  --theme-bg: radial-gradient(circle at top, rgba(16, 185, 129, 0.24), transparent 50%),
+    linear-gradient(135deg, #071a17, #0b1f1a 55%);
+  --theme-header: linear-gradient(120deg, rgba(6, 78, 59, 0.86), rgba(2, 44, 34, 0.96));
+  --theme-card: rgba(6, 78, 59, 0.55);
+  --theme-card-border: rgba(52, 211, 153, 0.25);
+  --theme-accent: #34d399;
+  --theme-accent-strong: #059669;
+  --theme-accent-soft: rgba(16, 185, 129, 0.18);
+  --theme-ring: rgba(52, 211, 153, 0.45);
+}
+
+[data-theme='sunset'] {
+  --theme-bg: radial-gradient(circle at top, rgba(251, 146, 60, 0.25), transparent 50%),
+    linear-gradient(135deg, #1a0f14, #1f1309 55%);
+  --theme-header: linear-gradient(120deg, rgba(80, 20, 18, 0.9), rgba(30, 12, 8, 0.96));
+  --theme-card: rgba(51, 16, 16, 0.55);
+  --theme-card-border: rgba(251, 146, 60, 0.22);
+  --theme-accent: #fb923c;
+  --theme-accent-strong: #f97316;
+  --theme-accent-soft: rgba(251, 146, 60, 0.18);
+  --theme-ring: rgba(251, 146, 60, 0.5);
+}
