@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import apiClient from '@/utils/apiClient';
 import { apiUrl } from '@/utils/api';
 
@@ -27,7 +27,7 @@ export function EmpresaProvider({ children }) {
     setEmpresaNombre(empresa.nombre);
   };
 
-  const refreshEmpresas = async () => {
+  const refreshEmpresas = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setEmpresas([]);
@@ -43,11 +43,11 @@ export function EmpresaProvider({ children }) {
     } finally {
       setLoadingEmpresas(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshEmpresas();
-  }, []);
+  }, [refreshEmpresas]);
 
   const value = useMemo(() => ({
     empresaId,
@@ -56,7 +56,7 @@ export function EmpresaProvider({ children }) {
     loadingEmpresas,
     setEmpresa,
     refreshEmpresas
-  }), [empresaId, empresaNombre, empresas, loadingEmpresas]);
+  }), [empresaId, empresaNombre, empresas, loadingEmpresas, refreshEmpresas]);
 
   return (
     <EmpresaContext.Provider value={value}>
