@@ -122,10 +122,9 @@ export default function ScheduleManager() {
     return trabajadores.filter((t) => (t.empresa ?? null) === selectedValue);
   }, [selectedCompany, trabajadores]);
 
-  const getEmpresaParam = (worker = null) => {
+  const getEmpresaParam = () => {
     if (selectedCompany === '__ALL__') {
-      const resolved = worker?.empresa ?? trabajadores.find(t => t.id === Number(selectedTrabajadorId))?.empresa;
-      return resolved ?? 'null';
+      return null;
     }
     return selectedCompany === '__NULL__' ? 'null' : selectedCompany;
   };
@@ -259,8 +258,8 @@ export default function ScheduleManager() {
   const handleDescargarTodasPlantillas = async () => {
     try {
       const token = localStorage.getItem('token');
-      const requests = filteredTrabajadores.map(t => {
-        const empresaParam = getEmpresaParam(t);
+      const requests = filteredTrabajadores.map((t) => {
+        const empresaParam = getEmpresaParam();
         return axios.get(apiUrl(`horarios/${t.id}`),
           {
             headers: { Authorization: `Bearer ${token}` },
