@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { format, startOfMonth, getDaysInMonth, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import Header from '@/components/Header';
 import HorarioModal from '@/components/HorarioModal';
 import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { HoursSummary } from '@/components/HorasResumen';
@@ -369,7 +368,6 @@ export default function ScheduleManager() {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
         <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center px-4">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">

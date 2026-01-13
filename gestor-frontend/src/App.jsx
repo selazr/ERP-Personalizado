@@ -6,6 +6,7 @@ import Proyecciones from './components/Proyecciones';
 import Organizacion from './components/Organizacion';
 import Externos from './components/Externos';
 import EmpresaSelector from './components/EmpresaSelector';
+import AppLayout from './components/AppLayout';
 import { useEmpresa } from '@/context/EmpresaContext';
 
 function RequireEmpresa() {
@@ -23,11 +24,13 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/seleccionar-empresa" element={<EmpresaSelector />} />
         <Route element={<RequireEmpresa />}>
-          <Route path="/trabajador" element={<Trabajador />} />
-          <Route path="/dashboard" element={<ScheduleManager />} />
-          <Route path="/proyecciones" element={<Proyecciones />} />
-          <Route path="/organizacion" element={<Organizacion />} />
-          <Route path="/externos" element={<Externos />} />
+          <Route element={<AppLayout />}>
+            <Route path="/trabajador" element={<Trabajador />} />
+            <Route path="/dashboard" element={<ScheduleManager />} />
+            <Route path="/proyecciones" element={<Proyecciones />} />
+            <Route path="/organizacion" element={<Organizacion />} />
+            <Route path="/externos" element={<Externos />} />
+          </Route>
         </Route>
       </Routes>
     </Router>

@@ -8,7 +8,6 @@ import {
   differenceInCalendarDays
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import Header from '@/components/Header';
 import ExternoModal from '@/components/ExternoModal';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiUrl } from '@/utils/api';
@@ -188,7 +187,6 @@ export default function Externos() {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-slate-100 p-4 sm:p-6 text-gray-900">
         <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">

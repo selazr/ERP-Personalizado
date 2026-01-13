@@ -22,7 +22,6 @@ import {
   Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Header from '@/components/Header';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import { exportWorkerToExcel, exportWorkersSelectionToExcel } from '@/utils/exportWorkerExcel';
@@ -251,7 +250,6 @@ export default function Trabajador() {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-slate-100 p-4 sm:p-6 space-y-6">
         <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 sm:p-6">
