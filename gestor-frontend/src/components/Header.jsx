@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LogOut,
@@ -27,6 +27,17 @@ export default function Header() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const { empresaId, empresaNombre, empresas, setEmpresa, themeName, setEmpresaTheme } = useEmpresa();
+
+  const logoSrc = useMemo(() => {
+    const normalizedName = (empresaNombre || '').toLowerCase();
+    if (normalizedName.includes('lxh')) {
+      return '/LXH_LOGO.png';
+    }
+    if (normalizedName.includes('tyron')) {
+      return '/TYRON_LOGO.png';
+    }
+    return '/logo.png';
+  }, [empresaNombre]);
 
   const isActivo = (trabajador) => {
     const today = new Date();
@@ -122,7 +133,7 @@ export default function Header() {
               >
                 <Building2 className="h-5 w-5" />
               </div>
-              <img className="h-7 w-auto" alt="Logo" src="/logo.png" />
+              <img className="h-7 w-auto" alt="Logo" src={logoSrc} />
             </div>
             <nav className="hidden md:block ml-10">
               <div className="flex items-baseline space-x-4">
