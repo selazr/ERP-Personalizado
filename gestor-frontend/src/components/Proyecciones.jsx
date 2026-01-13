@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { apiUrl } from '@/utils/api';
-import Header from '@/components/Header';
 import {
   BarChart,
   Bar,
@@ -85,7 +84,6 @@ export default function Proyecciones() {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen p-4 sm:p-6" style={{ background: 'var(--theme-bg)' }}>
         <div className="w-full max-w-5xl mx-auto mb-4 sm:mb-6 text-center px-4">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold theme-title-gradient">

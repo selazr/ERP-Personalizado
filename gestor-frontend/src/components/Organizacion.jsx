@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Building2, ChevronDown, MapPin } from 'lucide-react';
-import Header from '@/components/Header';
 import { isActivo, formatDate } from '@/components/Trabajador';
 import { apiUrl } from '@/utils/api';
 import apiClient from '@/utils/apiClient';
@@ -137,7 +136,6 @@ export default function Organizacion() {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 p-4 sm:p-6">
         <div className="w-full max-w-6xl mx-auto mb-6 text-center px-4">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
