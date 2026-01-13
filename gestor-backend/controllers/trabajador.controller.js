@@ -1,5 +1,6 @@
 const db = require('../models');
 const Trabajador = db.Trabajador;
+const Empresa = db.Empresa;
 
 exports.getAll = async (req, res) => {
   const trabajadores = await Trabajador.findAll({
@@ -44,11 +45,25 @@ exports.update = async (req, res) => {
     if (trabajador.empresa_id !== req.empresaId) {
       return res.status(403).json({ error: 'Acceso no autorizado' });
     }
-    if (req.body.empresa_id && Number(req.body.empresa_id) !== req.empresaId) {
+
+    const trimmedEmpresa = typeof req.body.empresa === 'string'
+      ? req.body.empresa.trim()
+      : null;
+    let empresaIdToSet = req.empresaId;
+    if (trimmedEmpresa) {
+      const empresaMatch = await Empresa.findOne({
+        where: { nombre: trimmedEmpresa }
+      });
+      if (empresaMatch) {
+        empresaIdToSet = empresaMatch.id;
+      }
+    }
+
+    if (req.body.empresa_id && Number(req.body.empresa_id) !== empresaIdToSet) {
       return res.status(403).json({ error: 'Acceso no autorizado' });
     }
 
-    await trabajador.update({ ...req.body, empresa_id: req.empresaId });
+    await trabajador.update({ ...req.body, empresa_id: empresaIdToSet });
     res.json(trabajador);
   } catch (err) {
     res.status(400).json({ error: err.message });
