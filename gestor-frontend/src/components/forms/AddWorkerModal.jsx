@@ -1,8 +1,11 @@
 // src/components/forms/AddWorkerModal.jsx
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
 import { apiUrl } from '@/utils/api';
+import apiClient from '@/utils/apiClient';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [form, setForm] = useState({
@@ -19,7 +22,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
     fecha_baja: '',
     horas_contratadas: '',
     salario_neto: '',
-    salario_bruto:'',
+    salario_bruto: '',
     direccion: '',
     desplazamiento: false,
     fecha_desplazamiento: '',
@@ -38,6 +41,12 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   });
 
   const [formErrors, setFormErrors] = useState({});
+  const { empresas } = useEmpresa();
+
+  const empresaOptions = useMemo(() => {
+    const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
+    return Array.from(new Set(names));
+  }, [empresas]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -47,7 +56,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
     } else {
       setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     }
-    setFormErrors((prev) => ({ ...prev, [name]: undefined })); // limpia error del campo al modificar
+    setFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
   const handleBlur = (e) => {
@@ -87,7 +96,6 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const parsedForm = Object.fromEntries(
         Object.entries(form).map(([key, value]) => {
           if (value === '') return [key, null];
@@ -97,31 +105,23 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         })
       );
 
-      const response = await fetch(apiUrl('trabajadores'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(parsedForm)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al añadir trabajador');
-      }
+      await apiClient.post(apiUrl('trabajadores'), parsedForm);
 
       onWorkerAdded();
       onClose();
     } catch (error) {
       console.error(error);
-      alert(error.message);
+      const errorMessage = error?.response?.data?.error
+        || error?.response?.data?.message
+        || error?.message
+        || 'Error al añadir trabajador';
+      alert(errorMessage);
     }
   };
 
   const renderInput = (label, name, placeholder, type = 'text') => (
-    <label className="flex flex-col">
-      {label}
+    <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+      <span>{label}</span>
       <input
         name={name}
         placeholder={placeholder}
@@ -129,103 +129,184 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         onChange={handleChange}
         onBlur={handleBlur}
         type={type}
-        className={`border p-2 rounded ${formErrors[name] ? 'border-red-500' : ''}`}
+        className={`rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+          formErrors[name]
+            ? 'border-red-500 focus:ring-red-200'
+            : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+        }`}
       />
       {formErrors[name] && <span className="text-red-500 text-sm">{formErrors[name]}</span>}
     </label>
   );
-  const renderSelect = (label, name, options) => (
-  <label>
-    {label}
-    <select
-      name={name}
-      value={form[name]}
-      onChange={handleChange}
-      className={`border p-2 rounded w-full ${
-        formErrors[name] ? 'border-red-500' : 'border-gray-300'
-      }`}
-    >
-      <option value="">Selecciona una opción</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
-    {formErrors[name] && <p className="text-red-500 text-sm">{formErrors[name]}</p>}
-  </label>
-);
 
+  const renderSelect = (label, name, options) => (
+    <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+      <span>{label}</span>
+      <select
+        name={name}
+        value={form[name] || ''}
+        onChange={handleChange}
+        className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+          formErrors[name]
+            ? 'border-red-500 focus:ring-red-200'
+            : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+        }`}
+      >
+        <option value="">Selecciona una opción</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+      {formErrors[name] && <p className="text-red-500 text-sm">{formErrors[name]}</p>}
+    </label>
+  );
+
+  const renderCheckbox = (label, name) => (
+    <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
+      <input
+        type="checkbox"
+        name={name}
+        checked={Boolean(form[name])}
+        onChange={handleChange}
+        className="h-4 w-4 rounded border-slate-300 text-[var(--theme-accent)] focus:ring-[var(--theme-ring)]"
+      />
+      {label}
+    </label>
+  );
+
+  const SectionCard = ({ title, description, children }) => (
+    <section className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 shadow-sm sm:p-5">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        {description && <p className="mt-1 text-xs text-slate-500">{description}</p>}
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {children}
+      </div>
+    </section>
+  );
 
   return (
     <AnimatePresence>
       {open && (
         <Motion.div
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          exit={{ opacity: 0 }} 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm sm:px-6"
         >
-          <div className="bg-white text-black rounded-md shadow-lg w-full max-w-4xl p-6 relative overflow-y-auto max-h-[90vh]">
-            <h2 className="text-xl font-bold mb-2">Añadir Nuevo Trabajador</h2>
-            <p className="text-sm text-gray-600 mb-4">Completa el formulario para registrar un nuevo trabajador.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderInput('Nombre', 'nombre', 'Ej: Juan Pérez')}
-              {renderInput('DNI', 'dni', 'Ej: 12345678A')}
-              {renderInput('Dirección', 'direccion', 'Ej: Calle Falsa 123')}
-              {renderInput('Correo Electrónico', 'correo_electronico', 'Ej: juan@email.com')}
-              {renderInput('Teléfono', 'telefono', 'Ej: 600123456')}
-              {renderInput('IBAN', 'iban', 'Ej: ES7620770024003102575766')}
-              {renderInput('NSS', 'nss', 'Ej: 123456789012')}
-              {renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
-              {renderInput('Grupo', 'grupo', 'Ej: G1')}
-              {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
-              {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
-              {form.tipo_trabajador !== 'Fijo' &&
-                renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
-              {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
-              {renderInput('Salario Neto/Mes (€)', 'salario_neto', 'Ej: 1.600,50')}
-              {renderInput('Salario Bruto/Mes (€)', 'salario_bruto', 'Ej: 1.800,75')}
-              {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
-              {renderInput('País', 'pais', 'Ej: España')}
-              {renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
-              <label className="flex items-center gap-2 col-span-full">
-                <input type="checkbox" name="a1" checked={form.a1} onChange={handleChange} /> ¿Tiene A1?
-              </label>
-              {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
-              {form.a1 && renderInput('Fin A1', 'fechafin_a1', '', 'date')}
-              {form.a1 && (
-                <>
-                  <label className="flex items-center gap-2 col-span-full">
-                    <input type="checkbox" name="limosa" checked={form.limosa} onChange={handleChange} /> ¿Tiene Limosa?
-                  </label>
-                  {form.limosa && renderInput('Fecha Limosa', 'fecha_limosa', '', 'date')}
-                  {form.limosa && renderInput('Fin Limosa', 'fechafin_limosa', '', 'date')}
-                </>
-              )}
-              <label className="flex items-center gap-2 col-span-full">
-                <input type="checkbox" name="epis" checked={form.epis} onChange={handleChange} /> ¿Tiene EPIs?
-              </label>
-              {form.epis && renderInput('Fecha EPIs', 'fecha_epis', '', 'date')}
-              <label className="flex items-center gap-2 col-span-full">
-                <input type="checkbox" name="desplazamiento" checked={form.desplazamiento} onChange={handleChange} /> ¿Desplazamiento?
-              </label>
-              {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
-              <label className="col-span-full">
-                Condiciones
-                <textarea
-                  name="condiciones"
-                  placeholder="Ej: Contrato indefinido, jornada completa..."
-                  value={form.condiciones}
-                  onChange={handleChange}
-                  className={`border p-2 rounded w-full ${formErrors.condiciones ? 'border-red-500' : ''}`}
-                />
-                {formErrors.condiciones && <span className="text-red-500 text-sm">{formErrors.condiciones}</span>}
-              </label>
+          <Motion.div
+            initial={{ scale: 0.98, opacity: 0, y: 12 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.98, opacity: 0, y: 12 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 18 }}
+            className="relative flex w-full max-w-5xl max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl"
+          >
+            <div className="flex items-start justify-between border-b border-slate-200/80 bg-white/90 px-5 py-4 backdrop-blur">
+              <div>
+                <h2 className="text-lg font-semibold">Añadir trabajador</h2>
+                <p className="text-sm text-slate-500">Completa los datos para registrar un nuevo trabajador.</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button onClick={onClose} className="px-4 py-2 border rounded hover:bg-gray-100">Cancelar</button>
-              <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Añadir Trabajador</button>
+
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:space-y-5">
+              <SectionCard
+                title="Datos personales"
+                description="Información básica de contacto y documentación."
+              >
+                {renderInput('Nombre', 'nombre', 'Ej: Juan Pérez')}
+                {renderInput('DNI', 'dni', 'Ej: 12345678A')}
+                {renderInput('Dirección', 'direccion', 'Ej: Calle Falsa 123')}
+                {renderInput('Correo Electrónico', 'correo_electronico', 'Ej: juan@email.com')}
+                {renderInput('Teléfono', 'telefono', 'Ej: 600123456')}
+                {renderInput('IBAN', 'iban', 'Ej: ES7620770024003102575766')}
+                {renderInput('NSS', 'nss', 'Ej: 123456789012')}
+              </SectionCard>
+
+              <SectionCard
+                title="Contrato y condiciones"
+                description="Define el tipo de contrato, fechas y la jornada."
+              >
+                {renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
+                {renderInput('Grupo', 'grupo', 'Ej: G1')}
+                {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
+                {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
+                {form.tipo_trabajador !== 'Fijo' && renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
+                {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
+                <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
+                  {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
+                </div>
+                {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
+                {renderInput('País', 'pais', 'Ej: España')}
+                {empresaOptions.length
+                  ? renderSelect('Empresa', 'empresa', empresaOptions)
+                  : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
+              </SectionCard>
+
+              <SectionCard
+                title="Documentación y permisos"
+                description="Marca los documentos disponibles y sus fechas."
+              >
+                <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {renderCheckbox('Tiene A1', 'a1')}
+                  {renderCheckbox('Tiene EPIs', 'epis')}
+                  {renderCheckbox('Desplazamiento', 'desplazamiento')}
+                  {form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
+                </div>
+                {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
+                {form.a1 && renderInput('Fin A1', 'fechafin_a1', '', 'date')}
+                {form.a1 && form.limosa && renderInput('Fecha Limosa', 'fecha_limosa', '', 'date')}
+                {form.a1 && form.limosa && renderInput('Fin Limosa', 'fechafin_limosa', '', 'date')}
+                {form.epis && renderInput('Fecha EPIs', 'fecha_epis', '', 'date')}
+                {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
+              </SectionCard>
+
+              <SectionCard
+                title="Observaciones"
+                description="Notas internas sobre las condiciones del trabajador."
+              >
+                <label className="sm:col-span-2 flex flex-col gap-1 text-sm font-medium text-slate-700">
+                  <span>Condiciones</span>
+                  <textarea
+                    name="condiciones"
+                    placeholder="Ej: Contrato indefinido, jornada completa..."
+                    value={form.condiciones || ''}
+                    onChange={handleChange}
+                    rows={4}
+                    className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+                      formErrors.condiciones
+                        ? 'border-red-500 focus:ring-red-200'
+                        : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+                    }`}
+                  />
+                  {formErrors.condiciones && <span className="text-red-500 text-sm">{formErrors.condiciones}</span>}
+                </label>
+              </SectionCard>
             </div>
-          </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200/80 bg-white px-5 py-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Añadir trabajador
+              </button>
+            </div>
+          </Motion.div>
         </Motion.div>
       )}
     </AnimatePresence>
