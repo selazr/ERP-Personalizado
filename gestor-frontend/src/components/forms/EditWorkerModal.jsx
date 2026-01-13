@@ -4,6 +4,7 @@ import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
 import { apiUrl } from '@/utils/api';
+import apiClient from '@/utils/apiClient';
 import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initialData }) {
@@ -77,7 +78,6 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     }
 
     try {
-      const token = localStorage.getItem('token');
       const parsedForm = Object.fromEntries(
         Object.entries(form).map(([key, value]) => {
           if (value === '') return [key, null];
@@ -87,25 +87,17 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         })
       );
 
-      const response = await fetch(apiUrl(`trabajadores/${form.id}`), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(parsedForm)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al actualizar trabajador');
-      }
+      await apiClient.put(apiUrl(`trabajadores/${form.id}`), parsedForm);
 
       onWorkerUpdated();
       onClose();
     } catch (error) {
       console.error(error);
-      alert(error.message);
+      const errorMessage = error?.response?.data?.error
+        || error?.response?.data?.message
+        || error?.message
+        || 'Error al actualizar trabajador';
+      alert(errorMessage);
     }
   };
 
