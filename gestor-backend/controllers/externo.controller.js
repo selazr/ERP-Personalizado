@@ -2,6 +2,8 @@ const db = require('../models');
 const Externo = db.Externo;
 const { Op } = db.Sequelize;
 
+const GLOBAL_EMPRESA_ID = 0;
+
 exports.createOrUpdate = async (req, res) => {
   const { fecha, cantidad, nombre_empresa_externo } = req.body;
   const trimmedName = (nombre_empresa_externo || '').trim();
@@ -20,7 +22,7 @@ exports.createOrUpdate = async (req, res) => {
       fecha,
       cantidad: cantidadNumerica,
       nombre_empresa_externo: trimmedName,
-      empresa_id: req.empresaId
+      empresa_id: GLOBAL_EMPRESA_ID
     });
     res.json({ fecha, cantidad: cantidadNumerica, nombre_empresa_externo: trimmedName });
   } catch (err) {
@@ -30,7 +32,7 @@ exports.createOrUpdate = async (req, res) => {
 
 exports.getExternos = async (req, res) => {
   const { start, end, nombre_empresa_externo } = req.query;
-  const where = { empresa_id: req.empresaId };
+  const where = {};
   if (start && end) {
     where.fecha = { [Op.between]: [start, end] };
   }
@@ -51,7 +53,7 @@ exports.getEmpresas = async (req, res) => {
       attributes: [
         [db.Sequelize.fn('DISTINCT', db.Sequelize.col('nombre_empresa_externo')), 'nombre_empresa_externo'],
       ],
-      where: { empresa_id: req.empresaId },
+      where: {},
       order: [['nombre_empresa_externo', 'ASC']],
     });
     const empresas = items.map((i) => i.get('nombre_empresa_externo'));
@@ -70,7 +72,7 @@ exports.deleteExterno = async (req, res) => {
   }
 
   try {
-    await Externo.destroy({ where: { fecha, nombre_empresa_externo: trimmedName, empresa_id: req.empresaId } });
+    await Externo.destroy({ where: { fecha, nombre_empresa_externo: trimmedName } });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Error eliminando externo' });
