@@ -21,14 +21,18 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   }, [empresas, form.empresa]);
 
   useEffect(() => {
-    if (initialData) {
-      setForm({
+    if (!open || !initialData) return;
+
+    setForm((prev) => {
+      if (prev?.id === initialData.id) return prev;
+
+      return {
         ...initialData,
         salario_neto: formatCurrency(initialData.salario_neto),
         salario_bruto: formatCurrency(initialData.salario_bruto)
-      });
-    }
-  }, [initialData]);
+      };
+    });
+  }, [initialData, open]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -110,7 +114,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
       <input
         name={name}
         placeholder={placeholder}
-        value={form[name] || ''}
+        value={form[name] ?? ''}
         onChange={handleChange}
         onBlur={handleBlur}
         type={type}
@@ -129,7 +133,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
       <span>{label}</span>
       <select
         name={name}
-        value={form[name] || ''}
+        value={form[name] ?? ''}
         onChange={handleChange}
         className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
           formErrors[name]
