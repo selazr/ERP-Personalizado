@@ -125,7 +125,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
       <input
         name={name}
         placeholder={placeholder}
-        value={form[name] || ''}
+        value={form[name] ?? ''}
         onChange={handleChange}
         onBlur={handleBlur}
         type={type}
