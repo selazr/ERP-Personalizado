@@ -78,13 +78,16 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     }
 
     try {
+      const ignoredKeys = new Set(['id', 'empresa_id', 'createdAt', 'updatedAt']);
       const parsedForm = Object.fromEntries(
-        Object.entries(form).map(([key, value]) => {
+        Object.entries(form)
+          .filter(([key]) => !ignoredKeys.has(key))
+          .map(([key, value]) => {
           if (value === '') return [key, null];
           if (["a1", "limosa", "epis", "desplazamiento"].includes(key)) return [key, Boolean(value)];
           if (["salario_neto", "salario_bruto"].includes(key)) return [key, parseCurrency(value)];
           return [key, value];
-        })
+          })
       );
 
       await apiClient.put(apiUrl(`trabajadores/${form.id}`), parsedForm);
