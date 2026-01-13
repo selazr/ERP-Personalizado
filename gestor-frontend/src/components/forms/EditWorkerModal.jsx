@@ -1,13 +1,23 @@
 // src/components/forms/EditWorkerModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { parseCurrency, formatCurrency } from '@/utils/utils';
 import { apiUrl } from '@/utils/api';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initialData }) {
   const [form, setForm] = useState({});
   const [formErrors, setFormErrors] = useState({});
+  const { empresas } = useEmpresa();
+
+  const empresaOptions = useMemo(() => {
+    const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
+    if (form.empresa && !names.includes(form.empresa)) {
+      names.unshift(form.empresa);
+    }
+    return Array.from(new Set(names));
+  }, [empresas, form.empresa]);
 
   useEffect(() => {
     if (initialData) {
@@ -226,7 +236,9 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 </div>
                 {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
-                {renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
+                {empresaOptions.length
+                  ? renderSelect('Empresa', 'empresa', empresaOptions)
+                  : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
               </SectionCard>
 
               <SectionCard
