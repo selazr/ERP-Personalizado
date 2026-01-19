@@ -7,6 +7,18 @@ import { apiUrl } from '@/utils/api';
 import apiClient from '@/utils/apiClient';
 import { useEmpresa } from '@/context/EmpresaContext';
 
+const SectionCard = ({ title, description, children }) => (
+  <section className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 shadow-sm sm:p-5">
+    <div className="mb-4">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      {description && <p className="mt-1 text-xs text-slate-500">{description}</p>}
+    </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {children}
+    </div>
+  </section>
+);
+
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [form, setForm] = useState({
     nombre: '',
@@ -50,13 +62,15 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (["salario_neto", "salario_bruto"].includes(name)) {
-      const formatted = value.replace(/[^0-9.,]/g, "");
-      setForm((prev) => ({ ...prev, [name]: formatted }));
+    const nextValue = type === 'checkbox' ? checked : value;
+    if (['salario_neto', 'salario_bruto'].includes(name)) {
+      setForm((prev) => ({ ...prev, [name]: value.replace(/[^0-9.,]/g, '') }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+      setForm((prev) => ({ ...prev, [name]: nextValue }));
     }
-    setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleBlur = (e) => {
@@ -172,18 +186,6 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
       />
       {label}
     </label>
-  );
-
-  const SectionCard = ({ title, description, children }) => (
-    <section className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 shadow-sm sm:p-5">
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        {description && <p className="mt-1 text-xs text-slate-500">{description}</p>}
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {children}
-      </div>
-    </section>
   );
 
   return (
