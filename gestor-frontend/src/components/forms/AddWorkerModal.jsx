@@ -50,13 +50,15 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (["salario_neto", "salario_bruto"].includes(name)) {
-      const formatted = value.replace(/[^0-9.,]/g, "");
-      setForm((prev) => ({ ...prev, [name]: formatted }));
+    const nextValue = type === 'checkbox' ? checked : value;
+    if (['salario_neto', 'salario_bruto'].includes(name)) {
+      setForm((prev) => ({ ...prev, [name]: value.replace(/[^0-9.,]/g, '') }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+      setForm((prev) => ({ ...prev, [name]: nextValue }));
     }
-    setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleBlur = (e) => {
