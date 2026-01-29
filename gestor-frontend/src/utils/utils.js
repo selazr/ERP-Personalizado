@@ -163,6 +163,12 @@ export function parseCurrency(value) {
   return parseFloat(str.replace(/\./g, ''));
 }
 
+export function getLocalDateString(date = new Date()) {
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  const localTime = new Date(date.getTime() - offsetMs);
+  return localTime.toISOString().split('T')[0];
+}
+
 export const PAYMENT_TYPE_LABELS = {
   normales: 'Normales',
   extras: 'Extra laborable',

@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import { exportWorkerToExcel, exportWorkersSelectionToExcel } from '@/utils/exportWorkerExcel';
-import { formatCurrency } from '@/utils/utils';
+import { formatCurrency, getLocalDateString } from '@/utils/utils';
 import { apiUrl } from '@/utils/api';
 import apiClient from '@/utils/apiClient';
 import { useEmpresa } from '@/context/EmpresaContext';
@@ -222,7 +222,7 @@ export default function Trabajador() {
     if (!window.confirm('¿Deseas dar de baja a este trabajador?')) return;
 
     try {
-      const fechaHoy = new Date().toISOString().split('T')[0];
+      const fechaHoy = getLocalDateString();
       await apiClient.put(apiUrl(`trabajadores/${id}`), {
         fecha_baja: fechaHoy
       });
