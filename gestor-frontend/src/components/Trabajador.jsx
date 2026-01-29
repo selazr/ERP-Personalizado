@@ -24,6 +24,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
+import ConfirmActionModal from '@/components/ConfirmActionModal';
 import { exportWorkerToExcel, exportWorkersSelectionToExcel } from '@/utils/exportWorkerExcel';
 import { formatCurrency, getLocalDateString } from '@/utils/utils';
 import { apiUrl } from '@/utils/api';
@@ -102,6 +103,11 @@ export default function Trabajador() {
   const [filterBy, setFilterBy] = useState('nombre');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState({
+    open: false,
+    type: 'baja',
+    trabajador: null
+  });
   const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFields, setSelectedFields] = useState(['nombre', 'dni', 'epis']);
@@ -203,9 +209,7 @@ export default function Trabajador() {
     setShowEditModal(false);
   }, [empresaId]);
 
-  const handleAlta = async (id) => {
-    if (!window.confirm('¿Deseas volver a dar de alta a este trabajador?')) return;
-
+  const executeAlta = async (id) => {
     try {
       await apiClient.put(apiUrl(`trabajadores/${id}`), {
         fecha_baja: null
@@ -218,9 +222,7 @@ export default function Trabajador() {
     }
   };
 
-  const handleBaja = async (id) => {
-    if (!window.confirm('¿Deseas dar de baja a este trabajador?')) return;
-
+  const executeBaja = async (id) => {
     try {
       const fechaHoy = getLocalDateString();
       await apiClient.put(apiUrl(`trabajadores/${id}`), {
@@ -232,6 +234,36 @@ export default function Trabajador() {
       console.error('Error al dar de baja:', err);
       alert('No se pudo dar de baja al trabajador.');
     }
+  };
+
+  const openConfirmAction = (type, trabajador) => {
+    setConfirmAction({
+      open: true,
+      type,
+      trabajador
+    });
+  };
+
+  const closeConfirmAction = () => {
+    setConfirmAction((prev) => ({
+      ...prev,
+      open: false
+    }));
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction.trabajador) {
+      closeConfirmAction();
+      return;
+    }
+
+    if (confirmAction.type === 'alta') {
+      await executeAlta(confirmAction.trabajador.id);
+    } else {
+      await executeBaja(confirmAction.trabajador.id);
+    }
+
+    closeConfirmAction();
   };
 
   const handleEdit = (trabajador) => {
@@ -565,14 +597,14 @@ export default function Trabajador() {
                     {isActivo(t) ? (
                       t.fecha_baja ? (
                         <button
-                          onClick={() => handleAlta(t.id)}
+                          onClick={() => openConfirmAction('alta', t)}
                           className="flex items-center gap-1 px-3 py-2 border border-green-600 text-green-700 text-sm rounded-lg hover:bg-green-50"
                         >
                           <Calendar className="w-4 h-4" /> Cancelar baja
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleBaja(t.id)}
+                          onClick={() => openConfirmAction('baja', t)}
                           className="flex items-center gap-1 px-3 py-2 border border-amber-500 text-amber-600 text-sm rounded-lg hover:bg-amber-50"
                         >
                           <Calendar className="w-4 h-4" /> Dar de baja
@@ -580,7 +612,7 @@ export default function Trabajador() {
                       )
                     ) : (
                       <button
-                        onClick={() => handleAlta(t.id)}
+                        onClick={() => openConfirmAction('alta', t)}
                         className="flex items-center gap-1 px-3 py-2 border border-green-600 text-green-700 text-sm rounded-lg hover:bg-green-50"
                       >
                         <Calendar className="w-4 h-4" /> Dar de alta
@@ -609,6 +641,13 @@ export default function Trabajador() {
           onClose={() => setShowEditModal(false)}
           onWorkerUpdated={fetchWorkers}
           initialData={trabajadorSeleccionado}
+        />
+        <ConfirmActionModal
+          open={confirmAction.open}
+          onClose={closeConfirmAction}
+          onConfirm={handleConfirmAction}
+          actionType={confirmAction.type}
+          workerName={confirmAction.trabajador?.nombre}
         />
 
         {totalPages > 1 && (
