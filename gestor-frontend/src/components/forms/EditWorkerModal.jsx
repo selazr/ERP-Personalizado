@@ -229,7 +229,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 {renderInput('Grupo', 'grupo', 'Ej: G1')}
                 {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
                 {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
-                {form.tipo_trabajador !== 'Fijo' && renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
+                {renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
                 {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
                 <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
