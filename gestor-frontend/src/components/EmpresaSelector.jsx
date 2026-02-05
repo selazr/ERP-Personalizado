@@ -183,7 +183,7 @@ export default function EmpresaSelector() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">
-                  ERP Company Hub
+                  Brands
                 </p>
                 <h1 className="text-2xl font-semibold text-white">
                   Selecciona empresa y personaliza tu experiencia

@@ -133,7 +133,9 @@ export default function Header() {
               >
                 <Building2 className="h-5 w-5" />
               </div>
-              <img className="h-7 w-auto" alt="Logo" src={logoSrc} />
+              <div className="brand-logo">
+                <img alt="Logo" src={logoSrc} />
+              </div>
             </div>
             <nav className="hidden md:block ml-10">
               <div className="flex items-baseline space-x-4">
