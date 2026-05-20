@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     pais: DataTypes.STRING,
     empresa: DataTypes.STRING,
     empresa_id: DataTypes.INTEGER,
+    autonomo_id: DataTypes.INTEGER,
     epis: { type: DataTypes.BOOLEAN, defaultValue: false },
     fecha_epis: DataTypes.DATEONLY,
     fecha_limosa: DataTypes.DATEONLY,
