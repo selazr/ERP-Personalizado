@@ -251,7 +251,7 @@ export default function Externos() {
             <select
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="border p-2 rounded text-black"
+              className="bg-white border p-2 rounded text-black"
             >
               <option value="">Empresa</option>
               {companies.map((name) => (

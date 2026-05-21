@@ -190,7 +190,7 @@ export default function Header() {
                           setEmpresa(next);
                         }
                       }}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
+                      className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
                     >
                       <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
                       {empresas
@@ -214,7 +214,7 @@ export default function Header() {
                           setEmpresaTheme(empresaId, event.target.value);
                         }
                       }}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
+                      className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
                     >
                       <option value="aurora">Aurora</option>
                       <option value="sapphire">Sapphire</option>

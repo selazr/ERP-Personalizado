@@ -1,7 +1,9 @@
+console.log("Cargando index.js, esto podría tomar un momento...");
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const horarioRoutes = require('./routes/horario.routes');
 const authRoutes = require('./routes/auth.routes');
 const trabajadorRoutes = require('./routes/trabajador.routes');
@@ -12,8 +14,6 @@ const autonomoRoutes = require('./routes/autonomo.routes');
 const trabajadorAutonomoRoutes = require('./routes/trabajador_autonomo.routes');
 const db = require('./models');
 const { scheduleCleanup } = require('./services/ocr.service');
-
-dotenv.config();
 
 //CONFIGURACION DE VARIABLES DE ENTORNO
 const requiredEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'];
