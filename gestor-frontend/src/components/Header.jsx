@@ -241,7 +241,7 @@ export default function Header() {
                     <select
                       value={activeKey}
                       onChange={(event) => handleTenantChange(event.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
+                      className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
                     >
                       <option value={activeKey}>{activeName || 'Selecciona inquilino'}</option>
                       {allTenants
@@ -261,7 +261,7 @@ export default function Header() {
                     <select
                       value={themeName}
                       onChange={(event) => handleThemeChange(event.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
+                      className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
                     >
                       <option value="aurora">Aurora</option>
                       <option value="sapphire">Sapphire</option>

@@ -342,7 +342,7 @@ export default function HorarioModal({
                   <select
                     value={paidType || ''}
                     onChange={(e) => setPaidType(e.target.value)}
-                    className="w-full border border-emerald-300 rounded px-2 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full bg-white border border-emerald-300 rounded px-2 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   >
                     {paymentOptions.map(([key, value]) => (
                       <option key={key} value={key}>
