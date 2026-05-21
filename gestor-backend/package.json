@@ -19,6 +19,6 @@
     "mysql2": "^3.14.1",
     "sequelize": "^6.37.7",
     "sharp": "^0.33.4",
-    "tesseract.js": "^5.1.4"
+    "tesseract.js": "^7.0.0"
   }
 }
