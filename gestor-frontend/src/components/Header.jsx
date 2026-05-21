@@ -26,10 +26,21 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { empresaId, empresaNombre, empresas, setEmpresa, themeName, setEmpresaTheme } = useEmpresa();
+  const {
+    empresaId,
+    empresaNombre,
+    autonomoId,
+    autonomoNombre,
+    isAutonomo,
+    empresas,
+    setEmpresa,
+    themeName,
+    setEmpresaTheme
+  } = useEmpresa();
+  const [autonomos, setAutonomos] = useState([]);
 
   const logoSrc = useMemo(() => {
-    const normalizedName = (empresaNombre || '').toLowerCase();
+    const normalizedName = (isAutonomo ? autonomoNombre : (empresaNombre || '')).toLowerCase();
     if (normalizedName.includes('lxh')) {
       return '/LXH_LOGO.png';
     }
@@ -37,7 +48,7 @@ export default function Header() {
       return '/TYRON_LOGO.png';
     }
     return '/logo.png';
-  }, [empresaNombre]);
+  }, [empresaNombre, autonomoNombre, isAutonomo]);
 
   const isActivo = (trabajador) => {
     const today = new Date();
@@ -46,11 +57,56 @@ export default function Header() {
     return fechaAlta <= today && (!fechaBaja || fechaBaja >= today);
   };
 
+  useEffect(() => {
+    const fetchAutonomos = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await apiClient.get(apiUrl('autonomos'));
+        setAutonomos(res.data || []);
+      } catch (error) {
+        console.error('Error fetching autonomos in Header:', error);
+      }
+    };
+    fetchAutonomos();
+  }, []);
+
+  const allTenants = useMemo(() => {
+    const formattedEmpresas = empresas.map(emp => ({
+      key: String(emp.id),
+      nombre: emp.nombre,
+      original: { ...emp, esAutonomo: false }
+    }));
+    const formattedAutonomos = autonomos.map(aut => ({
+      key: `autonomo_${aut.id}`,
+      nombre: `${aut.nombre} (Autónomo)`,
+      original: { ...aut, esAutonomo: true }
+    }));
+    return [...formattedEmpresas, ...formattedAutonomos];
+  }, [empresas, autonomos]);
+
+  const activeKey = isAutonomo ? `autonomo_${autonomoId}` : String(empresaId);
+  const activeName = isAutonomo ? `${autonomoNombre} (Autónomo)` : empresaNombre;
+
+  const handleTenantChange = (key) => {
+    const match = allTenants.find(t => t.key === key);
+    if (match) {
+      setEmpresa(match.original);
+    }
+  };
+
+  const handleThemeChange = (newTheme) => {
+    const activeId = isAutonomo ? `autonomo_${autonomoId}` : empresaId;
+    if (activeId) {
+      setEmpresaTheme(activeId, newTheme);
+    }
+  };
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await apiClient.get(apiUrl('trabajadores'));
+        const endpoint = isAutonomo ? 'trabajadores-autonomos' : 'trabajadores';
+        const res = await apiClient.get(apiUrl(endpoint));
         const today = new Date();
         const upcoming = [];
         res.data.filter(isActivo).forEach((w) => {
@@ -100,7 +156,7 @@ export default function Header() {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -179,25 +235,20 @@ export default function Header() {
               >
                 <HeadlessMenu.Items className="absolute right-0 mt-3 w-72 origin-top-right rounded-2xl border border-slate-200 bg-white p-3 shadow-xl focus:outline-none">
                   <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Empresa activa
+                    Inquilino activo
                   </div>
                   <div className="mt-2">
                     <select
-                      value={empresaId}
-                      onChange={(event) => {
-                        const next = empresas.find((e) => String(e.id) === event.target.value);
-                        if (next) {
-                          setEmpresa(next);
-                        }
-                      }}
+                      value={activeKey}
+                      onChange={(event) => handleTenantChange(event.target.value)}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
                     >
-                      <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
-                      {empresas
-                        .filter((e) => String(e.id) !== String(empresaId))
-                        .map((empresa) => (
-                          <option key={empresa.id} value={empresa.id}>
-                            {empresa.nombre}
+                      <option value={activeKey}>{activeName || 'Selecciona inquilino'}</option>
+                      {allTenants
+                        .filter((t) => t.key !== activeKey)
+                        .map((tenant) => (
+                          <option key={tenant.key} value={tenant.key}>
+                            {tenant.nombre}
                           </option>
                         ))}
                     </select>
@@ -209,11 +260,7 @@ export default function Header() {
                     <Palette className="h-4 w-4 text-slate-400" />
                     <select
                       value={themeName}
-                      onChange={(event) => {
-                        if (empresaId) {
-                          setEmpresaTheme(empresaId, event.target.value);
-                        }
-                      }}
+                      onChange={(event) => handleThemeChange(event.target.value)}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[var(--theme-ring)]"
                     >
                       <option value="aurora">Aurora</option>
@@ -323,24 +370,19 @@ export default function Header() {
             <div className="px-4 pt-2 pb-4 space-y-1">
               <div className="px-2 py-2">
                 <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">
-                  Empresa activa
+                  Inquilino activo
                 </label>
                 <select
-                  value={empresaId}
-                  onChange={(event) => {
-                    const next = empresas.find((e) => String(e.id) === event.target.value);
-                    if (next) {
-                      setEmpresa(next);
-                    }
-                  }}
+                  value={activeKey}
+                  onChange={(event) => handleTenantChange(event.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 text-gray-100 text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value={empresaId}>{empresaNombre || 'Selecciona empresa'}</option>
-                  {empresas
-                    .filter((e) => String(e.id) !== String(empresaId))
-                    .map((empresa) => (
-                      <option key={empresa.id} value={empresa.id}>
-                        {empresa.nombre}
+                  <option value={activeKey}>{activeName || 'Selecciona inquilino'}</option>
+                  {allTenants
+                    .filter((t) => t.key !== activeKey)
+                    .map((tenant) => (
+                      <option key={tenant.key} value={tenant.key}>
+                        {tenant.nombre}
                       </option>
                     ))}
                 </select>
@@ -351,11 +393,7 @@ export default function Header() {
                 </label>
                 <select
                   value={themeName}
-                  onChange={(event) => {
-                    if (empresaId) {
-                      setEmpresaTheme(empresaId, event.target.value);
-                    }
-                  }}
+                  onChange={(event) => handleThemeChange(event.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 text-gray-100 text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="aurora">Aurora</option>

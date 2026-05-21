@@ -22,7 +22,7 @@ const SectionCard = ({ title, description, children }) => (
 export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initialData }) {
   const [form, setForm] = useState({});
   const [formErrors, setFormErrors] = useState({});
-  const { empresas } = useEmpresa();
+  const { empresas, isAutonomo } = useEmpresa();
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
@@ -108,7 +108,8 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           })
       );
 
-      await apiClient.put(apiUrl(`trabajadores/${form.id}`), parsedForm);
+      const endpoint = isAutonomo ? `trabajadores-autonomos/${form.id}` : `trabajadores/${form.id}`;
+      await apiClient.put(apiUrl(endpoint), parsedForm);
 
       onWorkerUpdated();
       onClose();

@@ -113,7 +113,7 @@ export default function Trabajador() {
   const [selectedFields, setSelectedFields] = useState(['nombre', 'dni', 'epis']);
   const [showFieldSelector, setShowFieldSelector] = useState(false);
   const workersPerPage = 9;
-  const { empresaId } = useEmpresa();
+  const { empresaId, isAutonomo, autonomoId } = useEmpresa();
 
   const filteredTrabajadores = trabajadores
     .filter((t) => {
@@ -180,7 +180,8 @@ export default function Trabajador() {
   const navigate = useNavigate();
 
   const fetchWorkers = () => {
-    apiClient.get(apiUrl('trabajadores'))
+    const endpoint = isAutonomo ? 'trabajadores-autonomos' : 'trabajadores';
+    apiClient.get(apiUrl(endpoint))
       .then((res) => setTrabajadores(res.data))
       .catch((err) => {
         console.error(err);
@@ -191,10 +192,10 @@ export default function Trabajador() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/');
-    if (empresaId) {
+    if (empresaId || (isAutonomo && autonomoId)) {
       fetchWorkers();
     }
-  }, [navigate, empresaId]);
+  }, [navigate, empresaId, autonomoId, isAutonomo]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -207,11 +208,12 @@ export default function Trabajador() {
     setTrabajadorSeleccionado(null);
     setShowAddModal(false);
     setShowEditModal(false);
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   const executeAlta = async (id) => {
     try {
-      await apiClient.put(apiUrl(`trabajadores/${id}`), {
+      const endpoint = isAutonomo ? `trabajadores-autonomos/${id}` : `trabajadores/${id}`;
+      await apiClient.put(apiUrl(endpoint), {
         fecha_baja: null
       });
 
@@ -225,7 +227,8 @@ export default function Trabajador() {
   const executeBaja = async (id) => {
     try {
       const fechaHoy = getLocalDateString();
-      await apiClient.put(apiUrl(`trabajadores/${id}`), {
+      const endpoint = isAutonomo ? `trabajadores-autonomos/${id}` : `trabajadores/${id}`;
+      await apiClient.put(apiUrl(endpoint), {
         fecha_baja: fechaHoy
       });
 

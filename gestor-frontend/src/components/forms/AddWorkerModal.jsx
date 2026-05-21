@@ -53,7 +53,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   });
 
   const [formErrors, setFormErrors] = useState({});
-  const { empresas } = useEmpresa();
+  const { empresas, isAutonomo } = useEmpresa();
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
@@ -119,7 +119,8 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         })
       );
 
-      await apiClient.post(apiUrl('trabajadores'), parsedForm);
+      const endpoint = isAutonomo ? 'trabajadores-autonomos' : 'trabajadores';
+      await apiClient.post(apiUrl(endpoint), parsedForm);
 
       onWorkerAdded();
       onClose();

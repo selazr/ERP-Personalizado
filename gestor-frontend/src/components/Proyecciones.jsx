@@ -28,14 +28,16 @@ export default function Proyecciones() {
   const [error, setError] = useState('');
   const [selectedRange, setSelectedRange] = useState(null);
   const [resetKey, setResetKey] = useState(0);
-  const { empresaId } = useEmpresa();
+  const { empresaId, isAutonomo, autonomoId } = useEmpresa();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const statsEndpoint = isAutonomo ? 'trabajadores-autonomos/estadisticas' : 'trabajadores/estadisticas';
+        const workersEndpoint = isAutonomo ? 'trabajadores-autonomos' : 'trabajadores';
         const [statsRes, workersRes] = await Promise.all([
-          apiClient.get(apiUrl('trabajadores/estadisticas')),
-          apiClient.get(apiUrl('trabajadores'))
+          apiClient.get(apiUrl(statsEndpoint)),
+          apiClient.get(apiUrl(workersEndpoint))
         ]);
         setStats(statsRes.data);
         const mappedWorkers = workersRes.data.map((w) => ({
@@ -52,15 +54,15 @@ export default function Proyecciones() {
       }
     };
 
-    if (empresaId) {
+    if (empresaId || (isAutonomo && autonomoId)) {
       fetchData();
     }
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   useEffect(() => {
     setSelectedRange(null);
     setResetKey((k) => k + 1);
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   const chartData = stats
     ? [
