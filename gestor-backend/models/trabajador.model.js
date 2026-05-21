@@ -25,7 +25,6 @@ module.exports = (sequelize, DataTypes) => {
     pais: DataTypes.STRING,
     empresa: DataTypes.STRING,
     empresa_id: DataTypes.INTEGER,
-    autonomo_id: DataTypes.INTEGER,
     epis: { type: DataTypes.BOOLEAN, defaultValue: false },
     nda_firmado: { type: DataTypes.BOOLEAN, defaultValue: false },
     nda_pdf_path: DataTypes.STRING,

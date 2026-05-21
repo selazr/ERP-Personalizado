@@ -22,7 +22,6 @@ db.Trabajador = require('./trabajador.model')(sequelize, DataTypes);
 db.Horario = require('./horario.model')(sequelize, DataTypes);
 db.Externo = require('./externo.model')(sequelize, DataTypes);
 db.Empresa = require('./empresa.model')(sequelize, DataTypes);
-db.Autonomo = require('./autonomo.model')(sequelize, DataTypes);
 
 // Relaciones
 db.Empresa.hasMany(db.Trabajador, { foreignKey: 'empresa_id' });
@@ -31,7 +30,5 @@ db.Trabajador.hasMany(db.Horario, { foreignKey: 'trabajador_id' });
 db.Horario.belongsTo(db.Trabajador, { foreignKey: 'trabajador_id' });
 db.Empresa.hasMany(db.Horario, { foreignKey: 'empresa_id' });
 db.Horario.belongsTo(db.Empresa, { foreignKey: 'empresa_id', as: 'empresaRelacion' });
-db.Autonomo.hasMany(db.Trabajador, { foreignKey: 'autonomo_id' });
-db.Trabajador.belongsTo(db.Autonomo, { foreignKey: 'autonomo_id', as: 'autonomoRelacion' });
 
 module.exports = db;
