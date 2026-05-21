@@ -31,7 +31,7 @@ export default function WorkerAutocomplete({ workers = [], selectedId, onChange 
           setOpen(true);
         }}
         onFocus={() => {
-          setQuery('');  // Limpiar el filtro
+          setQuery(''); 
           setOpen(true);
         }}
         onBlur={() => setTimeout(() => setOpen(false), 100)}
