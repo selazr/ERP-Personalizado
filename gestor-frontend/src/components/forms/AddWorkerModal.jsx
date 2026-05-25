@@ -79,6 +79,8 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         if (name === 'autonomo' && nextValue) {
           nextForm.tipo_trabajador = '';
           nextForm.empresa = '';
+          nextForm.grupo = '';
+          nextForm.categoria = '';
         }
         if (name === 'permiso_b' && !nextValue) {
           nextForm.fecha_permiso_b = '';
@@ -298,8 +300,8 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
                   {renderCheckbox('Prácticas', 'practicas')}
                 </div>
                 {!form.autonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
-                {renderInput('Grupo', 'grupo', 'Ej: G1')}
-                {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
+                {!form.autonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
+                {!form.autonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
                 {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
                 {renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
                 {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
