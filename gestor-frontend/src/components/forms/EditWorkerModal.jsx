@@ -44,6 +44,8 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         ...initialData,
         autonomo: initialData.autonomo ?? false,
         practicas: initialData.practicas ?? false,
+        permiso_b: initialData.permiso_b ?? false,
+        fecha_permiso_b: initialData.fecha_permiso_b ?? '',
         salario_neto: formatCurrency(initialData.salario_neto),
         salario_bruto: formatCurrency(initialData.salario_bruto)
       };
@@ -56,7 +58,17 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (['salario_neto', 'salario_bruto'].includes(name)) {
       setForm((prev) => ({ ...prev, [name]: value.replace(/[^0-9.,]/g, '') }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: nextValue }));
+      setForm((prev) => {
+        const nextForm = { ...prev, [name]: nextValue };
+        if (name === 'autonomo' && nextValue) {
+          nextForm.tipo_trabajador = '';
+          nextForm.empresa = '';
+        }
+        if (name === 'permiso_b' && !nextValue) {
+          nextForm.fecha_permiso_b = '';
+        }
+        return nextForm;
+      });
       if (name === 'nda_firmado' && !nextValue) {
         setNdaFile(null);
       }
@@ -97,6 +109,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (form.limosa && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha Limosa';
     if (form.limosa && !form.fechafin_limosa) errors.fechafin_limosa = 'Debe especificar la fecha fin Limosa';
     if (form.a1 && !form.fecha_a1) errors.fecha_a1 = 'Debe especificar la fecha A1';
+    if (form.permiso_b && !form.fecha_permiso_b) errors.fecha_permiso_b = 'Debe especificar la fecha B';
     if (form.a1 && !form.fechafin_a1) errors.fechafin_a1 = 'Debe especificar la fecha fin A1';
     if (form.epis && !form.fecha_epis) errors.fecha_epis = 'Debe especificar la fecha de EPIs';
     if (form.desplazamiento && !form.fecha_desplazamiento) errors.fecha_desplazamiento = 'Debe especificar la fecha de desplazamiento';
@@ -119,7 +132,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           .filter(([key]) => !ignoredKeys.has(key))
           .map(([key, value]) => {
           if (value === '') return [key, null];
-          if (["a1", "limosa", "epis", "desplazamiento", "autonomo", "practicas", "nda_firmado", "revision_medica"].includes(key)) return [key, Boolean(value)];
+          if (["a1", "permiso_b", "limosa", "epis", "desplazamiento", "autonomo", "practicas", "nda_firmado", "revision_medica"].includes(key)) return [key, Boolean(value)];
           if (["salario_neto", "salario_bruto"].includes(key)) return [key, parseCurrency(value)];
           return [key, value];
           })
@@ -272,7 +285,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                   {renderCheckbox('Autónomo', 'autonomo')}
                   {renderCheckbox('Prácticas', 'practicas')}
                 </div>
-                {renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
+                {!form.autonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
                 {renderInput('Grupo', 'grupo', 'Ej: G1')}
                 {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
                 {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
@@ -284,9 +297,9 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 </div>
                 {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
-                {empresaOptions.length
+                {!form.autonomo && (empresaOptions.length
                   ? renderSelect('Empresa', 'empresa', empresaOptions)
-                  : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
+                  : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.'))}
               </SectionCard>
 
               <SectionCard
@@ -297,6 +310,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                   {renderCheckbox('NDA firmado', 'nda_firmado')}
                   {renderCheckbox('Revisión médica', 'revision_medica')}
                   {renderCheckbox('Tiene A1', 'a1')}
+                  {renderCheckbox('Tiene permiso B', 'permiso_b')}
                   {renderCheckbox('Tiene EPIs', 'epis')}
                   {renderCheckbox('Desplazamiento', 'desplazamiento')}
                   {form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
@@ -304,6 +318,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 {form.nda_firmado && renderFileInput('PDF NDA', 'nda')}
                 {form.revision_medica && renderInput('Fecha revisión médica', 'fecha_revision_medica', '', 'date')}
                 {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
+                {form.permiso_b && renderInput('Fecha B', 'fecha_permiso_b', '', 'date')}
                 {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
               </SectionCard>
 

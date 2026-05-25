@@ -8,6 +8,7 @@ const INFO_DIR = path.join(__dirname, '..', 'información');
 const BOOLEAN_FIELDS = [
   'desplazamiento',
   'a1',
+  'permiso_b',
   'limosa',
   'epis',
   'autonomo',
@@ -65,6 +66,10 @@ const normalizeTrabajadorPayload = (payload, { applyDefaults = false } = {}) => 
 
   if (normalized.nda_firmado === false && !normalized.nda_pdf_path) {
     normalized.nda_pdf_path = null;
+  }
+
+  if (normalized.permiso_b === false) {
+    normalized.fecha_permiso_b = null;
   }
 
   return normalized;

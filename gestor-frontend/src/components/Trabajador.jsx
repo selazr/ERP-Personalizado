@@ -21,7 +21,7 @@ import {
   Filter,
   Building2
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import ConfirmActionModal from '@/components/ConfirmActionModal';
@@ -77,6 +77,8 @@ const exportableFields = [
   { key: 'salario_bruto', label: 'Salario bruto' },
   { key: 'cliente', label: 'Cliente' },
   { key: 'a1', label: 'A1' },
+  { key: 'permiso_b', label: 'Permiso B' },
+  { key: 'fecha_permiso_b', label: 'Fecha B' },
   { key: 'fecha_a1', label: 'Fecha A1' },
   { key: 'fechafin_a1', label: 'Fin A1' },
   { key: 'limosa', label: 'Limosa' },
@@ -535,7 +537,11 @@ export default function Trabajador() {
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <p>A1: {t.a1 ? 'Sí' : 'No'}</p>
+                      <p>Permiso B: {t.permiso_b ? 'Sí' : 'No'}</p>
                       <p>Desplazamiento: {t.desplazamiento ? 'Sí' : 'No'}</p>
+                      {t.permiso_b && (
+                        <p>Fecha B: {t.fecha_permiso_b ? formatDate(t.fecha_permiso_b) : 'N/A'}</p>
+                      )}
                       {t.a1 && (
                         <p>Fecha A1: {t.fecha_a1 ? formatDate(t.fecha_a1) : 'N/A'}</p>
                       )}
@@ -564,7 +570,7 @@ export default function Trabajador() {
 
                   <AnimatePresence>
                     {expandedId === t.id && (
-                      <motion.div
+                      <Motion.div
                         key="expanded"
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -579,7 +585,7 @@ export default function Trabajador() {
                           <ClipboardSignature className="w-4 h-4 text-slate-500" />
                           <span>{t.condiciones || 'Sin condiciones específicas'}</span>
                         </p>
-                      </motion.div>
+                      </Motion.div>
                     )}
                   </AnimatePresence>
 

@@ -29,7 +29,7 @@ export function exportWorkerToExcel(trabajador, filePath) {
     'nombre', 'dni', 'correo_electronico', 'telefono', 'tipo_trabajador',
     'autonomo', 'practicas', 'grupo', 'categoria', 'iban', 'nss', 'fecha_alta', 'fecha_baja',
     'horas_contratadas', 'salario_neto', 'salario_bruto', 'direccion',
-    'desplazamiento', 'fecha_desplazamiento', 'cliente', 'a1', 'limosa',
+    'desplazamiento', 'fecha_desplazamiento', 'cliente', 'a1', 'permiso_b', 'fecha_permiso_b', 'limosa',
     'fecha_a1', 'fechafin_a1', 'fecha_limosa', 'fechafin_limosa',
     'condiciones', 'pais', 'epis', 'fecha_epis', 'nda_firmado',
     'nda_pdf_path', 'revision_medica', 'fecha_revision_medica', 'empresa'

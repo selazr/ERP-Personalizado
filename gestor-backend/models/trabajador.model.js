@@ -1,8 +1,8 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('trabajador', {
     nombre: { type: DataTypes.STRING, allowNull: false },
-    dni: { type: DataTypes.STRING, unique: true, allowNull: false },
-    correo_electronico: { type: DataTypes.STRING, unique: true, allowNull: false },
+    dni: { type: DataTypes.STRING, allowNull: false },
+    correo_electronico: { type: DataTypes.STRING, allowNull: false },
     telefono: DataTypes.STRING,
     tipo_trabajador: { type: DataTypes.STRING, allowNull: true },
     autonomo: { type: DataTypes.BOOLEAN, defaultValue: false },
@@ -21,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     fecha_desplazamiento: DataTypes.DATEONLY,
     cliente: DataTypes.STRING,
     a1: { type: DataTypes.BOOLEAN, defaultValue: false },
+    permiso_b: { type: DataTypes.BOOLEAN, defaultValue: false },
+    fecha_permiso_b: DataTypes.DATEONLY,
     limosa: { type: DataTypes.BOOLEAN, defaultValue: false },
     pais: DataTypes.STRING,
     empresa: DataTypes.STRING,
@@ -38,6 +40,18 @@ module.exports = (sequelize, DataTypes) => {
     fechafin_a1: DataTypes.DATEONLY,
     condiciones: DataTypes.TEXT
   }, {
-    freezeTableName: true // 👈 esto evita la pluralización (Trabajadors)
+    freezeTableName: true, // Evita la pluralizacion (Trabajadors)
+    indexes: [
+      {
+        unique: true,
+        name: 'uk_trabajador_dni',
+        fields: ['dni']
+      },
+      {
+        unique: true,
+        name: 'uk_trabajador_email',
+        fields: ['correo_electronico']
+      }
+    ]
   });
 };

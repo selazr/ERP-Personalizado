@@ -70,7 +70,8 @@ scheduleCleanup();
 db.sequelize.authenticate()
   .then(() => {
     console.log('✅ Conectado a la base de datos');
-    return db.sequelize.sync({ alter: true });
+    const syncOptions = process.env.DB_SYNC_ALTER === 'true' ? { alter: true } : {};
+    return db.sequelize.sync(syncOptions);
   })
   .then(() => {
     console.log('🗄️ Base de datos sincronizada');
