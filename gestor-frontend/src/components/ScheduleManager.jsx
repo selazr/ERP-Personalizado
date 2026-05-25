@@ -27,7 +27,7 @@ export default function ScheduleManager() {
   const [scheduleData, setScheduleData] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { empresaId } = useEmpresa();
+  const { empresaId, isAutonomo, autonomoId } = useEmpresa();
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
@@ -226,11 +226,12 @@ export default function ScheduleManager() {
   };
 
   useEffect(() => {
-    if (!empresaId) return;
-    apiClient.get(apiUrl('trabajadores')).then(res => {
+    if (!empresaId && !(isAutonomo && autonomoId)) return;
+    const endpoint = isAutonomo ? 'trabajadores-autonomos' : 'trabajadores';
+    apiClient.get(apiUrl(endpoint)).then(res => {
       setTrabajadores(res.data);
     });
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   useEffect(() => {
     if (!trabajadores.length) {
@@ -249,13 +250,13 @@ export default function ScheduleManager() {
     apiClient.get(apiUrl(`horarios/${selectedTrabajadorId}`)).then(res => {
       setScheduleData(res.data);
     });
-  }, [selectedTrabajadorId, currentDate, empresaId, trabajadores]);
+  }, [selectedTrabajadorId, currentDate, empresaId, autonomoId, isAutonomo, trabajadores]);
 
   useEffect(() => {
     setSelectedTrabajadorId('');
     setScheduleData([]);
     setSelectedDay(null);
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   const groupedData = agruparHorarios(scheduleData);
 

@@ -30,7 +30,10 @@ export default function WorkerAutocomplete({ workers = [], selectedId, onChange 
           setQuery(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setQuery(''); 
+          setOpen(true);
+        }}
         onBlur={() => setTimeout(() => setOpen(false), 100)}
       />
       {open && (

@@ -1,17 +1,19 @@
+console.log("Cargando index.js, esto podría tomar un momento...");
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const horarioRoutes = require('./routes/horario.routes');
 const authRoutes = require('./routes/auth.routes');
 const trabajadorRoutes = require('./routes/trabajador.routes');
 const externoRoutes = require('./routes/externo.routes');
 const ocrRoutes = require('./routes/ocr.routes');
 const empresaRoutes = require('./routes/empresa.routes');
+const autonomoRoutes = require('./routes/autonomo.routes');
+const trabajadorAutonomoRoutes = require('./routes/trabajador_autonomo.routes');
 const db = require('./models');
 const { scheduleCleanup } = require('./services/ocr.service');
-
-dotenv.config();
 
 //CONFIGURACION DE VARIABLES DE ENTORNO
 const requiredEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'];
@@ -55,6 +57,8 @@ app.use('/api/horarios', horarioRoutes);
 app.use('/api/externos', externoRoutes);
 app.use('/api/ocr', ocrRoutes);
 app.use('/api/empresas', empresaRoutes);
+app.use('/api/autonomos', autonomoRoutes);
+app.use('/api/trabajadores-autonomos', trabajadorAutonomoRoutes);
 
 // Archivos subidos para previsualización
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -66,7 +70,8 @@ scheduleCleanup();
 db.sequelize.authenticate()
   .then(() => {
     console.log('✅ Conectado a la base de datos');
-    return db.sequelize.sync({ alter: true });
+    const syncOptions = process.env.DB_SYNC_ALTER === 'true' ? { alter: true } : {};
+    return db.sequelize.sync(syncOptions);
   })
   .then(() => {
     console.log('🗄️ Base de datos sincronizada');

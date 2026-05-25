@@ -121,11 +121,17 @@ exports.getHorariosByTrabajador = async (req, res) => {
     if (!trabajador) {
       return res.status(404).json({ error: 'Trabajador no encontrado' });
     }
-    if (trabajador.empresa_id !== req.empresaId) {
+    if (req.empresaId && trabajador.empresa_id !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+    if (req.autonomoId && trabajador.autonomo_id !== req.autonomoId) {
       return res.status(403).json({ error: 'Acceso no autorizado' });
     }
 
-    const where = { trabajador_id: req.params.id, empresa_id: req.empresaId };
+    const where = { trabajador_id: req.params.id };
+    if (req.empresaId) {
+      where.empresa_id = req.empresaId;
+    }
 
     const horarios = await Horario.findAll({ where });
     res.json(horarios);
@@ -153,12 +159,15 @@ exports.createOrUpdateHorarios = async (req, res) => {
     if (!trabajador) {
       return res.status(404).json({ error: 'Trabajador no encontrado' });
     }
-    if (trabajador.empresa_id !== req.empresaId) {
+    if (req.empresaId && trabajador.empresa_id !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+    if (req.autonomoId && trabajador.autonomo_id !== req.autonomoId) {
       return res.status(403).json({ error: 'Acceso no autorizado' });
     }
 
     const empresa = trabajador.empresa ?? null;
-    const empresaId = req.empresaId ?? trabajador.empresa_id;
+    const empresaId = req.empresaId || null;
 
     const breakdown = calculateHourBreakdown(horarios, fecha, {
       festivo,

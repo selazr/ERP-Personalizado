@@ -1,6 +1,94 @@
+const path = require('path');
+const fs = require('fs/promises');
 const db = require('../models');
 const Trabajador = db.Trabajador;
 const Empresa = db.Empresa;
+
+const INFO_DIR = path.join(__dirname, '..', 'información');
+const BOOLEAN_FIELDS = [
+  'desplazamiento',
+  'a1',
+  'permiso_b',
+  'limosa',
+  'epis',
+  'autonomo',
+  'practicas',
+  'nda_firmado',
+  'revision_medica'
+];
+
+const toBoolean = (value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'si', 'sí', 'yes'].includes(normalized)) return true;
+    if (['false', '0', 'no'].includes(normalized)) return false;
+  }
+  return Boolean(value);
+};
+
+const sanitizeFolderName = (value) => {
+  const safeName = String(value || 'trabajador')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return safeName || 'trabajador';
+};
+
+const normalizeTrabajadorPayload = (payload, { applyDefaults = false } = {}) => {
+  const normalized = { ...payload };
+
+  BOOLEAN_FIELDS.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(normalized, field)) {
+      normalized[field] = toBoolean(normalized[field]);
+    }
+  });
+
+  if (applyDefaults && !Object.prototype.hasOwnProperty.call(normalized, 'autonomo')) {
+    normalized.autonomo = false;
+  }
+
+  if (applyDefaults && !Object.prototype.hasOwnProperty.call(normalized, 'practicas')) {
+    normalized.practicas = false;
+  }
+
+  if (normalized.autonomo && !normalized.tipo_trabajador) {
+    normalized.tipo_trabajador = null;
+  }
+
+  if (normalized.revision_medica === false) {
+    normalized.fecha_revision_medica = null;
+  }
+
+  if (normalized.nda_firmado === false && !normalized.nda_pdf_path) {
+    normalized.nda_pdf_path = null;
+  }
+
+  if (normalized.permiso_b === false) {
+    normalized.fecha_permiso_b = null;
+  }
+
+  return normalized;
+};
+
+const formatSequelizeError = (err) => {
+  if (Array.isArray(err.errors) && err.errors.length > 0) {
+    return err.errors
+      .map((error) => {
+        if (error.type === 'unique violation') {
+          return `${error.path} ya existe`;
+        }
+        return error.message;
+      })
+      .join('. ');
+  }
+
+  return err.message;
+};
 
 exports.getAll = async (req, res) => {
   const trabajadores = await Trabajador.findAll({
@@ -29,7 +117,7 @@ exports.create = async (req, res) => {
     }
 
     const nuevo = await Trabajador.create({
-      ...req.body,
+      ...normalizeTrabajadorPayload(req.body, { applyDefaults: true }),
       empresa_id: req.empresaId
     });
     res.status(201).json(nuevo);
@@ -63,7 +151,10 @@ exports.update = async (req, res) => {
       return res.status(403).json({ error: 'Acceso no autorizado' });
     }
 
-    await trabajador.update({ ...req.body, empresa_id: empresaIdToSet });
+    await trabajador.update({
+      ...normalizeTrabajadorPayload(req.body),
+      empresa_id: empresaIdToSet
+    });
     res.json(trabajador);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -78,6 +169,76 @@ exports.remove = async (req, res) => {
   }
   await trabajador.destroy();
   res.status(204).send();
+};
+
+exports.uploadNda = async (req, res) => {
+  try {
+    const trabajador = await Trabajador.findByPk(req.params.id);
+    if (!trabajador) return res.status(404).json({ error: 'No encontrado' });
+    if (trabajador.empresa_id !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Debe adjuntar el PDF del NDA' });
+    }
+
+    if (req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'El NDA debe ser un archivo PDF' });
+    }
+
+    const workerFolder = sanitizeFolderName(trabajador.nombre);
+    const ndaDir = path.join(INFO_DIR, workerFolder, 'NDA');
+    const ndaPath = path.join(ndaDir, 'PDFdeNDA.pdf');
+
+    await fs.mkdir(ndaDir, { recursive: true });
+    await fs.writeFile(ndaPath, req.file.buffer);
+
+    const relativePath = path.relative(path.join(__dirname, '..'), ndaPath).replace(/\\/g, '/');
+    await trabajador.update({
+      nda_firmado: true,
+      nda_pdf_path: relativePath
+    });
+
+    res.json({
+      message: 'NDA guardado correctamente',
+      nda_firmado: trabajador.nda_firmado,
+      nda_pdf_path: trabajador.nda_pdf_path
+    });
+  } catch (err) {
+    res.status(400).json({ error: formatSequelizeError(err) });
+  }
+};
+
+exports.downloadNda = async (req, res) => {
+  try {
+    const trabajador = await Trabajador.findByPk(req.params.id);
+    if (!trabajador) return res.status(404).json({ error: 'No encontrado' });
+    if (trabajador.empresa_id !== req.empresaId) {
+      return res.status(403).json({ error: 'Acceso no autorizado' });
+    }
+
+    if (!trabajador.nda_pdf_path) {
+      return res.status(404).json({ error: 'NDA no disponible' });
+    }
+
+    const baseDir = path.join(__dirname, '..');
+    const ndaPath = path.resolve(baseDir, trabajador.nda_pdf_path);
+    const infoRoot = path.resolve(INFO_DIR);
+    const relativeToInfo = path.relative(infoRoot, ndaPath);
+
+    if (relativeToInfo.startsWith('..') || path.isAbsolute(relativeToInfo)) {
+      return res.status(400).json({ error: 'Ruta de NDA invalida' });
+    }
+
+    await fs.access(ndaPath);
+    res.download(ndaPath, `${sanitizeFolderName(trabajador.nombre)}-NDA.pdf`);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return res.status(404).json({ error: 'Archivo NDA no encontrado' });
+    }
+    res.status(400).json({ error: formatSequelizeError(err) });
+  }
 };
 
 // Estadísticas y proyecciones de salarios

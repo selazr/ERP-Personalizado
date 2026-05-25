@@ -21,7 +21,7 @@ import {
   Filter,
   Building2
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import AddWorkerModal from '@/components/forms/AddWorkerModal';
 import EditWorkerModal from '@/components/forms/EditWorkerModal';
 import ConfirmActionModal from '@/components/ConfirmActionModal';
@@ -77,6 +77,8 @@ const exportableFields = [
   { key: 'salario_bruto', label: 'Salario bruto' },
   { key: 'cliente', label: 'Cliente' },
   { key: 'a1', label: 'A1' },
+  { key: 'permiso_b', label: 'Permiso B' },
+  { key: 'fecha_permiso_b', label: 'Fecha B' },
   { key: 'fecha_a1', label: 'Fecha A1' },
   { key: 'fechafin_a1', label: 'Fin A1' },
   { key: 'limosa', label: 'Limosa' },
@@ -113,7 +115,7 @@ export default function Trabajador() {
   const [selectedFields, setSelectedFields] = useState(['nombre', 'dni', 'epis']);
   const [showFieldSelector, setShowFieldSelector] = useState(false);
   const workersPerPage = 9;
-  const { empresaId } = useEmpresa();
+  const { empresaId, isAutonomo, autonomoId } = useEmpresa();
 
   const filteredTrabajadores = trabajadores
     .filter((t) => {
@@ -180,7 +182,8 @@ export default function Trabajador() {
   const navigate = useNavigate();
 
   const fetchWorkers = () => {
-    apiClient.get(apiUrl('trabajadores'))
+    const endpoint = isAutonomo ? 'trabajadores-autonomos' : 'trabajadores';
+    apiClient.get(apiUrl(endpoint))
       .then((res) => setTrabajadores(res.data))
       .catch((err) => {
         console.error(err);
@@ -191,10 +194,10 @@ export default function Trabajador() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/');
-    if (empresaId) {
+    if (empresaId || (isAutonomo && autonomoId)) {
       fetchWorkers();
     }
-  }, [navigate, empresaId]);
+  }, [navigate, empresaId, autonomoId, isAutonomo]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -207,11 +210,12 @@ export default function Trabajador() {
     setTrabajadorSeleccionado(null);
     setShowAddModal(false);
     setShowEditModal(false);
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   const executeAlta = async (id) => {
     try {
-      await apiClient.put(apiUrl(`trabajadores/${id}`), {
+      const endpoint = isAutonomo ? `trabajadores-autonomos/${id}` : `trabajadores/${id}`;
+      await apiClient.put(apiUrl(endpoint), {
         fecha_baja: null
       });
 
@@ -225,7 +229,8 @@ export default function Trabajador() {
   const executeBaja = async (id) => {
     try {
       const fechaHoy = getLocalDateString();
-      await apiClient.put(apiUrl(`trabajadores/${id}`), {
+      const endpoint = isAutonomo ? `trabajadores-autonomos/${id}` : `trabajadores/${id}`;
+      await apiClient.put(apiUrl(endpoint), {
         fecha_baja: fechaHoy
       });
 
@@ -292,12 +297,12 @@ export default function Trabajador() {
                   Buscar trabajador
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-white" />
                   <input
                     id="searchInput"
                     type="text"
                     placeholder={`Buscar por ${filterOptions.find(o => o.value === filterBy)?.label.toLowerCase()}...`}
-                    className="w-full pl-10 pr-4 py-3 text-base text-slate-900 placeholder:text-slate-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-3 text-base text-white placeholder:text-slate-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -311,7 +316,7 @@ export default function Trabajador() {
                   <Filter className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <select
                     id="filterSelect"
-                    className="w-full appearance-none pl-10 pr-8 py-3 text-base text-slate-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full bg-white appearance-none pl-10 pr-8 py-3 text-base text-slate-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={filterBy}
                     onChange={(e) => setFilterBy(e.target.value)}
                   >
@@ -532,7 +537,11 @@ export default function Trabajador() {
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <p>A1: {t.a1 ? 'Sí' : 'No'}</p>
+                      <p>Permiso B: {t.permiso_b ? 'Sí' : 'No'}</p>
                       <p>Desplazamiento: {t.desplazamiento ? 'Sí' : 'No'}</p>
+                      {t.permiso_b && (
+                        <p>Fecha B: {t.fecha_permiso_b ? formatDate(t.fecha_permiso_b) : 'N/A'}</p>
+                      )}
                       {t.a1 && (
                         <p>Fecha A1: {t.fecha_a1 ? formatDate(t.fecha_a1) : 'N/A'}</p>
                       )}
@@ -561,7 +570,7 @@ export default function Trabajador() {
 
                   <AnimatePresence>
                     {expandedId === t.id && (
-                      <motion.div
+                      <Motion.div
                         key="expanded"
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -576,7 +585,7 @@ export default function Trabajador() {
                           <ClipboardSignature className="w-4 h-4 text-slate-500" />
                           <span>{t.condiciones || 'Sin condiciones específicas'}</span>
                         </p>
-                      </motion.div>
+                      </Motion.div>
                     )}
                   </AnimatePresence>
 

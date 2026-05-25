@@ -22,10 +22,12 @@ const SectionCard = ({ title, description, children }) => (
 export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initialData }) {
   const [form, setForm] = useState({});
   const [formErrors, setFormErrors] = useState({});
-  const { empresas } = useEmpresa();
+  const { empresas, isAutonomo } = useEmpresa();
+  const [ndaFile, setNdaFile] = useState(null);
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
+
     if (form.empresa && !names.includes(form.empresa)) {
       names.unshift(form.empresa);
     }
@@ -40,6 +42,10 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
 
       return {
         ...initialData,
+        autonomo: initialData.autonomo ?? false,
+        practicas: initialData.practicas ?? false,
+        permiso_b: initialData.permiso_b ?? false,
+        fecha_permiso_b: initialData.fecha_permiso_b ?? '',
         salario_neto: formatCurrency(initialData.salario_neto),
         salario_bruto: formatCurrency(initialData.salario_bruto)
       };
@@ -52,10 +58,33 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (['salario_neto', 'salario_bruto'].includes(name)) {
       setForm((prev) => ({ ...prev, [name]: value.replace(/[^0-9.,]/g, '') }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: nextValue }));
+      setForm((prev) => {
+        const nextForm = { ...prev, [name]: nextValue };
+        if (name === 'autonomo' && nextValue) {
+          nextForm.tipo_trabajador = '';
+          nextForm.empresa = '';
+          nextForm.grupo = '';
+          nextForm.categoria = '';
+        }
+        if (name === 'permiso_b' && !nextValue) {
+          nextForm.fecha_permiso_b = '';
+        }
+        return nextForm;
+      });
+      if (name === 'nda_firmado' && !nextValue) {
+        setNdaFile(null);
+      }
     }
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setNdaFile(file);
+    if (file) {
+      setForm((prev) => ({ ...prev, nda_firmado: true }));
     }
   };
 
@@ -74,7 +103,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (!form.nombre) errors.nombre = 'El nombre es obligatorio';
     if (!form.dni) errors.dni = 'El DNI es obligatorio';
     if (!form.correo_electronico) errors.correo_electronico = 'El correo electrónico es obligatorio';
-    if (!form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
+    if (!form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
     if (!form.fecha_alta) errors.fecha_alta = 'La fecha de alta es obligatoria';
     if (!form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
     if (!form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
@@ -82,9 +111,12 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (form.limosa && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha Limosa';
     if (form.limosa && !form.fechafin_limosa) errors.fechafin_limosa = 'Debe especificar la fecha fin Limosa';
     if (form.a1 && !form.fecha_a1) errors.fecha_a1 = 'Debe especificar la fecha A1';
+    if (form.permiso_b && !form.fecha_permiso_b) errors.fecha_permiso_b = 'Debe especificar la fecha B';
     if (form.a1 && !form.fechafin_a1) errors.fechafin_a1 = 'Debe especificar la fecha fin A1';
     if (form.epis && !form.fecha_epis) errors.fecha_epis = 'Debe especificar la fecha de EPIs';
     if (form.desplazamiento && !form.fecha_desplazamiento) errors.fecha_desplazamiento = 'Debe especificar la fecha de desplazamiento';
+    if (form.revision_medica && !form.fecha_revision_medica) errors.fecha_revision_medica = 'Debe especificar la fecha de revisión médica';
+    if (ndaFile && ndaFile.type !== 'application/pdf') errors.nda = 'El NDA debe ser un PDF';
     return errors;
   };
 
@@ -102,13 +134,20 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           .filter(([key]) => !ignoredKeys.has(key))
           .map(([key, value]) => {
           if (value === '') return [key, null];
-          if (["a1", "limosa", "epis", "desplazamiento"].includes(key)) return [key, Boolean(value)];
+          if (["a1", "permiso_b", "limosa", "epis", "desplazamiento", "autonomo", "practicas", "nda_firmado", "revision_medica"].includes(key)) return [key, Boolean(value)];
           if (["salario_neto", "salario_bruto"].includes(key)) return [key, parseCurrency(value)];
           return [key, value];
           })
       );
 
-      await apiClient.put(apiUrl(`trabajadores/${form.id}`), parsedForm);
+      const endpoint = isAutonomo ? `trabajadores-autonomos/${form.id}` : `trabajadores/${form.id}`;
+      await apiClient.put(apiUrl(endpoint), parsedForm);
+
+      if (ndaFile) {
+        const ndaData = new FormData();
+        ndaData.append('nda', ndaFile);
+        await apiClient.post(apiUrl(`trabajadores/${form.id}/nda`), ndaData);
+      }
 
       onWorkerUpdated();
       onClose();
@@ -132,7 +171,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         onChange={handleChange}
         onBlur={handleBlur}
         type={type}
-        className={`rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+        className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
           formErrors[name]
             ? 'border-red-500 focus:ring-red-200'
             : 'border-slate-200 focus:ring-[var(--theme-ring)]'
@@ -149,7 +188,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         name={name}
         value={form[name] ?? ''}
         onChange={handleChange}
-        className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
           formErrors[name]
             ? 'border-red-500 focus:ring-red-200'
             : 'border-slate-200 focus:ring-[var(--theme-ring)]'
@@ -174,6 +213,25 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         className="h-4 w-4 rounded border-slate-300 text-[var(--theme-accent)] focus:ring-[var(--theme-ring)]"
       />
       {label}
+    </label>
+  );
+
+  const renderFileInput = (label, name) => (
+    <label className="sm:col-span-2 flex flex-col gap-1 text-sm font-medium text-slate-700">
+      <span>{label}</span>
+      <input
+        type="file"
+        name={name}
+        accept="application/pdf"
+        onChange={handleFileChange}
+        className={`rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+          formErrors[name]
+            ? 'border-red-500 focus:ring-red-200'
+            : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+        }`}
+      />
+      {form.nda_pdf_path && <span className="text-xs text-slate-500">PDF actual: {form.nda_pdf_path}</span>}
+      {formErrors[name] && <span className="text-red-500 text-sm">{formErrors[name]}</span>}
     </label>
   );
 
@@ -225,9 +283,13 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 title="Contrato y condiciones"
                 description="Define el tipo de contrato, fechas y la jornada."
               >
-                {renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
-                {renderInput('Grupo', 'grupo', 'Ej: G1')}
-                {renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
+                <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {renderCheckbox('Autónomo', 'autonomo')}
+                  {renderCheckbox('Prácticas', 'practicas')}
+                </div>
+                {!form.autonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
+                {!form.autonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
+                {!form.autonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
                 {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
                 {renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
                 {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
@@ -237,9 +299,9 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 </div>
                 {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
-                {empresaOptions.length
+                {!form.autonomo && (empresaOptions.length
                   ? renderSelect('Empresa', 'empresa', empresaOptions)
-                  : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.')}
+                  : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.'))}
               </SectionCard>
 
               <SectionCard
@@ -247,16 +309,18 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 description="Marca los documentos disponibles y sus fechas."
               >
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {renderCheckbox('NDA firmado', 'nda_firmado')}
+                  {renderCheckbox('Revisión médica', 'revision_medica')}
                   {renderCheckbox('Tiene A1', 'a1')}
+                  {renderCheckbox('Tiene permiso B', 'permiso_b')}
                   {renderCheckbox('Tiene EPIs', 'epis')}
                   {renderCheckbox('Desplazamiento', 'desplazamiento')}
                   {form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
                 </div>
+                {form.nda_firmado && renderFileInput('PDF NDA', 'nda')}
+                {form.revision_medica && renderInput('Fecha revisión médica', 'fecha_revision_medica', '', 'date')}
                 {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
-                {form.a1 && renderInput('Fin A1', 'fechafin_a1', '', 'date')}
-                {form.a1 && form.limosa && renderInput('Fecha Limosa', 'fecha_limosa', '', 'date')}
-                {form.a1 && form.limosa && renderInput('Fin Limosa', 'fechafin_limosa', '', 'date')}
-                {form.epis && renderInput('Fecha EPIs', 'fecha_epis', '', 'date')}
+                {form.permiso_b && renderInput('Fecha B', 'fecha_permiso_b', '', 'date')}
                 {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
               </SectionCard>
 
@@ -272,7 +336,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                     value={form.condiciones || ''}
                     onChange={handleChange}
                     rows={4}
-                    className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+                    className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
                       formErrors.condiciones
                         ? 'border-red-500 focus:ring-red-200'
                         : 'border-slate-200 focus:ring-[var(--theme-ring)]'
