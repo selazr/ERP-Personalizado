@@ -126,8 +126,8 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
     if (!form.dni) errors.dni = 'El DNI es obligatorio';
     if (!form.correo_electronico) errors.correo_electronico = 'El correo electrónico es obligatorio';
     if (!isAutonomo && !form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
-    if (!form.fecha_alta) errors.fecha_alta = 'La fecha de alta es obligatoria';
-    if (!form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
+    if (!isAutonomo && !form.fecha_alta) errors.fecha_alta = 'La fecha de alta es obligatoria';
+    if (!isAutonomo && !form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
     if (!form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
     if (!form.salario_bruto) errors.salario_bruto = 'El salario bruto mensual es obligatorio';
     if (form.limosa && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha Limosa';
