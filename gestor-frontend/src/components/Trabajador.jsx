@@ -290,11 +290,11 @@ export default function Trabajador() {
       <div className="min-h-screen bg-slate-100 p-4 sm:p-6 space-y-6">
         <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 sm:p-6">
-            <h1 className="text-xl font-semibold text-slate-900 mb-4">Gestionar trabajadores</h1>
+            <h1 className="text-xl font-semibold text-slate-900 mb-4">{isAutonomo ? 'Gestionar autónomos' : 'Gestionar trabajadores'}</h1>
             <div className="flex flex-col lg:flex-row lg:items-end gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="searchInput">
-                  Buscar trabajador
+                  {isAutonomo ? 'Buscar autónomo' : 'Buscar trabajador'}
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-5 w-5 text-white" />
@@ -331,7 +331,7 @@ export default function Trabajador() {
                 onClick={() => setShowAddModal(true)}
                 className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition"
               >
-                <User className="h-5 w-5" /> Añadir trabajador
+                <User className="h-5 w-5" /> {isAutonomo ? 'Añadir autónomo' : 'Añadir trabajador'}
               </button>
             </div>
 

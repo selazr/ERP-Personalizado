@@ -42,7 +42,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
 
       return {
         ...initialData,
-        autonomo: initialData.autonomo ?? false,
+        autonomo: isAutonomo || (initialData.autonomo ?? false),
         practicas: initialData.practicas ?? false,
         permiso_b: initialData.permiso_b ?? false,
         fecha_permiso_b: initialData.fecha_permiso_b ?? '',
@@ -50,7 +50,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         salario_bruto: formatCurrency(initialData.salario_bruto)
       };
     });
-  }, [initialData, open]);
+  }, [initialData, open, isAutonomo]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -103,7 +103,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (!form.nombre) errors.nombre = 'El nombre es obligatorio';
     if (!form.dni) errors.dni = 'El DNI es obligatorio';
     if (!form.correo_electronico) errors.correo_electronico = 'El correo electrónico es obligatorio';
-    if (!form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
+    if (!isAutonomo && !form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
     if (!form.fecha_alta) errors.fecha_alta = 'La fecha de alta es obligatoria';
     if (!form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
     if (!form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
@@ -253,7 +253,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           >
             <div className="flex items-start justify-between border-b border-slate-200/80 bg-white/90 px-5 py-4 backdrop-blur">
               <div>
-                <h2 className="text-lg font-semibold">Editar trabajador</h2>
+                <h2 className="text-lg font-semibold">{isAutonomo ? 'Editar autónomo' : 'Editar trabajador'}</h2>
                 <p className="text-sm text-slate-500">Actualiza la información manteniendo todos los campos completos.</p>
               </div>
               <button
@@ -284,22 +284,22 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 description="Define el tipo de contrato, fechas y la jornada."
               >
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {renderCheckbox('Autónomo', 'autonomo')}
-                  {renderCheckbox('Prácticas', 'practicas')}
+                  {!isAutonomo && renderCheckbox('Autónomo', 'autonomo')}
+                  {!isAutonomo && renderCheckbox('Prácticas', 'practicas')}
                 </div>
-                {!form.autonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
-                {!form.autonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
-                {!form.autonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
-                {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
-                {renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
-                {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
+                {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
+                {!isAutonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
+                {!isAutonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
+                {!isAutonomo && renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
+                {!isAutonomo && renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
+                {!isAutonomo && renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
                 <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
                   {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
                 </div>
-                {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
+                {!isAutonomo && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
-                {!form.autonomo && (empresaOptions.length
+                {!isAutonomo && (empresaOptions.length
                   ? renderSelect('Empresa', 'empresa', empresaOptions)
                   : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.'))}
               </SectionCard>
