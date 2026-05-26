@@ -302,7 +302,6 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
                 description="Define el tipo de contrato, fechas y la jornada."
               >
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {!isAutonomo && renderCheckbox('Autónomo', 'autonomo')}
                   {!isAutonomo && renderCheckbox('Prácticas', 'practicas')}
                 </div>
                 {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
