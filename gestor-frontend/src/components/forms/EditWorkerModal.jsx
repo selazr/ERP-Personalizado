@@ -24,6 +24,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   const [formErrors, setFormErrors] = useState({});
   const { empresas, isAutonomo } = useEmpresa();
   const [ndaFile, setNdaFile] = useState(null);
+  const isPracticasContract = form.tipo_trabajador === 'Prácticas';
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
@@ -40,10 +41,20 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     setForm((prev) => {
       if (prev?.id === initialData.id) return prev;
 
+      const isPracticas = initialData.tipo_trabajador === 'Prácticas';
       return {
         ...initialData,
         autonomo: isAutonomo || (initialData.autonomo ?? false),
-        practicas: initialData.practicas ?? false,
+        practicas: isPracticas,
+        cliente: isPracticas ? '' : initialData.cliente,
+        desplazamiento: isPracticas ? false : (initialData.desplazamiento ?? false),
+        fecha_desplazamiento: isPracticas ? '' : (initialData.fecha_desplazamiento ?? ''),
+        a1: isPracticas ? false : (initialData.a1 ?? false),
+        fecha_a1: isPracticas ? '' : (initialData.fecha_a1 ?? ''),
+        fechafin_a1: isPracticas ? '' : (initialData.fechafin_a1 ?? ''),
+        limosa: isPracticas ? false : (initialData.limosa ?? false),
+        fecha_limosa: isPracticas ? '' : (initialData.fecha_limosa ?? ''),
+        fechafin_limosa: isPracticas ? '' : (initialData.fechafin_limosa ?? ''),
         permiso_b: initialData.permiso_b ?? false,
         fecha_permiso_b: initialData.fecha_permiso_b ?? '',
         salario_neto: formatCurrency(initialData.salario_neto),
@@ -65,6 +76,21 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           nextForm.empresa = '';
           nextForm.grupo = '';
           nextForm.categoria = '';
+          nextForm.practicas = false;
+        }
+        if (name === 'tipo_trabajador') {
+          nextForm.practicas = nextValue === 'Prácticas';
+          if (nextForm.practicas) {
+            nextForm.cliente = '';
+            nextForm.desplazamiento = false;
+            nextForm.fecha_desplazamiento = '';
+            nextForm.a1 = false;
+            nextForm.fecha_a1 = '';
+            nextForm.fechafin_a1 = '';
+            nextForm.limosa = false;
+            nextForm.fecha_limosa = '';
+            nextForm.fechafin_limosa = '';
+          }
         }
         if (name === 'permiso_b' && !nextValue) {
           nextForm.fecha_permiso_b = '';
@@ -285,7 +311,6 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
               >
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {!isAutonomo && renderCheckbox('Autónomo', 'autonomo')}
-                  {!isAutonomo && renderCheckbox('Prácticas', 'practicas')}
                 </div>
                 {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
                 {!isAutonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
@@ -297,7 +322,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                   {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
                   {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
                 </div>
-                {!isAutonomo && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
+                {!isAutonomo && !isPracticasContract && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
                 {!isAutonomo && (empresaOptions.length
                   ? renderSelect('Empresa', 'empresa', empresaOptions)
@@ -311,17 +336,17 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {renderCheckbox('NDA firmado', 'nda_firmado')}
                   {renderCheckbox('Revisión médica', 'revision_medica')}
-                  {renderCheckbox('Tiene A1', 'a1')}
+                  {!isPracticasContract && renderCheckbox('Tiene A1', 'a1')}
                   {renderCheckbox('Tiene permiso B', 'permiso_b')}
                   {renderCheckbox('Tiene EPIs', 'epis')}
-                  {renderCheckbox('Desplazamiento', 'desplazamiento')}
-                  {form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
+                  {!isPracticasContract && renderCheckbox('Desplazamiento', 'desplazamiento')}
+                  {!isPracticasContract && form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
                 </div>
                 {form.nda_firmado && renderFileInput('PDF NDA', 'nda')}
                 {form.revision_medica && renderInput('Fecha revisión médica', 'fecha_revision_medica', '', 'date')}
-                {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
+                {!isPracticasContract && form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
                 {form.permiso_b && renderInput('Fecha B', 'fecha_permiso_b', '', 'date')}
-                {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
+                {!isPracticasContract && form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
               </SectionCard>
 
               <SectionCard

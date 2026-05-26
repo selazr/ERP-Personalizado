@@ -62,6 +62,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [formErrors, setFormErrors] = useState({});
   const { empresas, isAutonomo } = useEmpresa();
   const [ndaFile, setNdaFile] = useState(null);
+  const isPracticasContract = form.tipo_trabajador === 'Prácticas';
 
   useEffect(() => {
     if (isAutonomo) {
@@ -87,6 +88,21 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
           nextForm.empresa = '';
           nextForm.grupo = '';
           nextForm.categoria = '';
+          nextForm.practicas = false;
+        }
+        if (name === 'tipo_trabajador') {
+          nextForm.practicas = nextValue === 'Prácticas';
+          if (nextForm.practicas) {
+            nextForm.cliente = '';
+            nextForm.desplazamiento = false;
+            nextForm.fecha_desplazamiento = '';
+            nextForm.a1 = false;
+            nextForm.fecha_a1 = '';
+            nextForm.fechafin_a1 = '';
+            nextForm.limosa = false;
+            nextForm.fecha_limosa = '';
+            nextForm.fechafin_limosa = '';
+          }
         }
         if (name === 'permiso_b' && !nextValue) {
           nextForm.fecha_permiso_b = '';
@@ -301,9 +317,6 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
                 title="Contrato y condiciones"
                 description="Define el tipo de contrato, fechas y la jornada."
               >
-                <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {!isAutonomo && renderCheckbox('Prácticas', 'practicas')}
-                </div>
                 {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
                 {!isAutonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
                 {!isAutonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
@@ -314,7 +327,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
                   {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
                   {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
                 </div>
-                {!isAutonomo && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
+                {!isAutonomo && !isPracticasContract && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
                 {!isAutonomo && (empresaOptions.length
                   ? renderSelect('Empresa', 'empresa', empresaOptions)
@@ -328,17 +341,17 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {renderCheckbox('NDA firmado', 'nda_firmado')}
                   {renderCheckbox('Revisión médica', 'revision_medica')}
-                  {renderCheckbox('Tiene A1', 'a1')}
+                  {!isPracticasContract && renderCheckbox('Tiene A1', 'a1')}
                   {renderCheckbox('Tiene permiso B', 'permiso_b')}
                   {renderCheckbox('Tiene EPIs', 'epis')}
-                  {renderCheckbox('Desplazamiento', 'desplazamiento')}
-                  {form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
+                  {!isPracticasContract && renderCheckbox('Desplazamiento', 'desplazamiento')}
+                  {!isPracticasContract && form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
                 </div>
                 {form.nda_firmado && renderFileInput('PDF NDA', 'nda')}
                 {form.revision_medica && renderInput('Fecha revisión médica', 'fecha_revision_medica', '', 'date')}
-                {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
+                {!isPracticasContract && form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
                 {form.permiso_b && renderInput('Fecha B', 'fecha_permiso_b', '', 'date')}
-                {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
+                {!isPracticasContract && form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
               </SectionCard>
 
               <SectionCard
