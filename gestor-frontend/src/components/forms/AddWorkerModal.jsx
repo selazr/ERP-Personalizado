@@ -204,6 +204,7 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         placeholder={placeholder}
         value={form[name] ?? ''}
         onChange={handleChange}
+        autoComplete='off'
         onBlur={handleBlur}
         type={type}
         className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${

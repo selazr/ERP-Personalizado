@@ -195,6 +195,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         placeholder={placeholder}
         value={form[name] ?? ''}
         onChange={handleChange}
+        autoComplete='off'
         onBlur={handleBlur}
         type={type}
         className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
