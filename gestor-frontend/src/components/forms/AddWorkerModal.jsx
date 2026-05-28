@@ -19,6 +19,45 @@ const SectionCard = ({ title, description, children }) => (
   </section>
 );
 
+const INITIAL_FORM_STATE = {
+  nombre: '',
+  dni: '',
+  correo_electronico: '',
+  telefono: '',
+  tipo_trabajador: '',
+  autonomo: false,
+  practicas: false,
+  grupo: '',
+  categoria: '',
+  iban: '',
+  nss: '',
+  fecha_alta: '',
+  fecha_baja: '',
+  horas_contratadas: '',
+  salario_neto: '',
+  salario_bruto: '',
+  direccion: '',
+  desplazamiento: false,
+  fecha_desplazamiento: '',
+  cliente: '',
+  a1: false,
+  permiso_b: false,
+  fecha_permiso_b: '',
+  limosa: false,
+  fecha_limosa: '',
+  fechafin_limosa: '',
+  fecha_a1: '',
+  fechafin_a1: '',
+  condiciones: '',
+  pais: '',
+  epis: false,
+  fecha_epis: '',
+  nda_firmado: false,
+  revision_medica: false,
+  fecha_revision_medica: '',
+  empresa: ''
+};
+
 export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const [form, setForm] = useState({
     nombre: '',
@@ -63,6 +102,14 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
   const { empresas, isAutonomo } = useEmpresa();
   const [ndaFile, setNdaFile] = useState(null);
   const isPracticasContract = form.tipo_trabajador === 'Prácticas' || form.tipo_trabajador === 'Prácticas dual';
+
+  useEffect(() => {
+    if (!open) {
+      setForm(INITIAL_FORM_STATE);
+      setFormErrors({});
+      setNdaFile(null);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (isAutonomo) {
@@ -204,13 +251,13 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         placeholder={placeholder}
         value={form[name] ?? ''}
         onChange={handleChange}
+        autoComplete='off'
         onBlur={handleBlur}
         type={type}
-        className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
-          formErrors[name]
-            ? 'border-red-500 focus:ring-red-200'
-            : 'border-slate-200 focus:ring-[var(--theme-ring)]'
-        }`}
+        className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${formErrors[name]
+          ? 'border-red-500 focus:ring-red-200'
+          : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+          }`}
       />
       {formErrors[name] && <span className="text-red-500 text-sm">{formErrors[name]}</span>}
     </label>
@@ -223,11 +270,10 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         name={name}
         value={form[name] || ''}
         onChange={handleChange}
-        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
-          formErrors[name]
-            ? 'border-red-500 focus:ring-red-200'
-            : 'border-slate-200 focus:ring-[var(--theme-ring)]'
-        }`}
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${formErrors[name]
+          ? 'border-red-500 focus:ring-red-200'
+          : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+          }`}
       >
         <option value="">Selecciona una opción</option>
         {options.map((opt) => (
@@ -259,11 +305,10 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
         name={name}
         accept="application/pdf"
         onChange={handleFileChange}
-        className={`rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
-          formErrors[name]
-            ? 'border-red-500 focus:ring-red-200'
-            : 'border-slate-200 focus:ring-[var(--theme-ring)]'
-        }`}
+        className={`rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${formErrors[name]
+          ? 'border-red-500 focus:ring-red-200'
+          : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+          }`}
       />
       {formErrors[name] && <span className="text-red-500 text-sm">{formErrors[name]}</span>}
     </label>
@@ -368,11 +413,10 @@ export default function AddWorkerModal({ open, onClose, onWorkerAdded }) {
                     value={form.condiciones || ''}
                     onChange={handleChange}
                     rows={4}
-                    className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
-                      formErrors.condiciones
-                        ? 'border-red-500 focus:ring-red-200'
-                        : 'border-slate-200 focus:ring-[var(--theme-ring)]'
-                    }`}
+                    className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${formErrors.condiciones
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-[var(--theme-ring)]'
+                      }`}
                   />
                   {formErrors.condiciones && <span className="text-red-500 text-sm">{formErrors.condiciones}</span>}
                 </label>

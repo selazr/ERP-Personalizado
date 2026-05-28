@@ -301,6 +301,7 @@ export default function Trabajador() {
                   <input
                     id="searchInput"
                     type="text"
+                    autoComplete='off'
                     placeholder={`Buscar por ${filterOptions.find(o => o.value === filterBy)?.label.toLowerCase()}...`}
                     className="w-full pl-10 pr-4 py-3 text-base text-white placeholder:text-slate-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={searchTerm}
