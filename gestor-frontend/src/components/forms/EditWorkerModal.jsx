@@ -24,7 +24,16 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   const [formErrors, setFormErrors] = useState({});
   const { empresas, isAutonomo } = useEmpresa();
   const [ndaFile, setNdaFile] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
   const isPracticasContract = form.tipo_trabajador === 'Prácticas' || form.tipo_trabajador === 'Prácticas dual';
+
+  const handleClose = () => {
+    if (isDirty) {
+      const confirmClose = window.confirm('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?');
+      if (!confirmClose) return;
+    }
+    onClose();
+  };
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
@@ -36,10 +45,16 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   }, [empresas, form.empresa]);
 
   useEffect(() => {
-    if (!open || !initialData) return;
+    if (!open) {
+      setForm({});
+      setIsDirty(false);
+      return;
+    }
+    if (!initialData) return;
 
     setForm((prev) => {
       if (prev?.id === initialData.id) return prev;
+      setIsDirty(false);
 
       const isPracticas = initialData.tipo_trabajador === 'Prácticas' || initialData.tipo_trabajador === 'Prácticas dual';
       return {
@@ -64,10 +79,21 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   }, [initialData, open, isAutonomo]);
 
   const handleChange = (e) => {
+    setIsDirty(true);
     const { name, value, type, checked } = e.target;
-    const nextValue = type === 'checkbox' ? checked : value;
+    let nextValue = type === 'checkbox' ? checked : value;
+
+    if (name === 'dni') {
+      nextValue = value.toUpperCase().trim();
+    } else if (name === 'iban') {
+      const cleanValue = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      nextValue = cleanValue.match(/.{1,4}/g)?.join(' ') || cleanValue;
+    } else if (name === 'telefono') {
+      nextValue = value.replace(/[^0-9+ ]/g, '');
+    }
+
     if (['salario_neto', 'salario_bruto'].includes(name)) {
-      setForm((prev) => ({ ...prev, [name]: value.replace(/[^0-9.,]/g, '') }));
+      setForm((prev) => ({ ...prev, [name]: nextValue.replace(/[^0-9.,]/g, '') }));
     } else {
       setForm((prev) => {
         const nextForm = { ...prev, [name]: nextValue };
@@ -107,6 +133,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   };
 
   const handleFileChange = (e) => {
+    setIsDirty(true);
     const file = e.target.files?.[0] || null;
     setNdaFile(file);
     if (file) {
@@ -284,7 +311,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 <p className="text-sm text-slate-500">Actualiza la información manteniendo todos los campos completos.</p>
               </div>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100"
                 aria-label="Cerrar"
               >
@@ -377,7 +404,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
 
             <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200/80 bg-white px-5 py-4">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-4 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
               >
                 Cancelar
