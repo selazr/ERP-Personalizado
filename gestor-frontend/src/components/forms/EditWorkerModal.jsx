@@ -24,7 +24,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   const [formErrors, setFormErrors] = useState({});
   const { empresas, isAutonomo } = useEmpresa();
   const [ndaFile, setNdaFile] = useState(null);
-  const isPracticasContract = form.tipo_trabajador === 'Prácticas';
+  const isPracticasContract = form.tipo_trabajador === 'Prácticas' || form.tipo_trabajador === 'Prácticas dual';
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
@@ -41,7 +41,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     setForm((prev) => {
       if (prev?.id === initialData.id) return prev;
 
-      const isPracticas = initialData.tipo_trabajador === 'Prácticas';
+      const isPracticas = initialData.tipo_trabajador === 'Prácticas' || initialData.tipo_trabajador === 'Prácticas dual';
       return {
         ...initialData,
         autonomo: isAutonomo || (initialData.autonomo ?? false),
@@ -79,7 +79,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           nextForm.practicas = false;
         }
         if (name === 'tipo_trabajador') {
-          nextForm.practicas = nextValue === 'Prácticas';
+          nextForm.practicas = nextValue === 'Prácticas' || nextValue === 'Prácticas dual';
           if (nextForm.practicas) {
             nextForm.cliente = '';
             nextForm.desplazamiento = false;
@@ -132,8 +132,8 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (!isAutonomo && !form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
     if (!form.fecha_alta) errors.fecha_alta = 'La fecha de alta es obligatoria';
     if (!form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
-    if (!form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
-    if (!form.salario_bruto) errors.salario_bruto = 'El salario bruto mensual es obligatorio';
+    if (form.tipo_trabajador !== 'Prácticas' && !form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
+    if (form.tipo_trabajador !== 'Prácticas' && !form.salario_bruto) errors.salario_bruto = 'El salario bruto mensual es obligatorio';
     if (form.limosa && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha Limosa';
     if (form.limosa && !form.fechafin_limosa) errors.fechafin_limosa = 'Debe especificar la fecha fin Limosa';
     if (form.a1 && !form.fecha_a1) errors.fecha_a1 = 'Debe especificar la fecha A1';
@@ -312,16 +312,18 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {!isAutonomo && renderCheckbox('Autónomo', 'autonomo')}
                 </div>
-                {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
-                {!isAutonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
-                {!isAutonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
+                {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas', 'Prácticas dual'])}
+                {!isAutonomo && !isPracticasContract && renderInput('Grupo', 'grupo', 'Ej: G1')}
+                {!isAutonomo && !isPracticasContract && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
                 {!isAutonomo && renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
                 {!isAutonomo && renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
                 {!isAutonomo && renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
-                <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
-                  {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
-                </div>
+                {form.tipo_trabajador !== 'Prácticas' && (
+                  <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
+                    {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
+                  </div>
+                )}
                 {!isAutonomo && !isPracticasContract && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
                 {!isAutonomo && (empresaOptions.length
