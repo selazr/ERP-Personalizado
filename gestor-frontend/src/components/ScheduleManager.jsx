@@ -5,7 +5,7 @@ import HorarioModal from '@/components/HorarioModal';
 import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { HoursSummary } from '@/components/HorasResumen';
 import { YearHoursSummary } from '@/components/HorasResumenAnual';
-import { ChevronLeft, ChevronRight, Settings, Folder, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Settings, Folder, Download, Copy, Clipboard } from 'lucide-react';
 import {
   exportScheduleToExcel,
   exportAllSchedulesToExcel,
@@ -27,11 +27,13 @@ export default function ScheduleManager() {
   const [scheduleData, setScheduleData] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copiedWeek, setCopiedWeek] = useState(null);
+  const [copiedDay, setCopiedDay] = useState(null); // <- NUEVO ESTADO PARA EL DÍA COPIADO
   const { empresaId, isAutonomo, autonomoId } = useEmpresa();
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
-  const firstDayIndex = (getDay(firstDay) + 6) % 7; // Ajuste para comenzar en lunes
+  const firstDayIndex = (getDay(firstDay) + 6) % 7;
 
   const agruparHorarios = (horarios) => {
     const result = {};
@@ -182,8 +184,114 @@ export default function ScheduleManager() {
     });
   };
 
+  const handleCopyDay = (e, dateKey) => {
+    e.stopPropagation();
+    const grouped = groupedData[dateKey] || {};
+    const dayData = {
+      intervals: grouped.intervals || [],
+      festivo: grouped.isHoliday || false,
+      vacaciones: grouped.isVacation || false,
+      bajamedica: grouped.isBaja || false,
+      proyecto_nombre: grouped.intervals?.[0]?.proyecto_nombre || '',
+      horaNegativa: grouped.horaNegativa || 0,
+      diaNegativo: grouped.diaNegativo || false,
+      pagada: grouped.pagada || false,
+      horasPagadas: grouped.horasPagadas || 0,
+      tipoPagadas: grouped.tipoPagadas || null,
+    };
+    setCopiedDay(dayData);
+  };
+
+  const handlePasteDay = (e, targetDateKey) => {
+    e.stopPropagation();
+    if (!copiedDay || !selectedTrabajadorId) return;
+
+    apiClient.post(
+      apiUrl('horarios'),
+      {
+        trabajador_id: selectedTrabajadorId,
+        fecha: targetDateKey,
+        horarios: copiedDay.intervals,
+        festivo: copiedDay.festivo,
+        vacaciones: copiedDay.vacaciones,
+        bajamedica: copiedDay.bajamedica,
+        proyecto_nombre: copiedDay.proyecto_nombre || null,
+        horanegativa: copiedDay.horaNegativa,
+        dianegativo: copiedDay.diaNegativo,
+        pagada: copiedDay.pagada,
+        horas_pagadas: copiedDay.horasPagadas,
+        tipo_horas_pagadas: copiedDay.tipoPagadas
+      }
+    )
+    .then(() => {
+      return apiClient.get(apiUrl(`horarios/${selectedTrabajadorId}`));
+    })
+    .then((res) => {
+      setScheduleData(res.data);
+    })
+    .catch((err) => {
+      console.error('Error al pegar el día:', err);
+      alert('Hubo un error al pegar el horario del día.');
+    });
+  };
+
+  const handleCopyWeek = (weekDateKeys) => {
+    const weekData = weekDateKeys.map((dateKey) => {
+      const grouped = groupedData[dateKey] || {};
+      return {
+        intervals: grouped.intervals || [],
+        festivo: grouped.isHoliday || false,
+        vacaciones: grouped.isVacation || false,
+        bajamedica: grouped.isBaja || false,
+        proyecto_nombre: grouped.intervals?.[0]?.proyecto_nombre || '',
+        horaNegativa: grouped.horaNegativa || 0,
+        diaNegativo: grouped.diaNegativo || false,
+        pagada: grouped.pagada || false,
+        horasPagadas: grouped.horasPagadas || 0,
+        tipoPagadas: grouped.tipoPagadas || null,
+      };
+    });
+    setCopiedWeek(weekData);
+  };
+
+  const handlePasteWeek = (targetDateKeys) => {
+    if (!copiedWeek || copiedWeek.length !== 7 || !selectedTrabajadorId) return;
+
+    const requests = targetDateKeys.map((dateKey, index) => {
+      const sourceDay = copiedWeek[index];
+      return apiClient.post(
+        apiUrl('horarios'),
+        {
+          trabajador_id: selectedTrabajadorId,
+          fecha: dateKey,
+          horarios: sourceDay.intervals,
+          festivo: sourceDay.festivo,
+          vacaciones: sourceDay.vacaciones,
+          bajamedica: sourceDay.bajamedica,
+          proyecto_nombre: sourceDay.proyecto_nombre || null,
+          horanegativa: sourceDay.horaNegativa,
+          dianegativo: sourceDay.diaNegativo,
+          pagada: sourceDay.pagada,
+          horas_pagadas: sourceDay.horasPagadas,
+          tipo_horas_pagadas: sourceDay.tipoPagadas
+        }
+      );
+    });
+
+    Promise.all(requests)
+      .then(() => {
+        return apiClient.get(apiUrl(`horarios/${selectedTrabajadorId}`));
+      })
+      .then((res) => {
+        setScheduleData(res.data);
+      })
+      .catch((err) => {
+        console.error('Error al pegar la semana:', err);
+        alert('Hubo un error al pegar los horarios de la semana.');
+      });
+  };
+
   const handleDescargarPlantilla = async () => {
-    // Descarga el horario completo del trabajador seleccionado en formato Excel
     try {
       const res = await apiClient.get(apiUrl(`horarios/${selectedTrabajadorId}`));
       const trabajador = trabajadores.find(t => t.id === Number(selectedTrabajadorId));
@@ -261,110 +369,178 @@ export default function ScheduleManager() {
   const groupedData = agruparHorarios(scheduleData);
 
   const renderCalendar = () => {
-    const days = [];
-    for (let i = 0; i < firstDayIndex; i++) {
-      days.push(<div key={`empty-${i}`} className="border p-4 bg-transparent" />);
-    }
+    const gridStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1 - firstDayIndex);
+    const elements = [];
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const dateKey = getFechaKey(day);
-      const grouped = groupedData[dateKey];
-      const eventos = grouped?.intervals || [];
-      const festivo = grouped?.isHoliday || false;
-      const vacaciones = grouped?.isVacation || false;
-      const bajamedica = grouped?.isBaja || false;
-      const horaNegativa = grouped?.horaNegativa || 0;
-      const diaNegativo = grouped?.diaNegativo || false;
-      const pagada = grouped?.pagada || false;
-      const horasPagadasRaw = grouped?.horasPagadas || 0;
-      const horasPagadas =
-        typeof horasPagadasRaw === 'number'
-          ? horasPagadasRaw
-          : parseFloat(horasPagadasRaw) || 0;
-      const tipoPagadas = grouped?.tipoPagadas || null;
-      const weekend = date.getDay() === 6 || date.getDay() === 0;
+    const numWeeks = Math.ceil((firstDayIndex + daysInMonth) / 7);
 
-      const paidLabel = getPaidLabel(tipoPagadas);
-      const paidAmountLabel = horasPagadas > 0 ? formatHoursToHM(horasPagadas) : null;
-      const paidDisplay = paidAmountLabel ? `${paidLabel} · ${paidAmountLabel}` : paidLabel;
+    for (let w = 0; w < numWeeks; w++) {
+      const weekDateKeys = [];
+      for (let i = 0; i < 7; i++) {
+        const cellIndex = w * 7 + i;
+        const date = new Date(gridStartDate.getFullYear(), gridStartDate.getMonth(), gridStartDate.getDate() + cellIndex);
+        weekDateKeys.push(format(date, 'yyyy-MM-dd'));
+      }
 
-      const totalHoras = eventos.reduce((sum, ev) => {
-        if (!ev.hora_inicio || !ev.hora_fin) return sum;
-        const [h1, m1] = ev.hora_inicio.split(':').map(Number);
-        const [h2, m2] = ev.hora_fin.split(':').map(Number);
-        return sum + ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
-      }, 0);
-
-      days.push(
+      elements.push(
         <div
-          key={day}
-          onClick={() => handleDayClick(day)}
-          className={`
-            cursor-pointer border rounded-lg h-24 w-full p-2 text-sm font-medium flex flex-col items-center justify-center relative transition-all duration-200
-            ${bajamedica ? 'bg-red-100 text-red-700' : ''}
-            ${festivo ? 'bg-purple-100 text-purple-700' : ''}
-            ${vacaciones ? 'bg-green-100 text-green-700' : ''}
-            ${diaNegativo || horaNegativa > 0 ? 'bg-red-200 text-red-700' : ''}
-            ${pagada ? 'border-2 border-emerald-400' : ''}
-            ${totalHoras > 0 && !festivo && !vacaciones && !bajamedica && horaNegativa <= 0 && !diaNegativo ? 'bg-blue-100 text-blue-700' : ''}
-            ${weekend && !festivo && !vacaciones && !bajamedica && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
-            hover:shadow-md
-          `}
+          key={`action-week-${w}`}
+          className="flex flex-col items-center justify-center gap-1 h-24 w-full bg-slate-50 border border-slate-200 rounded-lg p-1 shadow-sm"
         >
-          <span className="absolute top-1 left-1 text-xs font-semibold text-gray-500">{day}</span>
+          <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">Sem {w + 1}</span>
+          <button
+            type="button"
+            title="Copiar semana"
+            onClick={() => handleCopyWeek(weekDateKeys)}
+            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+          >
+            <Copy className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            title="Pegar semana"
+            disabled={!copiedWeek}
+            onClick={() => handlePasteWeek(weekDateKeys)}
+            className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <Clipboard className="w-4 h-4" />
+          </button>
+        </div>
+      );
 
-          {bajamedica && (
-            <span className="text-xs font-semibold mt-2">Baja</span>
-          )}
-          {festivo && !bajamedica && (
-            <span className="text-xs font-semibold mt-2">Festivo</span>
-          )}
-          {vacaciones && !festivo && !bajamedica && (
-            <span className="text-xs font-semibold mt-2">Vacaciones</span>
-          )}
+      for (let i = 0; i < 7; i++) {
+        const cellIndex = w * 7 + i;
+        const date = new Date(gridStartDate.getFullYear(), gridStartDate.getMonth(), gridStartDate.getDate() + cellIndex);
+        const day = date.getDate();
+        const dateKey = weekDateKeys[i];
 
-          {(totalHoras > 0 || horaNegativa > 0 || diaNegativo || pagada) && !vacaciones && !bajamedica && (
-            <div className="flex flex-col items-center">
-              {totalHoras > 0 && (
-                <span className="text-base font-bold">
-                  {formatHoursToHM(totalHoras)}
-                </span>
+        const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+
+        if (!isCurrentMonth) {
+          elements.push(
+            <div key={`empty-${cellIndex}`} className="border rounded-lg h-24 w-full p-2 bg-slate-50/50 text-gray-300 flex items-center justify-center text-xs font-semibold relative">
+              <span className="absolute top-1 left-1 text-xs font-semibold text-gray-300">{day}</span>
+            </div>
+          );
+        } else {
+          const grouped = groupedData[dateKey];
+          const eventos = grouped?.intervals || [];
+          const festivo = grouped?.isHoliday || false;
+          const vacaciones = grouped?.isVacation || false;
+          const bajamedica = grouped?.isBaja || false;
+          const horaNegativa = grouped?.horaNegativa || 0;
+          const diaNegativo = grouped?.diaNegativo || false;
+          const pagada = grouped?.pagada || false;
+          const horasPagadasRaw = grouped?.horasPagadas || 0;
+          const horasPagadas =
+            typeof horasPagadasRaw === 'number'
+              ? horasPagadasRaw
+              : parseFloat(horasPagadasRaw) || 0;
+          const tipoPagadas = grouped?.tipoPagadas || null;
+          const weekend = date.getDay() === 6 || date.getDay() === 0;
+
+          const paidLabel = getPaidLabel(tipoPagadas);
+          const paidAmountLabel = horasPagadas > 0 ? formatHoursToHM(horasPagadas) : null;
+          const paidDisplay = paidAmountLabel ? `${paidLabel} · ${paidAmountLabel}` : paidLabel;
+
+          const totalHoras = eventos.reduce((sum, ev) => {
+            if (!ev.hora_inicio || !ev.hora_fin) return sum;
+            const [h1, m1] = ev.hora_inicio.split(':').map(Number);
+            const [h2, m2] = ev.hora_fin.split(':').map(Number);
+            return sum + ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+          }, 0);
+
+          elements.push(
+            <div
+              key={day}
+              onClick={() => handleDayClick(day)}
+              className={`
+                group cursor-pointer border rounded-lg h-24 w-full p-2 text-sm font-medium flex flex-col items-center justify-center relative transition-all duration-200
+                ${bajamedica ? 'bg-red-100 text-red-700' : ''}
+                ${festivo ? 'bg-purple-100 text-purple-700' : ''}
+                ${vacaciones ? 'bg-green-100 text-green-700' : ''}
+                ${diaNegativo || horaNegativa > 0 ? 'bg-red-200 text-red-700' : ''}
+                ${pagada ? 'border-2 border-emerald-400' : ''}
+                ${totalHoras > 0 && !festivo && !vacaciones && !bajamedica && horaNegativa <= 0 && !diaNegativo ? 'bg-blue-100 text-blue-700' : ''}
+                ${weekend && !festivo && !vacaciones && !bajamedica && totalHoras === 0 ? 'bg-gray-100 text-gray-400' : ''}
+                hover:shadow-md
+              `}
+            >
+              <span className="absolute top-1 left-1 text-xs font-semibold text-gray-500">{day}</span>
+
+              <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+                <button
+                  type="button"
+                  title="Copiar día"
+                  onClick={(e) => handleCopyDay(e, dateKey)}
+                  className="p-1 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded shadow-sm transition"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  title="Pegar día"
+                  disabled={!copiedDay}
+                  onClick={(e) => handlePasteDay(e, dateKey)}
+                  className="p-1 bg-white border border-slate-200 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded shadow-sm transition disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <Clipboard className="w-3 h-3" />
+                </button>
+              </div>
+
+              {bajamedica && (
+                <span className="text-xs font-semibold mt-2">Baja</span>
               )}
-              {(horaNegativa > 0 || diaNegativo) && (
-                <span className="text-base font-bold text-red-700 mt-1">
-                  {horaNegativa > 0 ? `-${formatHoursToHM(horaNegativa)}` : 'Día negativo'}
-                </span>
+              {festivo && !bajamedica && (
+                <span className="text-xs font-semibold mt-2">Festivo</span>
               )}
-              {pagada && (
-                <span className="text-xs font-semibold text-emerald-600 mt-1">
-                  {paidDisplay}
-                </span>
+              {vacaciones && !festivo && !bajamedica && (
+                <span className="text-xs font-semibold mt-2">Vacaciones</span>
               )}
-              {eventos[0]?.proyecto_nombre && (
+
+              {(totalHoras > 0 || horaNegativa > 0 || diaNegativo || pagada) && !vacaciones && !bajamedica && (
+                <div className="flex flex-col items-center">
+                  {totalHoras > 0 && (
+                    <span className="text-base font-bold">
+                      {formatHoursToHM(totalHoras)}
+                    </span>
+                  )}
+                  {(horaNegativa > 0 || diaNegativo) && (
+                    <span className="text-base font-bold text-red-700 mt-1">
+                      {horaNegativa > 0 ? `-${formatHoursToHM(horaNegativa)}` : 'Día negativo'}
+                    </span>
+                  )}
+                  {pagada && (
+                    <span className="text-xs font-semibold text-emerald-600 mt-1">
+                      {paidDisplay}
+                    </span>
+                  )}
+                  {eventos[0]?.proyecto_nombre && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                      <Folder className="w-4 h-4" />
+                      <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {totalHoras === 0 && horaNegativa <= 0 && !diaNegativo && !festivo && !bajamedica && eventos[0]?.proyecto_nombre && (
                 <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                   <Folder className="w-4 h-4" />
                   <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
                 </div>
               )}
-            </div>
-          )}
 
-          {totalHoras === 0 && horaNegativa <= 0 && !diaNegativo && !festivo && !bajamedica && eventos[0]?.proyecto_nombre && (
-            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-              <Folder className="w-4 h-4" />
-              <span className="truncate max-w-[6rem]">{eventos[0].proyecto_nombre}</span>
+              {totalHoras === 0 && !festivo && !bajamedica && weekend && !eventos[0]?.proyecto_nombre && horaNegativa <= 0 && !diaNegativo && (
+                <span className="text-xs italic absolute bottom-1 right-1 text-gray-400">Libre</span>
+              )}
             </div>
-          )}
-
-          {totalHoras === 0 && !festivo && !bajamedica && weekend && !eventos[0]?.proyecto_nombre && horaNegativa <= 0 && !diaNegativo && (
-            <span className="text-xs italic absolute bottom-1 right-1 text-gray-400">Libre</span>
-          )}
-        </div>
-      );
+          );
+        }
+      }
     }
 
-    return days;
+    return elements;
   };
 
   return (
@@ -380,13 +556,33 @@ export default function ScheduleManager() {
         </div>
 
         <div className="w-full max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
-          <div className="w-full sm:w-auto">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Trabajador:</label>
-            <WorkerAutocomplete
-              workers={trabajadores}
-              selectedId={selectedTrabajadorId}
-              onChange={setSelectedTrabajadorId}
-            />
+          <div className="w-full sm:w-auto flex items-center gap-4">
+            <div className="w-full sm:w-auto">
+              <WorkerAutocomplete
+                workers={trabajadores}
+                selectedId={selectedTrabajadorId}
+                onChange={setSelectedTrabajadorId}
+                variant="active"
+              />
+            </div>
+            {copiedWeek && (
+              <div className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm mt-5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Semana copiada
+              </div>
+            )}
+            {copiedDay && (
+              <div className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm mt-5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                Día copiado
+              </div>
+            )}
           </div>
           <button
             onClick={() => alert('Aquí iría el modal de festivos')}
@@ -425,13 +621,14 @@ export default function ScheduleManager() {
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-gray-500 mb-2">
+          <div className="grid grid-cols-[3.5rem_repeat(7,1fr)] gap-2 text-center text-sm font-medium text-gray-500 mb-2">
+            <div title="Semana" className="flex items-center justify-center font-bold text-gray-400">Sem.</div>
             {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((dia) => (
               <div key={dia}>{dia}</div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-[3.5rem_repeat(7,1fr)] gap-2">
             {renderCalendar()}
           </div>
         </div>
