@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, ChevronDown, Search, User, X } from 'lucide-react';
+
 export default function WorkerAutocomplete({ workers = [], selectedId, onChange, variant = 'compact' }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);

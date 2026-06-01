@@ -165,7 +165,7 @@ export default function Header() {
   };
 
   const navLinkClasses = ({ isActive }) =>
-    `flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors duration-150 ease-in-out ${
+    `flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-colors duration-150 ease-in-out ${
       isActive
         ? 'bg-[var(--theme-accent-soft)] text-white shadow-md'
         : 'text-slate-200 hover:bg-[var(--theme-chip)] hover:text-white'
