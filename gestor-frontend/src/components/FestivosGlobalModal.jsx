@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -10,8 +10,15 @@ export default function FestivosGlobalModal({
     currentDate,
     workerCount,
     onSave,
+    initialDates = [],
 }) {
     const [dates, setDates] = useState([]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setDates(initialDates || []);
+        }
+    }, [isOpen, initialDates]);
 
     const addDate = () => {
         const defaultDate = format(currentDate, 'yyyy-MM-01');
@@ -30,11 +37,6 @@ export default function FestivosGlobalModal({
 
     const handleSave = () => {
         const validDates = dates.filter(Boolean);
-
-        if (validDates.length === 0) {
-            return;
-        }
-
         onSave(validDates);
         onClose();
     };
@@ -78,7 +80,7 @@ export default function FestivosGlobalModal({
                                         type="date"
                                         value={date}
                                         onChange={(e) => changeDate(index, e.target.value)}
-                                        className="h-10 flex-1 rounded-lg border border-slate-300 px-3 text-sm text-white"
+                                        className="h-10 flex-1 rounded-lg border border-slate-300 px-3 text-sm text-white shadow-sm"
                                     />
                                     <button
                                         type="button"
@@ -113,8 +115,7 @@ export default function FestivosGlobalModal({
                         <button
                             type="button"
                             onClick={handleSave}
-                            disabled={dates.filter(Boolean).length === 0}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40"
+                            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2 text-sm font-bold text-white hover:bg-slate-800"
                         >
                             <Save className="h-4 w-4" />
                             Guardar festivos

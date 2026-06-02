@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { format, startOfMonth, getDaysInMonth, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import HorarioModal from '@/components/HorarioModal';
@@ -31,7 +31,19 @@ export default function ScheduleManager() {
   const [isFestivosModalOpen, setIsFestivosModalOpen] = useState(false);
   const [copiedWeek, setCopiedWeek] = useState(null);
   const [copiedDay, setCopiedDay] = useState(null); // <- NUEVO ESTADO PARA EL DÍA COPIADO
+  const [globalHolidays, setGlobalHolidays] = useState([]);
   const { empresaId, isAutonomo, autonomoId } = useEmpresa();
+  const monthInputRef = useRef(null);
+
+  const handleMonthLabelClick = () => {
+    if (monthInputRef.current) {
+      if (typeof monthInputRef.current.showPicker === 'function') {
+        monthInputRef.current.showPicker();
+      } else {
+        monthInputRef.current.click();
+      }
+    }
+  };
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = startOfMonth(currentDate);
@@ -186,27 +198,65 @@ export default function ScheduleManager() {
     });
   };
 
-  const handleGuardarFestivosGlobales = async (fechas) => {
-    const requests = trabajadores.flatMap((trabajador) =>
-      fechas.map((fecha) =>
-        apiClient.post(apiUrl('horarios'), {
-          trabajador_id: trabajador.id,
-          fecha,
-          horarios: [],
-          festivo: true,
-          vacaciones: false,
-          bajamedica: false,
-          proyecto_nombre: null,
-          horanegativa: 0,
-          dianegativo: false,
-          pagada: false,
-          horas_pagadas: 0,
-          tipo_horas_pagadas: null,
-        })
-      )
-    );
+  const handleGuardarFestivosGlobales = async (nuevasFechas) => {
+    const fechasEliminadas = globalHolidays.filter((f) => !nuevasFechas.includes(f));
+    const fechasAgregadas = nuevasFechas.filter((f) => !globalHolidays.includes(f));
+
+    const requests = [];
+
+    // Agregar festivos nuevos
+    fechasAgregadas.forEach((fecha) => {
+      trabajadores.forEach((trabajador) => {
+        requests.push(
+          apiClient.post(apiUrl('horarios'), {
+            trabajador_id: trabajador.id,
+            fecha,
+            horarios: [],
+            festivo: true,
+            vacaciones: false,
+            bajamedica: false,
+            proyecto_nombre: null,
+            horanegativa: 0,
+            dianegativo: false,
+            pagada: false,
+            horas_pagadas: 0,
+            tipo_horas_pagadas: null,
+          })
+        );
+      });
+    });
+
+    // Eliminar festivos descartados (seteando festivo: false)
+    fechasEliminadas.forEach((fecha) => {
+      trabajadores.forEach((trabajador) => {
+        requests.push(
+          apiClient.post(apiUrl('horarios'), {
+            trabajador_id: trabajador.id,
+            fecha,
+            horarios: [],
+            festivo: false,
+            vacaciones: false,
+            bajamedica: false,
+            proyecto_nombre: null,
+            horanegativa: 0,
+            dianegativo: false,
+            pagada: false,
+            horas_pagadas: 0,
+            tipo_horas_pagadas: null,
+          })
+        );
+      });
+    });
 
     await Promise.all(requests);
+
+    const storageKey = empresaId
+      ? `global_holidays_empresa_${empresaId}`
+      : autonomoId
+      ? `global_holidays_autonomo_${autonomoId}`
+      : 'global_holidays';
+    localStorage.setItem(storageKey, JSON.stringify(nuevasFechas));
+    setGlobalHolidays(nuevasFechas);
 
     if (selectedTrabajadorId) {
       const res = await apiClient.get(apiUrl(`horarios/${selectedTrabajadorId}`));
@@ -395,6 +445,24 @@ export default function ScheduleManager() {
     setScheduleData([]);
     setSelectedDay(null);
   }, [empresaId, autonomoId, isAutonomo]);
+
+  useEffect(() => {
+    const storageKey = empresaId
+      ? `global_holidays_empresa_${empresaId}`
+      : autonomoId
+      ? `global_holidays_autonomo_${autonomoId}`
+      : 'global_holidays';
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        setGlobalHolidays(JSON.parse(saved));
+      } catch (e) {
+        setGlobalHolidays([]);
+      }
+    } else {
+      setGlobalHolidays([]);
+    }
+  }, [empresaId, autonomoId]);
 
   const groupedData = agruparHorarios(scheduleData);
 
@@ -598,9 +666,29 @@ export default function ScheduleManager() {
               >
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
-              <strong className="min-w-40 text-center text-xl text-gray-700 lg:min-w-48 capitalize">
-                {format(currentDate, 'MMMM yyyy', { locale: es })}
-              </strong>
+              
+              <div 
+                onClick={handleMonthLabelClick}
+                className="relative flex items-center justify-center min-w-40 lg:min-w-48 group cursor-pointer"
+              >
+                <strong className="text-center text-xl text-gray-700 capitalize group-hover:text-purple-600 transition flex items-center gap-1.5 select-none">
+                  {format(currentDate, 'MMMM yyyy', { locale: es })}
+                </strong>
+                <input
+                  ref={monthInputRef}
+                  type="month"
+                  value={format(currentDate, 'yyyy-MM')}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [year, month] = e.target.value.split('-').map(Number);
+                      setCurrentDate(new Date(year, month - 1, 1));
+                    }
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full pointer-events-none"
+                  title="Seleccionar mes y año"
+                />
+              </div>
+
               <button
                 onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}
                 className="p-2 bg-white border rounded shadow hover:bg-gray-50 transition"
@@ -791,6 +879,7 @@ export default function ScheduleManager() {
         currentDate={currentDate}
         workerCount={trabajadores.length}
         onSave={handleGuardarFestivosGlobales}
+        initialDates={globalHolidays}
       />
     </>
   );
