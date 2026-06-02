@@ -24,6 +24,16 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   const [formErrors, setFormErrors] = useState({});
   const { empresas, isAutonomo } = useEmpresa();
   const [ndaFile, setNdaFile] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const isPracticasContract = form.tipo_trabajador === 'Prácticas' || form.tipo_trabajador === 'Prácticas dual';
+
+  const handleClose = () => {
+    if (isDirty) {
+      const confirmClose = window.confirm('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?');
+      if (!confirmClose) return;
+    }
+    onClose();
+  };
 
   const empresaOptions = useMemo(() => {
     const names = empresas.map((empresa) => empresa.nombre).filter(Boolean);
@@ -35,28 +45,55 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   }, [empresas, form.empresa]);
 
   useEffect(() => {
-    if (!open || !initialData) return;
+    if (!open) {
+      setForm({});
+      setIsDirty(false);
+      return;
+    }
+    if (!initialData) return;
 
     setForm((prev) => {
       if (prev?.id === initialData.id) return prev;
+      setIsDirty(false);
 
+      const isPracticas = initialData.tipo_trabajador === 'Prácticas' || initialData.tipo_trabajador === 'Prácticas dual';
       return {
         ...initialData,
-        autonomo: initialData.autonomo ?? false,
-        practicas: initialData.practicas ?? false,
+        autonomo: isAutonomo || (initialData.autonomo ?? false),
+        practicas: isPracticas,
+        cliente: isPracticas ? '' : initialData.cliente,
+        desplazamiento: isPracticas ? false : (initialData.desplazamiento ?? false),
+        fecha_desplazamiento: isPracticas ? '' : (initialData.fecha_desplazamiento ?? ''),
+        a1: isPracticas ? false : (initialData.a1 ?? false),
+        fecha_a1: isPracticas ? '' : (initialData.fecha_a1 ?? ''),
+        fechafin_a1: isPracticas ? '' : (initialData.fechafin_a1 ?? ''),
+        limosa: isPracticas ? false : (initialData.limosa ?? false),
+        fecha_limosa: isPracticas ? '' : (initialData.fecha_limosa ?? ''),
+        fechafin_limosa: isPracticas ? '' : (initialData.fechafin_limosa ?? ''),
         permiso_b: initialData.permiso_b ?? false,
         fecha_permiso_b: initialData.fecha_permiso_b ?? '',
         salario_neto: formatCurrency(initialData.salario_neto),
         salario_bruto: formatCurrency(initialData.salario_bruto)
       };
     });
-  }, [initialData, open]);
+  }, [initialData, open, isAutonomo]);
 
   const handleChange = (e) => {
+    setIsDirty(true);
     const { name, value, type, checked } = e.target;
-    const nextValue = type === 'checkbox' ? checked : value;
+    let nextValue = type === 'checkbox' ? checked : value;
+
+    if (name === 'dni') {
+      nextValue = value.toUpperCase().trim();
+    } else if (name === 'iban') {
+      const cleanValue = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      nextValue = cleanValue.match(/.{1,4}/g)?.join(' ') || cleanValue;
+    } else if (name === 'telefono') {
+      nextValue = value.replace(/[^0-9+ ]/g, '');
+    }
+
     if (['salario_neto', 'salario_bruto'].includes(name)) {
-      setForm((prev) => ({ ...prev, [name]: value.replace(/[^0-9.,]/g, '') }));
+      setForm((prev) => ({ ...prev, [name]: nextValue.replace(/[^0-9.,]/g, '') }));
     } else {
       setForm((prev) => {
         const nextForm = { ...prev, [name]: nextValue };
@@ -65,6 +102,21 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           nextForm.empresa = '';
           nextForm.grupo = '';
           nextForm.categoria = '';
+          nextForm.practicas = false;
+        }
+        if (name === 'tipo_trabajador') {
+          nextForm.practicas = nextValue === 'Prácticas' || nextValue === 'Prácticas dual';
+          if (nextForm.practicas) {
+            nextForm.cliente = '';
+            nextForm.desplazamiento = false;
+            nextForm.fecha_desplazamiento = '';
+            nextForm.a1 = false;
+            nextForm.fecha_a1 = '';
+            nextForm.fechafin_a1 = '';
+            nextForm.limosa = false;
+            nextForm.fecha_limosa = '';
+            nextForm.fechafin_limosa = '';
+          }
         }
         if (name === 'permiso_b' && !nextValue) {
           nextForm.fecha_permiso_b = '';
@@ -81,6 +133,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
   };
 
   const handleFileChange = (e) => {
+    setIsDirty(true);
     const file = e.target.files?.[0] || null;
     setNdaFile(file);
     if (file) {
@@ -103,11 +156,11 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
     if (!form.nombre) errors.nombre = 'El nombre es obligatorio';
     if (!form.dni) errors.dni = 'El DNI es obligatorio';
     if (!form.correo_electronico) errors.correo_electronico = 'El correo electrónico es obligatorio';
-    if (!form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
+    if (!isAutonomo && !form.autonomo && !form.tipo_trabajador) errors.tipo_trabajador = 'El tipo de trabajador es obligatorio';
     if (!form.fecha_alta) errors.fecha_alta = 'La fecha de alta es obligatoria';
     if (!form.horas_contratadas) errors.horas_contratadas = 'Las horas contratadas son obligatorias';
-    if (!form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
-    if (!form.salario_bruto) errors.salario_bruto = 'El salario bruto mensual es obligatorio';
+    if (form.tipo_trabajador !== 'Prácticas' && !form.salario_neto) errors.salario_neto = 'El salario neto mensual es obligatorio';
+    if (form.tipo_trabajador !== 'Prácticas' && !form.salario_bruto) errors.salario_bruto = 'El salario bruto mensual es obligatorio';
     if (form.limosa && !form.fecha_limosa) errors.fecha_limosa = 'Debe especificar la fecha Limosa';
     if (form.limosa && !form.fechafin_limosa) errors.fechafin_limosa = 'Debe especificar la fecha fin Limosa';
     if (form.a1 && !form.fecha_a1) errors.fecha_a1 = 'Debe especificar la fecha A1';
@@ -169,6 +222,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         placeholder={placeholder}
         value={form[name] ?? ''}
         onChange={handleChange}
+        autoComplete='off'
         onBlur={handleBlur}
         type={type}
         className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
@@ -253,11 +307,11 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
           >
             <div className="flex items-start justify-between border-b border-slate-200/80 bg-white/90 px-5 py-4 backdrop-blur">
               <div>
-                <h2 className="text-lg font-semibold">Editar trabajador</h2>
+                <h2 className="text-lg font-semibold">{isAutonomo ? 'Editar autónomo' : 'Editar trabajador'}</h2>
                 <p className="text-sm text-slate-500">Actualiza la información manteniendo todos los campos completos.</p>
               </div>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100"
                 aria-label="Cerrar"
               >
@@ -284,22 +338,23 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 description="Define el tipo de contrato, fechas y la jornada."
               >
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {renderCheckbox('Autónomo', 'autonomo')}
-                  {renderCheckbox('Prácticas', 'practicas')}
+                  {!isAutonomo && renderCheckbox('Autónomo', 'autonomo')}
                 </div>
-                {!form.autonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas'])}
-                {!form.autonomo && renderInput('Grupo', 'grupo', 'Ej: G1')}
-                {!form.autonomo && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
-                {renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
-                {renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
-                {renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
-                <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
-                  {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
-                </div>
-                {renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
+                {!isAutonomo && renderSelect('Tipo de contrato', 'tipo_trabajador', ['Fijo discontinuo', 'Fijo', 'Temporal', 'Prácticas', 'Prácticas dual'])}
+                {!isAutonomo && !isPracticasContract && renderInput('Grupo', 'grupo', 'Ej: G1')}
+                {!isAutonomo && !isPracticasContract && renderInput('Categoría', 'categoria', 'Ej: Oficial 1ª')}
+                {!isAutonomo && renderInput('Fecha de Alta', 'fecha_alta', '', 'date')}
+                {!isAutonomo && renderInput('Fecha de Baja', 'fecha_baja', '', 'date')}
+                {!isAutonomo && renderInput('Horas Contratadas', 'horas_contratadas', 'Ej: 40', 'number')}
+                {form.tipo_trabajador !== 'Prácticas' && (
+                  <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {renderInput('Salario Neto/Mensual (€)', 'salario_neto', 'Ej: 1.600,50')}
+                    {renderInput('Salario Bruto/Mensual (€)', 'salario_bruto', 'Ej: 1.800,75')}
+                  </div>
+                )}
+                {!isAutonomo && !isPracticasContract && renderInput('Cliente', 'cliente', 'Ej: Indra, Amazon...')}
                 {renderInput('País', 'pais', 'Ej: España')}
-                {!form.autonomo && (empresaOptions.length
+                {!isAutonomo && (empresaOptions.length
                   ? renderSelect('Empresa', 'empresa', empresaOptions)
                   : renderInput('Empresa', 'empresa', 'Ej: Construcciones S.A.'))}
               </SectionCard>
@@ -311,17 +366,17 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                 <div className="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {renderCheckbox('NDA firmado', 'nda_firmado')}
                   {renderCheckbox('Revisión médica', 'revision_medica')}
-                  {renderCheckbox('Tiene A1', 'a1')}
+                  {!isPracticasContract && renderCheckbox('Tiene A1', 'a1')}
                   {renderCheckbox('Tiene permiso B', 'permiso_b')}
                   {renderCheckbox('Tiene EPIs', 'epis')}
-                  {renderCheckbox('Desplazamiento', 'desplazamiento')}
-                  {form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
+                  {!isPracticasContract && renderCheckbox('Desplazamiento', 'desplazamiento')}
+                  {!isPracticasContract && form.a1 && renderCheckbox('Tiene Limosa', 'limosa')}
                 </div>
                 {form.nda_firmado && renderFileInput('PDF NDA', 'nda')}
                 {form.revision_medica && renderInput('Fecha revisión médica', 'fecha_revision_medica', '', 'date')}
-                {form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
+                {!isPracticasContract && form.a1 && renderInput('Fecha A1', 'fecha_a1', '', 'date')}
                 {form.permiso_b && renderInput('Fecha B', 'fecha_permiso_b', '', 'date')}
-                {form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
+                {!isPracticasContract && form.desplazamiento && renderInput('Fecha Desplazamiento', 'fecha_desplazamiento', '', 'date')}
               </SectionCard>
 
               <SectionCard
@@ -349,7 +404,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
 
             <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200/80 bg-white px-5 py-4">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-4 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
               >
                 Cancelar

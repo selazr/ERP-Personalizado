@@ -19,7 +19,7 @@ export default function Organizacion() {
     setter(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const expiringContracts = ['Fijo discontinuo', 'Temporal', 'Prácticas'];
+  const expiringContracts = ['Fijo discontinuo', 'Temporal', 'Prácticas', 'Prácticas dual'];
 
   const cardBaseClasses =
     'bg-white/90 backdrop-blur border border-slate-200 shadow-sm rounded-2xl';

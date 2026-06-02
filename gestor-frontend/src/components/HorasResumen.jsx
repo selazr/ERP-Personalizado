@@ -168,7 +168,7 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
-          className="rounded-lg p-4 shadow-md border"
+          className="rounded-xl p-6 shadow-lg space-y-3 border"
           style={{ background: 'var(--theme-chip)', borderColor: 'var(--theme-card-border)' }}
         >
           <p className="text-sm mb-1" style={{ color: 'var(--theme-text-muted)' }}>
@@ -180,7 +180,7 @@ export function HoursSummary({ currentDate, scheduleData, onDownload }) {
         </div>
 
         <div
-          className="rounded-2xl p-6 shadow-lg space-y-3 border"
+          className="rounded-xl p-6 shadow-lg space-y-3 border"
           style={{ background: 'var(--theme-chip)', borderColor: 'var(--theme-card-border)' }}
         >
           <h3 className="text-sm font-medium" style={{ color: 'var(--theme-text-muted)' }}>
