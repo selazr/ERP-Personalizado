@@ -240,18 +240,18 @@ export default function Externos() {
               type="date"
               value={startRange}
               onChange={(e) => setStartRange(e.target.value)}
-              className="border p-2 rounded text-black"
+              className="rounded border bg-white p-2 text-black [color-scheme:light]"
             />
             <input
               type="date"
               value={endRange}
               onChange={(e) => setEndRange(e.target.value)}
-              className="border p-2 rounded text-black"
+              className="rounded border bg-white p-2 text-black [color-scheme:light]"
             />
             <select
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="bg-white border p-2 rounded text-black"
+              className="rounded border bg-white p-2 text-black [color-scheme:light]"
             >
               <option value="">Empresa</option>
               {companies.map((name) => (
@@ -265,7 +265,7 @@ export default function Externos() {
               placeholder="€"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="border p-2 rounded text-black w-24"
+              className="w-24 rounded border bg-white p-2 text-black placeholder:text-slate-500 [color-scheme:light]"
             />
             <button
               onClick={handleCalcularMedia}

@@ -80,7 +80,7 @@ export default function FestivosGlobalModal({
                                         type="date"
                                         value={date}
                                         onChange={(e) => changeDate(index, e.target.value)}
-                                        className="h-10 flex-1 rounded-lg border border-slate-300 px-3 text-sm text-white shadow-sm"
+                                        className="h-10 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm [color-scheme:light]"
                                     />
                                     <button
                                         type="button"

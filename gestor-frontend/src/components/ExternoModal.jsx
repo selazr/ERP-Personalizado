@@ -64,7 +64,7 @@ export default function ExternoModal({
                   onChange={(e) =>
                     handleChange(index, 'nombre_empresa_externo', e.target.value)
                   }
-                  className="border p-2 rounded text-black flex-1"
+                  className="flex-1 rounded border bg-white p-2 text-black placeholder:text-slate-500 [color-scheme:light]"
                   placeholder="Empresa"
                 />
                 <datalist id={listId}>
@@ -79,7 +79,7 @@ export default function ExternoModal({
                   onChange={(e) =>
                     handleChange(index, 'cantidad', e.target.value)
                   }
-                  className="border p-2 rounded w-24 text-black"
+                  className="w-24 rounded border bg-white p-2 text-black [color-scheme:light]"
                 />
                 <button
                   type="button"
