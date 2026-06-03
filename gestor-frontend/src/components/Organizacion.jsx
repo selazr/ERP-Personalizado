@@ -13,13 +13,13 @@ export default function Organizacion() {
   const [openContratos, setOpenContratos] = useState({});
   const [openRoles, setOpenRoles] = useState({});
   const [openWorkers, setOpenWorkers] = useState({});
-  const { empresaId, empresaNombre } = useEmpresa();
+  const { empresaId, empresaNombre, isAutonomo, autonomoId, autonomoNombre } = useEmpresa();
 
   const toggle = (setter, key) => {
     setter(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const expiringContracts = ['Fijo discontinuo', 'Temporal', 'Prácticas'];
+  const expiringContracts = ['Fijo discontinuo', 'Temporal', 'Prácticas', 'Prácticas dual'];
 
   const cardBaseClasses =
     'bg-white/90 backdrop-blur border border-slate-200 shadow-sm rounded-2xl';
@@ -82,10 +82,11 @@ export default function Organizacion() {
 
   useEffect(() => {
     const loadStats = async () => {
-      if (!empresaId) return;
+      if (!empresaId && !(isAutonomo && autonomoId)) return;
       setLoading(true);
       try {
-        const res = await apiClient.get(apiUrl('trabajadores/organizacion'));
+        const endpoint = isAutonomo ? 'trabajadores-autonomos/organizacion' : 'trabajadores/organizacion';
+        const res = await apiClient.get(apiUrl(endpoint));
         const data = res.data;
         setStats(data);
         setError('');
@@ -98,7 +99,7 @@ export default function Organizacion() {
     };
 
     loadStats();
-  }, [empresaId]);
+  }, [empresaId, autonomoId, isAutonomo]);
 
   useEffect(() => {
     setOpenPaises({});
@@ -165,7 +166,7 @@ export default function Organizacion() {
                       {stats.totalTrabajadores ?? 0}
                     </p>
                     <p className="mt-1 text-sm text-blue-100">
-                      Datos correspondientes a {empresaNombre || 'empresa activa'}
+                      Datos correspondientes a {isAutonomo ? `${autonomoNombre} (Autónomo)` : (empresaNombre || 'empresa activa')}
                     </p>
                   </div>
 

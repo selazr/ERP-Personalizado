@@ -10,8 +10,8 @@ import AppLayout from './components/AppLayout';
 import { useEmpresa } from '@/context/EmpresaContext';
 
 function RequireEmpresa() {
-  const { empresaId } = useEmpresa();
-  if (!empresaId) {
+  const { empresaId, autonomoId } = useEmpresa();
+  if (!empresaId && !autonomoId) {
     return <Navigate to="/seleccionar-empresa" replace />;
   }
   return <Outlet />;

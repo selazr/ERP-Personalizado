@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog } from '@headlessui/react';
 import { format, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import { CalendarDays, Clock, CreditCard, Folder, Plus, RotateCcw, Save, Trash2, Users, X } from 'lucide-react';
 import WorkerAutocomplete from '@/components/WorkerAutocomplete';
 import { calculateHourBreakdown, formatHoursToHM, PAYMENT_TYPE_LABELS } from '@/utils/utils';
 
@@ -233,107 +234,191 @@ export default function HorarioModal({
     formattedDate = format(new Date(fecha), 'dd/MM/yyyy');
   }
 
-  return (
-    <Dialog open={isOpen} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen p-4 bg-black/40">
-          <Dialog.Panel className={`w-full max-w-md rounded-lg shadow-lg p-6 transition-colors duration-300 ${
-            isBaja
-              ? 'bg-red-50 text-red-900'
-              : isVacation
-              ? 'bg-green-50 text-green-900'
-              : isHoliday
-              ? 'bg-purple-50 text-purple-900'
-              : 'bg-white text-black'
-          }`}>
-          <Dialog.Title className="text-lg font-bold mb-2">Gestionar Horas</Dialog.Title>
-          <p className="text-sm mb-4">
-            Ajusta los intervalos horarios para el día {formattedDate}. Total: <strong>{totalHoras.toFixed(1)}h</strong>
-          </p>
+  const modalTone = isBaja
+    ? {
+        label: 'Baja médica',
+        border: 'border-red-200',
+        badge: 'bg-red-50 text-red-700 ring-red-200',
+      }
+    : isVacation
+    ? {
+        label: 'Vacaciones',
+        border: 'border-emerald-200',
+        badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+      }
+    : isHoliday
+    ? {
+        label: 'Festivo',
+        border: 'border-violet-200',
+        badge: 'bg-violet-50 text-violet-700 ring-violet-200',
+      }
+    : {
+        label: 'Jornada',
+        border: 'border-slate-200',
+        badge: 'bg-slate-100 text-slate-700 ring-slate-200',
+      };
 
-          <div className="space-y-2">
+  const sectionClass = 'rounded-xl border border-slate-200 bg-white p-4';
+  const sectionTitleClass = 'flex items-center gap-2 text-sm font-semibold text-slate-800';
+  const inputClass = 'h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition [color-scheme:light] placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200';
+  const checkboxClass = 'h-4 w-4 rounded border-slate-300 accent-slate-900';
+
+  return (
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950/35 p-4 backdrop-blur-[2px]">
+        <Dialog.Panel className={`w-full max-w-xl overflow-hidden rounded-2xl border ${modalTone.border} bg-slate-50 text-slate-900 shadow-xl shadow-slate-950/20 transition-colors duration-300`}>
+          <div className="border-b border-slate-200 bg-white px-5 py-5 sm:px-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${modalTone.badge}`}>
+                    {modalTone.label}
+                  </span>
+                  {isPaid && (
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                      Pagada
+                    </span>
+                  )}
+                </div>
+                <Dialog.Title className="text-2xl font-bold tracking-tight text-slate-950">
+                  Gestionar horas
+                </Dialog.Title>
+                <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                  <CalendarDays className="h-4 w-4" />
+                  {formattedDate}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Total</p>
+                <p className="mt-1 text-2xl font-bold text-slate-950">{formatHoursToHM(totalHoras)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-h-[72vh] space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
+            <section className={sectionClass}>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className={sectionTitleClass}>
+                  <Clock className="h-4 w-4 text-slate-500" />
+                  Intervalos
+                </h3>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                  {intervals.length} tramo{intervals.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="space-y-2">
             {intervals.map((intv) => (
-              <div key={intv.id} className="flex gap-2 items-center">
+              <div key={intv.id} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 p-2">
                 <input
                   type="time"
                   lang="es"
                   value={intv.hora_inicio}
                   onChange={(e) => handleChange(intv.id, 'hora_inicio', e.target.value)}
-                  className="border p-1 rounded w-full text-black"
+                  className={inputClass}
                 />
-                <span>-</span>
+                <span className="text-slate-400">-</span>
                 <input
                   type="time"
                   lang="es"
                   value={intv.hora_fin}
                   onChange={(e) => handleChange(intv.id, 'hora_fin', e.target.value)}
-                  className="border p-1 rounded w-full text-black"
+                  className={inputClass}
                 />
-                <button onClick={() => handleRemove(intv.id)} className="text-red-500">&#x2716;</button>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(intv.id)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  title="Eliminar intervalo"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))}
 
-            <button onClick={handleAddInterval} className="w-full border-dashed border p-2 text-center rounded hover:bg-gray-100">
-              + Añadir Intervalo
+            <button
+              type="button"
+              onClick={handleAddInterval}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white"
+            >
+              <Plus className="h-4 w-4" />
+              Añadir intervalo
             </button>
+              </div>
+            </section>
 
-            <label className="flex items-center gap-2 mt-3">
-              <input
-                type="checkbox"
-                checked={useNegative}
-                onChange={(e) => setUseNegative(e.target.checked)}
-              />
-              Registrar horas negativas
-            </label>
+            <section className={sectionClass}>
+              <h3 className={sectionTitleClass}>
+                <CalendarDays className="h-4 w-4 text-slate-500" />
+                Estado del día
+              </h3>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={useNegative}
+                    onChange={(e) => setUseNegative(e.target.checked)}
+                    className={checkboxClass}
+                  />
+                  Registrar horas negativas
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={isHoliday}
+                    onChange={(e) => setIsHoliday(e.target.checked)}
+                    className={checkboxClass}
+                  />
+                  Festivo
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={isVacation}
+                    onChange={(e) => setIsVacation(e.target.checked)}
+                    className={checkboxClass}
+                  />
+                  Vacaciones
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={isBaja}
+                    onChange={(e) => setIsBaja(e.target.checked)}
+                    className={checkboxClass}
+                  />
+                  Baja médica
+                </label>
+              </div>
 
-            {useNegative && (
-              <input
-                type="text"
-                value={negativeHours}
-                onChange={(e) => setNegativeHours(e.target.value)}
-                placeholder="Horas negativas (HH,MM)"
-                className="p-2 border border-gray-300 rounded w-full mt-1"
-              />
-            )}
+              {useNegative && (
+                <input
+                  type="text"
+                  value={negativeHours}
+                  onChange={(e) => setNegativeHours(e.target.value)}
+                  placeholder="Horas negativas (HH,MM)"
+                  className={`${inputClass} mt-3 w-full`}
+                />
+              )}
+            </section>
 
-            <label className="flex items-center gap-2 mt-3">
-              <input
-                type="checkbox"
-                checked={isHoliday}
-                onChange={(e) => setIsHoliday(e.target.checked)}
-              />
-              Marcar como Festivo (para este trabajador)
-            </label>
-
-            <label className="flex items-center gap-2 mt-3">
-              <input
-                type="checkbox"
-                checked={isVacation}
-                onChange={(e) => setIsVacation(e.target.checked)}
-              />
-              Marcar como Vacaciones (para este trabajador)
-            </label>
-
-            <label className="flex items-center gap-2 mt-3">
-              <input
-                type="checkbox"
-                checked={isBaja}
-                onChange={(e) => setIsBaja(e.target.checked)}
-              />
-              Marcar como Baja Médica
-            </label>
-
-            <div className="mt-3 border border-emerald-200 rounded-lg p-3 bg-emerald-50/30">
-              <label className="flex items-center gap-2 text-emerald-700 font-medium">
+            <section className={sectionClass}>
+              <h3 className={sectionTitleClass}>
+                <CreditCard className="h-4 w-4 text-slate-500" />
+                Pago
+              </h3>
+              <label className="mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-700">
                 <input
                   type="checkbox"
                   checked={isPaid}
                   onChange={handlePaidChange}
                   disabled={!canMarkPaid}
+                  className="h-4 w-4 rounded border-slate-300 accent-emerald-600"
                 />
                 Marcar horas como pagadas
               </label>
               {!canMarkPaid && (
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-slate-500">
                   No hay horas disponibles que cumplan las condiciones para realizar el pago.
                 </p>
               )}
@@ -342,7 +427,7 @@ export default function HorarioModal({
                   <select
                     value={paidType || ''}
                     onChange={(e) => setPaidType(e.target.value)}
-                    className="w-full border border-emerald-300 rounded px-2 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                   >
                     {paymentOptions.map(([key, value]) => (
                       <option key={key} value={key}>
@@ -351,20 +436,24 @@ export default function HorarioModal({
                     ))}
                   </select>
                   {selectedPaidLabel && selectedPaidHours > 0 ? (
-                    <p className="text-sm text-emerald-600">
+                    <p className="text-sm text-emerald-700">
                       Se pagarán {formattedPaidHours} de horas {selectedPaidLabel.toLowerCase()}.
                     </p>
                   ) : (
-                    <p className="text-sm text-emerald-600">
+                    <p className="text-sm text-emerald-700">
                       Selecciona un tipo de horas para realizar el pago.
                     </p>
                   )}
                 </div>
               )}
-            </div>
+            </section>
 
-            <label className="flex flex-col gap-2 mt-3">
-              <div className="flex items-center gap-2">
+            <section className={sectionClass}>
+              <h3 className={sectionTitleClass}>
+                <Folder className="h-4 w-4 text-slate-500" />
+                Proyecto
+              </h3>
+              <label className="mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                 <input
                   type="checkbox"
                   checked={editarProyecto}
@@ -372,25 +461,28 @@ export default function HorarioModal({
                     setEditarProyecto(e.target.checked);
                     if (!e.target.checked) setProyectoNombre(null); // Limpia si se desmarca
                   }}
+                  className={checkboxClass}
                 />
                 Asignar a un proyecto
-              </div>
-
+              </label>
               {editarProyecto && (
                 <input
                   type="text"
                   value={proyectoNombre ?? ''}
                   onChange={(e) => setProyectoNombre(e.target.value)}
                   placeholder="Nombre del proyecto"
-                  className="p-2 border border-gray-300 rounded"
+                  className={`${inputClass} mt-3 w-full`}
                 />
               )}
-            </label>
+            </section>
 
-            <div className="mt-4">
-              <h3 className="font-medium">Asignar a más trabajadores</h3>
+            <section className={sectionClass}>
+              <h3 className={sectionTitleClass}>
+                <Users className="h-4 w-4 text-slate-500" />
+                Aplicar a más trabajadores
+              </h3>
               {extraWorkers.map((w, idx) => (
-                <div key={idx} className="flex items-center gap-2 mt-2">
+                <div key={idx} className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
                   <WorkerAutocomplete
                     workers={workers}
                     selectedId={w}
@@ -399,56 +491,82 @@ export default function HorarioModal({
                   <button
                     type="button"
                     onClick={() => removeWorker(idx)}
-                    className="text-red-500"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                    title="Quitar trabajador"
                   >
-                    &#x2716;
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               <button
                 type="button"
                 onClick={addWorker}
-                className="w-full border-dashed border p-2 text-center rounded hover:bg-gray-100 mt-2"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white"
               >
-                + Agregar Trabajador
+                <Plus className="h-4 w-4" />
+                Agregar trabajador
               </button>
-            </div>
+            </section>
 
-            <div className="mt-4">
-              <h3 className="font-medium">Aplicar a más días</h3>
+            <section className={sectionClass}>
+              <h3 className={sectionTitleClass}>
+                <CalendarDays className="h-4 w-4 text-slate-500" />
+                Aplicar a más días
+              </h3>
               {extraDates.map((d, idx) => (
-                <div key={idx} className="flex items-center gap-2 mt-2">
+                <div key={idx} className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
                   <input
                     type="date"
                     value={d}
                     onChange={(e) => changeDate(idx, e.target.value)}
-                    className="border p-1 rounded w-full text-black"
+                    className={`${inputClass} w-full`}
                   />
                   <button
                     type="button"
                     onClick={() => removeDate(idx)}
-                    className="text-red-500"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                    title="Quitar día"
                   >
-                    &#x2716;
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               <button
                 type="button"
                 onClick={addDate}
-                className="w-full border-dashed border p-2 text-center rounded hover:bg-gray-100 mt-2"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white"
               >
-                + Agregar Día
+                <Plus className="h-4 w-4" />
+                Agregar día
               </button>
-            </div>
-
+            </section>
           </div>
 
-          <div className="mt-6 flex justify-between">
-            <button onClick={handleClear} className="bg-red-500 text-white px-3 py-1 rounded">Limpiar Día</button>
-            <div className="flex gap-2">
-              <button onClick={onClose} className="border px-3 py-1 rounded">Cancelar</button>
-              <button onClick={handleSave} className="bg-purple-500 text-white px-3 py-1 rounded">Guardar Cambios</button>
+          <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Limpiar día
+            </button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800"
+              >
+                <Save className="h-4 w-4" />
+                Guardar cambios
+              </button>
             </div>
           </div>
         </Dialog.Panel>

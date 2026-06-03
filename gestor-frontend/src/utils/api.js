@@ -1,9 +1,7 @@
-const RAW_API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
-
 const normalizeBase = base => base.replace(/\/+$/, '');
 const normalizePath = path => `/${path.replace(/^\/+/, '')}`;
 
-const normalizedBase = normalizeBase(RAW_API_BASE_URL);
+const normalizedBase = 'http://localhost:3001/api'
 
 const buildOriginRelativeUrl = (base, path) => {
   if (!base) {
