@@ -225,7 +225,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         autoComplete='off'
         onBlur={handleBlur}
         type={type}
-        className={`rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
+        className={`rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition [color-scheme:light] placeholder:text-slate-400 focus:ring-2 ${
           formErrors[name]
             ? 'border-red-500 focus:ring-red-200'
             : 'border-slate-200 focus:ring-[var(--theme-ring)]'
@@ -242,7 +242,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         name={name}
         value={form[name] ?? ''}
         onChange={handleChange}
-        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition [color-scheme:light] focus:ring-2 ${
           formErrors[name]
             ? 'border-red-500 focus:ring-red-200'
             : 'border-slate-200 focus:ring-[var(--theme-ring)]'
@@ -278,7 +278,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
         name={name}
         accept="application/pdf"
         onChange={handleFileChange}
-        className={`rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:ring-2 ${
+        className={`rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition [color-scheme:light] file:text-slate-700 focus:ring-2 ${
           formErrors[name]
             ? 'border-red-500 focus:ring-red-200'
             : 'border-slate-200 focus:ring-[var(--theme-ring)]'
@@ -391,7 +391,7 @@ export default function EditWorkerModal({ open, onClose, onWorkerUpdated, initia
                     value={form.condiciones || ''}
                     onChange={handleChange}
                     rows={4}
-                    className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-white shadow-sm outline-none transition focus:ring-2 ${
+                    className={`w-full resize-none rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition [color-scheme:light] placeholder:text-slate-400 focus:ring-2 ${
                       formErrors.condiciones
                         ? 'border-red-500 focus:ring-red-200'
                         : 'border-slate-200 focus:ring-[var(--theme-ring)]'

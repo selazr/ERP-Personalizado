@@ -139,8 +139,15 @@ body {
   padding: 14px;
   border-radius: 14px;
   border: 1px solid var(--border-color);
+  background: #ffffff;
+  color: #0f172a;
+  color-scheme: light;
   font-size: 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-form input::placeholder {
+  color: #9ca3af;
 }
 
 .login-form input:focus {
