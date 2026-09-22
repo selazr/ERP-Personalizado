@@ -1,7 +1,12 @@
 const normalizeBase = base => base.replace(/\/+$/, '');
 const normalizePath = path => `/${path.replace(/^\/+/, '')}`;
 
+
+"LOCAL"
 const normalizedBase = 'http://localhost:3001/api'
+"PRODUCCION"
+"const normalizedBase = '/api'"
+
 
 const buildOriginRelativeUrl = (base, path) => {
   if (!base) {
