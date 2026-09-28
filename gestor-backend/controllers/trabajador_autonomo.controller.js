@@ -2,6 +2,20 @@ const db = require('../models');
 const Trabajador = db.Trabajador;
 const Autonomo = db.Autonomo;
 
+const formatSequelizeError = (err) => {
+    if (Array.isArray(err.errors) && err.errors.length > 0) {
+        return err.errors
+            .map((error) => {
+                if (error.type === 'unique violation') {
+                    return `${error.path} ya existe`;
+                }
+                return error.message;
+            })
+            .join('. ');
+    }
+    return err.message;
+};
+
 exports.getAll = async (req, res) => {
     try {
         const trabajadores = await Trabajador.findAll({
@@ -42,7 +56,8 @@ exports.create = async (req, res) => {
         });
         res.status(201).json(nuevo);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Error al crear trabajador autónomo:', err);
+        res.status(400).json({ error: formatSequelizeError(err) });
     }
 };
 
@@ -74,7 +89,8 @@ exports.update = async (req, res) => {
         await trabajador.update({ ...req.body, autonomo_id: autonomoIdToSet });
         res.json(trabajador);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Error al actualizar trabajador autónomo:', err);
+        res.status(400).json({ error: formatSequelizeError(err) });
     }
 };
 

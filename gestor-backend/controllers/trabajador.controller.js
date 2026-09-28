@@ -159,7 +159,8 @@ exports.create = async (req, res) => {
     });
     res.status(201).json(nuevo);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error al crear trabajador:', err);
+    res.status(400).json({ error: formatSequelizeError(err) });
   }
 };
 //UPDATE
@@ -194,7 +195,8 @@ exports.update = async (req, res) => {
     });
     res.json(trabajador);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error al actualizar trabajador:', err);
+    res.status(400).json({ error: formatSequelizeError(err) });
   }
 };
 //DELETE
